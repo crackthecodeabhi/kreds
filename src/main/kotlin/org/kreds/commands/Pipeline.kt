@@ -15,12 +15,12 @@ interface PipelineExecutor{
     suspend fun execute(commands: List<CommandExecution>): List<Response<*>>
 }
 
-interface Pipeline: PipelineStringCommands {
+interface Pipeline: PipelineStringCommands, PipelineKeyCommands {
     fun <T> add(commandExecution: CommandExecution): Response<T>
     suspend fun execute()
 }
 
-class PipelineImpl(private val client: KredsClient): PipelineStringCommandsExecutor{
+class PipelineImpl(private val client: KredsClient): PipelineStringCommandsExecutor, PipelineKeyCommandExecutor{
 
     private val commands = mutableListOf<CommandExecution>()
     private val commandResponse = mutableListOf<Response<*>>()

@@ -12,8 +12,6 @@ import io.netty.handler.codec.redis.RedisMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel as KChannel
 
-val eventLoopGroup = NioEventLoopGroup()
-
 open class DefaultKConnection(endpoint: Endpoint, eventLoopGroup: EventLoopGroup): KConnection {
     private var channel: SocketChannel? = null
     private val cScope = CoroutineScope(Dispatchers.Default)

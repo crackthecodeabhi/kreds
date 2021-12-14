@@ -4,6 +4,66 @@ import org.kreds.*
 import org.kreds.protocol.*
 import org.kreds.commands.KeyCommand.*
 
+enum class KeyCommand: Command{
+    DEL,COPY,DUMP,EXISTS,EXPIRE,EXPIREAT,EXPIRETIME,
+    KEYS,MOVE,PERSIST,PEXPIRE,PEXPIREAT,PEXPIRETIME,
+    PTTL,RANDOMKEY,RENAME,RENAMENX,TOUCH,TTL,TYPE,UNLINK;
+
+    private val commandString = name.replace('_',' ');
+    override val string: String = commandString
+}
+
+interface BaseKeyCommands{
+    fun _del(vararg keys: String) = CommandExecution(DEL, IntegerCommandProcessor,*keys.toArguments())
+    fun _copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): CommandExecution {
+        val args =
+            createArguments(
+                source,
+                destination,
+                destinationDb?.let { KeyValueArgument("DB",it) },
+                replace?.let { KeyOnlyArgument("replace") })
+        return CommandExecution(COPY, IntegerCommandProcessor,*args)
+    }
+    fun _dump(key: String) = CommandExecution(DUMP, BulkStringCommandProcessor,key.toArgument())
+    fun _exists(vararg keys: String)= CommandExecution(EXISTS, IntegerCommandProcessor,*keys.toArguments())
+    fun _expire(key: String, seconds: ULong, expireOption: ExpireOption?) =
+        CommandExecution(EXPIRE, IntegerCommandProcessor,*createArguments(key, seconds, expireOption))
+
+    fun _expireAt(key: String, timestamp: ULong, expireOption: ExpireOption?) =
+        CommandExecution(EXPIREAT, IntegerCommandProcessor, *createArguments(key,timestamp,expireOption))
+
+    fun _expireTime(key: String)= CommandExecution(EXPIRETIME, IntegerCommandProcessor,key.toArgument())
+
+    fun _keys(pattern: String) = CommandExecution(KEYS, ArrayCommandProcessor,pattern.toArgument())
+
+    fun _move(key: String, db: String)= CommandExecution(MOVE, IntegerCommandProcessor,key.toArgument(),db.toArgument())
+
+    fun _persist(key: String)= CommandExecution(PERSIST, IntegerCommandProcessor,key.toArgument())
+
+    fun _pexpire(key: String, milliseconds: ULong, expireOption: PExpireOption?) =
+        CommandExecution(PEXPIRE, IntegerCommandProcessor, *createArguments(key,milliseconds,expireOption))
+
+    fun _pexpireat(key: String, millisecondsTimestamp: ULong, expireOption: PExpireOption?)=
+        CommandExecution(PEXPIREAT, IntegerCommandProcessor,*createArguments(key,millisecondsTimestamp,expireOption))
+
+    fun _pexpiretime(key: String)= CommandExecution(PEXPIRETIME, IntegerCommandProcessor,key.toArgument())
+
+    fun _pttl(key: String)= CommandExecution(PTTL, IntegerCommandProcessor,key.toArgument())
+
+    fun _randomKey()= CommandExecution(RANDOMKEY, BulkStringCommandProcessor)
+
+    fun _rename(key: String, newKey: String) = CommandExecution(RENAME, SimpleStringCommandProcessor,*createArguments(key,newKey))
+
+    fun _renamenx(key: String, newKey: String) = CommandExecution(RENAMENX, IntegerCommandProcessor,*createArguments(key,newKey))
+
+    fun _touch(vararg keys: String) = CommandExecution(TOUCH, IntegerCommandProcessor,*createArguments(keys))
+
+    fun _ttl(key: String)= CommandExecution(TTL, IntegerCommandProcessor,key.toArgument())
+
+    fun _type(key: String) = CommandExecution(TYPE, SimpleStringCommandProcessor,key.toArgument())
+
+    fun _unlink(vararg keys: String)= CommandExecution(UNLINK, IntegerCommandProcessor,*createArguments(keys))
+}
 interface KeyCommands {
     /**
      * ### `DEL key [key ...]`
@@ -254,73 +314,53 @@ interface KeyCommands {
 
 }
 
-enum class KeyCommand: Command{
-    DEL,COPY,DUMP,EXISTS,EXPIRE,EXPIREAT,EXPIRETIME,
-    KEYS,MOVE,PERSIST,PEXPIRE,PEXPIREAT,PEXPIRETIME,
-    PTTL,RANDOMKEY,RENAME,RENAMENX,TOUCH,TTL,TYPE,UNLINK;
+interface KeyCommandExecutor: CommandExecutor,KeyCommands,BaseKeyCommands {
 
-    private val commandString = name.replace('_',' ');
-    override val string: String = commandString
-}
+    override suspend fun del(vararg keys: String): Long = execute(_del(*keys))
 
-interface KeyCommandExecutor: CommandExecutor,KeyCommands {
+    override suspend fun copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): Long =
+        execute(_copy(source,destination,destinationDb,replace))
 
-    override suspend fun del(vararg keys: String): Long = execute(DEL, IntegerCommandProcessor,*keys.toArguments())
+    override suspend fun dump(key: String): String? = execute(_dump(key))
 
-    override suspend fun copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): Long {
-        val args =
-            createArguments(
-                source,
-                destination,
-                destinationDb?.let { KeyValueArgument("DB",it) },
-                replace?.let { KeyOnlyArgument("replace") })
-        return execute(COPY, IntegerCommandProcessor,*args)
-    }
+    override suspend fun exists(vararg keys: String): Long = execute(_exists(*keys))
 
-    override suspend fun dump(key: String): String? = execute(DUMP, BulkStringCommandProcessor,key.toArgument())
+    override suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption?): Long =
+        execute(_expire(key, seconds, expireOption))
 
-    override suspend fun exists(vararg keys: String): Long = execute(EXISTS, IntegerCommandProcessor,*keys.toArguments())
+    override suspend fun expireAt(key: String, timestamp: ULong, expireOption: ExpireOption?): Long =
+        execute(_expireAt(key, timestamp, expireOption))
 
-    override suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption?): Long {
-        val args = createArguments(key, seconds, expireOption)
-        return execute(EXPIRE, IntegerCommandProcessor,*args)
-    }
+    override suspend fun expireTime(key: String): Long = execute(_expireTime(key))
 
-    override suspend fun expireAt(key: String, timestamp: ULong, expireOption: ExpireOption?): Long {
-       return execute(EXPIREAT, IntegerCommandProcessor, *createArguments(key,timestamp,expireOption))
-    }
+    override suspend fun keys(pattern: String): List<String> =
+        execute(_keys(pattern))
 
-    override suspend fun expireTime(key: String): Long = execute(EXPIRETIME, IntegerCommandProcessor,key.toArgument())
+    override suspend fun move(key: String, db: String): Long = execute(_move(key,db))
 
-    override suspend fun keys(pattern: String): List<String> {
-        return execute(KEYS, ArrayCommandProcessor,pattern.toArgument())
-    }
-
-    override suspend fun move(key: String, db: String): Long = execute(MOVE, IntegerCommandProcessor,key.toArgument(),db.toArgument())
-
-    override suspend fun persist(key: String): Long = execute(PERSIST, IntegerCommandProcessor,key.toArgument())
+    override suspend fun persist(key: String): Long = execute(_persist(key))
 
     override suspend fun pexpire(key: String, milliseconds: ULong, expireOption: PExpireOption?): Long =
-        execute(PEXPIRE, IntegerCommandProcessor, *createArguments(key,milliseconds,expireOption))
+        execute(_pexpire(key, milliseconds, expireOption))
 
     override suspend fun pexpireat(key: String, millisecondsTimestamp: ULong, expireOption: PExpireOption?): Long =
-        execute(PEXPIREAT, IntegerCommandProcessor,*createArguments(key,millisecondsTimestamp,expireOption))
+        execute(_pexpireat(key, millisecondsTimestamp, expireOption))
 
-    override suspend fun pexpiretime(key: String): Long = execute(PEXPIRETIME, IntegerCommandProcessor,key.toArgument())
+    override suspend fun pexpiretime(key: String): Long = execute(_pexpiretime(key))
 
-    override suspend fun pttl(key: String): Long = execute(PTTL, IntegerCommandProcessor,key.toArgument())
+    override suspend fun pttl(key: String): Long = execute(_pttl(key))
 
-    override suspend fun randomKey(): String? = execute(RANDOMKEY, BulkStringCommandProcessor)
+    override suspend fun randomKey(): String? = execute(_randomKey())
 
-    override suspend fun rename(key: String, newKey: String): String = execute(RENAME, SimpleStringCommandProcessor,*createArguments(key,newKey))
+    override suspend fun rename(key: String, newKey: String): String = execute(_rename(key, newKey))
 
-    override suspend fun renamenx(key: String, newKey: String): Long = execute(RENAMENX, IntegerCommandProcessor,*createArguments(key,newKey))
+    override suspend fun renamenx(key: String, newKey: String): Long = execute(_renamenx(key, newKey))
 
-    override suspend fun touch(vararg keys: String): Long = execute(TOUCH, IntegerCommandProcessor,*createArguments(keys))
+    override suspend fun touch(vararg keys: String): Long = execute(_touch(*keys))
 
-    override suspend fun ttl(key: String): Long = execute(TTL, IntegerCommandProcessor,key.toArgument())
+    override suspend fun ttl(key: String): Long = execute(_ttl(key))
 
-    override suspend fun type(key: String): String = execute(TYPE, SimpleStringCommandProcessor,key.toArgument())
+    override suspend fun type(key: String): String = execute(_type(key))
 
-    override suspend fun unlink(vararg keys: String): Long = execute(UNLINK, IntegerCommandProcessor,*createArguments(keys))
+    override suspend fun unlink(vararg keys: String): Long = execute(_unlink(*keys))
 }

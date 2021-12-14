@@ -1,15 +1,13 @@
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
-import org.kreds.SetOption
 import org.kreds.connection.Endpoint
-import org.kreds.connection.KredsClient
-import org.kreds.to
+import org.kreds.connection.KredsClientGroup
 
 class TestClient {
 
     @Test
     fun testClient()= runBlocking {
-        val client = KredsClient.newClient(Endpoint.from("127.0.0.1:6379"))
+        val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
         try{
             println("Client id = ${client.echo("Hello redis")}")
             val pipeline = client.pipelined()
@@ -22,6 +20,9 @@ class TestClient {
             println("incrResp = ${incrResp.get()}")
         }catch (ex: KredsException){
             println("caught exception $ex")
+        }
+        finally {
+            KredsClientGroup.shutdown()
         }
     }
 }

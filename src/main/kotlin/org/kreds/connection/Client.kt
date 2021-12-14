@@ -1,17 +1,22 @@
 package org.kreds.connection
 
 import io.netty.channel.EventLoopGroup
+import io.netty.channel.nio.NioEventLoopGroup
 import org.kreds.Argument
 import org.kreds.commands.*
 import org.kreds.protocol.*
 
+
+object KredsClientGroup{
+    private val eventLoopGroup = NioEventLoopGroup()
+    fun newClient(endpoint: Endpoint): KredsClient = DefaultKredsClient(endpoint, eventLoopGroup)
+    suspend fun shutdown(){
+        eventLoopGroup.shutdownGracefully().suspendableAwait()
+    }
+}
+
 interface KredsClient: KeyCommands,StringCommands,ConnectionCommands, CommandExecutor, PipelineExecutor{
     fun pipelined(): Pipeline
-    companion object{
-        fun newClient(endpoint: Endpoint): KredsClient{
-            return DefaultKredsClient(endpoint, eventLoopGroup)
-        }
-    }
 }
 
 class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup): DefaultKConnection(endpoint,eventLoopGroup), KredsClient, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor{
