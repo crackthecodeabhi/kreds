@@ -4,7 +4,7 @@ import org.kreds.connection.KredsClient
 import org.kreds.protocol.CommandExecution
 
 
-class Response<T>(private val responseList: List<Response<*>>, private val index: Int){
+class Response<T>(private val responseList: List<Any?>, private val index: Int){
     @Suppress("UNCHECKED_CAST")
     fun get(): T {
         return responseList[index] as T
@@ -12,18 +12,21 @@ class Response<T>(private val responseList: List<Response<*>>, private val index
 }
 
 interface PipelineExecutor{
-    suspend fun execute(commands: List<CommandExecution>): List<Response<*>>
+    suspend fun executePipeline(commands: List<CommandExecution>): List<Any?>
+}
+
+interface QueuedCommand {
+    fun <T> add(commandExecution: CommandExecution): Response<T>
 }
 
 interface Pipeline: PipelineStringCommands, PipelineKeyCommands {
-    fun <T> add(commandExecution: CommandExecution): Response<T>
     suspend fun execute()
 }
 
-class PipelineImpl(private val client: KredsClient): PipelineStringCommandsExecutor, PipelineKeyCommandExecutor{
+class PipelineImpl(private val client: KredsClient): Pipeline, PipelineStringCommandsExecutor, PipelineKeyCommandExecutor{
 
     private val commands = mutableListOf<CommandExecution>()
-    private val commandResponse = mutableListOf<Response<*>>()
+    private val commandResponse = mutableListOf<Any?>()
 
     override fun <T> add(commandExecution: CommandExecution): Response<T>{
         commands.add(commandExecution)
@@ -31,6 +34,6 @@ class PipelineImpl(private val client: KredsClient): PipelineStringCommandsExecu
     }
 
     override suspend fun execute(){
-        commandResponse.addAll(client.execute(commands))
+        commandResponse.addAll(client.executePipeline(commands))
     }
 }

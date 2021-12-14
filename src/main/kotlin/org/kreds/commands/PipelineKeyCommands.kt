@@ -110,7 +110,7 @@ interface PipelineKeyCommands{
     fun unlink(vararg keys: String): Response<Long>
 }
 
-interface PipelineKeyCommandExecutor: Pipeline, PipelineKeyCommands, BaseKeyCommands {
+interface PipelineKeyCommandExecutor: QueuedCommand, PipelineKeyCommands, BaseKeyCommands {
 
     override fun del(vararg keys: String): Response<Long>  = add(_del(*keys))
 

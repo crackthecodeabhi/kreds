@@ -76,7 +76,7 @@ interface PipelineStringCommands{
 }
 
 
-interface PipelineStringCommandsExecutor: PipelineStringCommands,BaseStringCommands, Pipeline {
+interface PipelineStringCommandsExecutor: PipelineStringCommands,BaseStringCommands, QueuedCommand {
     override fun get(key: String): Response<String?> = add(_get(key))
 
     override fun set(key: String, value: String, setOption: SetOption?): Response<String?> = add(_set(key,value,setOption))

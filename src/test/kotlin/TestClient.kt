@@ -25,4 +25,20 @@ class TestClient {
             KredsClientGroup.shutdown()
         }
     }
+
+    @Test
+    fun transactionTest() = runBlocking {
+        val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
+        try{
+            val transaction = client.multi()
+            transaction.set("abhi","150")
+            val incrResp = transaction.incr("abhi")
+            transaction.del("abhi")
+            transaction.exec()
+            println("incr resp = ${incrResp.get()}")
+        }
+        finally {
+            KredsClientGroup.shutdown()
+        }
+    }
 }

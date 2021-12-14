@@ -5,10 +5,7 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
-import io.netty.handler.codec.redis.RedisBulkStringAggregator
-import io.netty.handler.codec.redis.RedisDecoder
-import io.netty.handler.codec.redis.RedisEncoder
-import io.netty.handler.codec.redis.RedisMessage
+import io.netty.handler.codec.redis.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel as KChannel
 
@@ -30,6 +27,7 @@ open class DefaultKConnection(endpoint: Endpoint, eventLoopGroup: EventLoopGroup
                     pipeline.addFirst(RedisEncoder())
                     pipeline.addFirst(responseHandler)
                     pipeline.addFirst(RedisBulkStringAggregator())
+                    pipeline.addFirst(RedisArrayAggregator())
                     pipeline.addFirst(RedisDecoder())
                 }
             })

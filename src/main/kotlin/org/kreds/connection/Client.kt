@@ -15,13 +15,15 @@ object KredsClientGroup{
     }
 }
 
-interface KredsClient: KeyCommands,StringCommands,ConnectionCommands, CommandExecutor, PipelineExecutor{
+interface KredsClient: KeyCommands,StringCommands,ConnectionCommands, CommandExecutor, PipelineExecutor, TransactionExecutor{
     fun pipelined(): Pipeline
+    fun multi(): Transaction
 }
 
 class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup): DefaultKConnection(endpoint,eventLoopGroup), KredsClient, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor{
 
     override fun pipelined(): Pipeline = PipelineImpl(this)
+    override fun multi(): Transaction = TransactionImpl(this)
 
     override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T {
         writeAndFlush(processor.encode(command,*args))
@@ -35,7 +37,7 @@ class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup): Def
         }
     }
 
-    override suspend fun execute(commands: List<CommandExecution>): List<Response<*>> {
+    override suspend fun executePipeline(commands: List<CommandExecution>): List<Any?> {
         val head = commands.dropLast(1)
         head.forEach{
             with(it){
@@ -46,12 +48,30 @@ class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup): Def
             writeAndFlush(processor.encode(command,*args))
         }
         // collect the response.
-        val responseList = mutableListOf<Response<*>>()
+        val responseList = mutableListOf<Any?>()
         repeat(commands.size){
             val cmd = commands[it]
             responseList.add(it,cmd.processor.decode(readChannel.receive()))
         }
         return responseList
+    }
+
+    override suspend fun executeTransaction(commands: List<CommandExecution>): List<Any?> {
+        val head = commands.dropLast(1)
+        head.forEach{
+            with(it){
+                write(processor.encode(command,*args))
+            }
+        }
+        with(commands.last()){
+            writeAndFlush(processor.encode(command,*args))
+        }
+
+        // Drop all the QUEUED messages
+        repeat(commands.size - 1){
+            readChannel.receive()
+        }
+        return commands.last().processor.decode(readChannel.receive())
     }
 }
 
