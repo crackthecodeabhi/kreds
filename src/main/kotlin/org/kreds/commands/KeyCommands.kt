@@ -1,0 +1,326 @@
+package org.kreds.commands
+
+import org.kreds.*
+import org.kreds.protocol.*
+import org.kreds.commands.KeyCommand.*
+
+interface KeyCommands {
+    /**
+     * ### `DEL key [key ...]`
+     * Removes the specified keys. A key is ignored if it does not exist.
+     * [Doc](https://redis.io/commands/del)
+     *
+     * @return The number of keys that were removed.
+     * @since  1.0.0.
+     */
+    suspend fun del(vararg keys: String): Long
+
+    /**
+     * ### `COPY source destination [DB destination-db] [REPLACE]`
+     * This command copies the value stored at the source key to the destination key.
+     * By default, the destination key is created in the logical database used by the connection.
+     * The DB option allows specifying an alternative logical database index for the destination key.
+     * The command returns an error when the destination key already exists.
+     * The REPLACE option removes the destination key before copying the value to it.
+     *
+     * [Doc](https://redis.io/commands/copy)
+     * @return 1 if source was copied, else 0
+     * @since 6.2.0
+     */
+    suspend fun copy(source: String, destination: String, destinationDb: String? = null, replace: Boolean? = null): Long
+
+    /**
+     * ### `DUMP key`
+     * Serialize the value stored at key in a Redis-specific format and return it to the user.
+     *
+     * [Doc](https://redis.io/commands/dump)
+     * @since 2.6.0
+     * @return If key does not exist a null is returned else serialized value
+     */
+    suspend fun dump(key: String): String?
+
+    /**
+     * ### ` EXISTS key [key ...]`
+     * Returns if key exists.
+     *
+     * [Doc](https://redis.io/commands/exists)
+     * @since 1.0.0
+     * @return 1 if the key exists else 0
+     */
+    suspend fun exists(vararg keys: String): Long
+
+    /**
+     * ### `EXPIRE key seconds [NX|XX|GT|LT]`
+     * Set a timeout on key. After the timeout has expired, the key will automatically be deleted.
+     * A key with an associated timeout is often said to be volatile in Redis terminology.
+     *
+     * [Doc](https://redis.io/commands/expire)
+     * @since 1.0.0
+     * @return 1 if the timeout was set else 0,e.g. key doesn't exist, or operation skipped due to the provided arguments.
+     */
+    suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption? = null): Long
+
+    /**
+     * ### `EXPIREAT key timestamp [NX|XX|GT|LT]`
+     *
+     * EXPIREAT has the same effect and semantic as EXPIRE, but instead of specifying the number of seconds representing
+     * the TTL (time to live), it takes an absolute Unix timestamp (seconds since January 1, 1970).
+     *
+     * A timestamp in the past will delete the key immediately.
+     *
+     * [Doc](https://redis.io/commands/expireat)
+     * @since 1.2.0
+     * @return 1 if the timeout was set else 0. e.g. key doesn't exist, or operation skipped due to the provided arguments.
+     */
+    suspend fun expireAt(key: String, timestamp: ULong, expireOption: ExpireOption? = null): Long
+
+    /**
+     * ###  EXPIRETIME key
+     *
+     * Returns the absolute Unix timestamp (since January 1, 1970) in seconds at which the given key will expire.
+     * [Doc](https://redis.io/commands/expiretime)
+     * @since 7.0.0
+     * @return Expiration Unix timestamp in seconds, or a negative value in order to signal an error
+     * The command returns -1 if the key exists but has no associated expiration time.
+     * The command returns -2 if the key does not exist.
+     */
+    suspend fun expireTime(key: String): Long
+
+    /**
+     * ###  KEYS pattern
+     *
+     * Returns all keys matching pattern.
+     *
+     * [Doc](https://redis.io/commands/keys)
+     * @since 1.0.0
+     * @return list of keys matching pattern.
+     */
+    suspend fun keys(pattern: String): List<String>
+
+    /**
+     * ###  MOVE key db
+     *
+     * Move key from the currently selected database (see SELECT) to the specified destination database.
+     * When key already exists in the destination database, or it does not exist in the source database, it does nothing.
+     * It is possible to use MOVE as a locking primitive because of this.
+     *
+     * [Doc](https://redis.io/commands/move)
+     * @since 1.0.0
+     * @return 1 if key was moved else 0
+     */
+    suspend fun move(key: String, db: String): Long
+
+    /**
+     * ###  PERSIST key
+     *
+     * Remove the existing timeout on key, turning the key from volatile (a key with an expire set)
+     * to persistent (a key that will never expire as no timeout is associated).
+     *
+     * [Doc](https://redis.io/commands/persist)
+     * @since 2.2.0
+     * @return 1 if the timeout was removed, 0 if key does not exist or does not have an associated timeout.
+     */
+    suspend fun persist(key: String):Long
+
+    /**
+     * ###  `PEXPIRE key milliseconds [NX|XX|GT|LT]`
+     *
+     * This command works exactly like EXPIRE but the time to live of the key is specified in milliseconds instead of seconds.
+     *
+     * [Doc](https://redis.io/commands/pexpire)
+     * @since 2.6.0
+     * @return 1 if the timeout was set.
+     * 0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
+     */
+    suspend fun pexpire(key: String, milliseconds: ULong,expireOption: PExpireOption? = null): Long
+
+    /**
+     * ### `PEXPIREAT key milliseconds-timestamp [NX|XX|GT|LT] `
+     *
+     * PEXPIREAT has the same effect and semantic as EXPIREAT,
+     * but the Unix time at which the key will expire is specified in milliseconds instead of seconds.
+     *
+     * [Doc](https://redis.io/commands/pexpireat)
+     * @since 2.6.0
+     * @return 1 if the timeout was set. 0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
+     */
+    suspend fun pexpireat(key:String, millisecondsTimestamp: ULong, expireOption: PExpireOption? = null /* = org.kreds.ExpireOption? */): Long
+
+    /**
+     * ###  PEXPIRETIME key
+     *
+     * PEXPIRETIME has the same semantic as EXPIRETIME, but returns the absolute Unix expiration timestamp in milliseconds instead of seconds.
+     *
+     * [Doc](https://redis.io/commands/pexpiretime)
+     * @since 7.0.0
+     * @return Expiration Unix timestamp in milliseconds, or a negative value in order to signal an error (see the description below). * The command returns -1 if the key exists but has no associated expiration time. * The command returns -2 if the key does not exist.
+     */
+    suspend fun pexpiretime(key: String): Long
+
+    /**
+     * ###  PTTL key
+     *
+     * Like TTL this command returns the remaining time to live of a key that has an expire set, with the sole difference that TTL returns the amount of remaining time in seconds while PTTL returns it in milliseconds.
+     * In Redis 2.6 or older the command returns -1 if the key does not exist or if the key exist but has no associated expire.
+     * Starting with Redis 2.8 the return value in case of error changed:
+     * The command returns -2 if the key does not exist.
+     * The command returns -1 if the key exists but has no associated expire.
+     *
+     * [Doc](https://redis.io/commands/pttl)
+     * @since 2.6.0
+     * @return TTL in milliseconds, or a negative value in order to signal an error (see the description above).
+     */
+    suspend fun pttl(key: String): Long
+
+
+    /**
+     * ### RANDOMKEY
+     *
+     * Return a random key from the currently selected database.
+     *
+     * [Doc](https://redis.io/commands/randomkey)
+     * @since 1.0.0
+     * @return the random key, or null when the database is empty.
+     */
+    suspend fun randomKey(): String?
+
+    /**
+     * ##  RENAME key newkey
+     *
+     * Renames key to newkey.
+     *
+     * [Doc](https://redis.io/commands/rename)
+     * @since 1.0.0
+     * @return OK
+     */
+    suspend fun rename(key: String, newKey: String): String
+
+    /**
+     * ###  RENAMENX key newkey
+     *
+     * Renames key to newkey if newkey does not yet exist. It returns an error when key does not exist.
+     *
+     * [Doc](https://redis.io/commands/renamenx)
+     * @since 1.0.0
+     * @return 1 if key was renamed to newkey.
+     * 0 if newkey already exists.
+     */
+    suspend fun renamenx(key: String, newKey: String): Long
+
+    /**
+     * ### ` TOUCH key [key ...] `
+     *
+     * Alters the last access time of a key(s). A key is ignored if it does not exist.
+     *
+     * [Doc](https://redis.io/commands/touch)
+     * @since 3.2.1
+     * @return The number of keys that were touched.
+     */
+    suspend fun touch(vararg keys: String): Long
+
+    /**
+     * ### TTL key
+     *
+     * Returns the remaining time to live of a key that has a timeout.
+     *
+     * [Doc](https://redis.io/commands/ttl)
+     * @since 1.0.0
+     * @return TTL in seconds, or a negative value in order to signal an error (see the description above).
+     */
+    suspend fun ttl(key: String): Long
+
+    /**
+     * ###  TYPE key
+     *
+     * Returns the string representation of the type of the value stored at key.
+     * The different types that can be returned are: string, list, set, zset, hash and stream.
+     *
+     * [Doc](https://redis.io/commands/type)
+     * @since 1.0.0
+     * @return type of key, or none when key does not exist.
+     */
+    suspend fun type(key: String): String
+
+    /**
+     * ### ` UNLINK key [key ...] `
+     *
+     * This command is very similar to DEL: it removes the specified keys. Just like DEL a key is ignored if it does not exist.
+     *
+     * [Doc](https://redis.io/commands/unlink)
+     * @since 4.0.0
+     * @return The number of keys that were unlinked.
+     */
+    suspend fun unlink(vararg keys: String): Long
+
+}
+
+enum class KeyCommand: Command{
+    DEL,COPY,DUMP,EXISTS,EXPIRE,EXPIREAT,EXPIRETIME,
+    KEYS,MOVE,PERSIST,PEXPIRE,PEXPIREAT,PEXPIRETIME,
+    PTTL,RANDOMKEY,RENAME,RENAMENX,TOUCH,TTL,TYPE,UNLINK;
+
+    private val commandString = name.replace('_',' ');
+    override val string: String = commandString
+}
+
+interface KeyCommandExecutor: CommandExecutor,KeyCommands {
+
+    override suspend fun del(vararg keys: String): Long = execute(DEL, IntegerCommandProcessor,*keys.toArguments())
+
+    override suspend fun copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): Long {
+        val args =
+            createArguments(
+                source,
+                destination,
+                destinationDb?.let { KeyValueArgument("DB",it) },
+                replace?.let { KeyOnlyArgument("replace") })
+        return execute(COPY, IntegerCommandProcessor,*args)
+    }
+
+    override suspend fun dump(key: String): String? = execute(DUMP, BulkStringCommandProcessor,key.toArgument())
+
+    override suspend fun exists(vararg keys: String): Long = execute(EXISTS, IntegerCommandProcessor,*keys.toArguments())
+
+    override suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption?): Long {
+        val args = createArguments(key, seconds, expireOption)
+        return execute(EXPIRE, IntegerCommandProcessor,*args)
+    }
+
+    override suspend fun expireAt(key: String, timestamp: ULong, expireOption: ExpireOption?): Long {
+       return execute(EXPIREAT, IntegerCommandProcessor, *createArguments(key,timestamp,expireOption))
+    }
+
+    override suspend fun expireTime(key: String): Long = execute(EXPIRETIME, IntegerCommandProcessor,key.toArgument())
+
+    override suspend fun keys(pattern: String): List<String> {
+        return execute(KEYS, ArrayCommandProcessor,pattern.toArgument())
+    }
+
+    override suspend fun move(key: String, db: String): Long = execute(MOVE, IntegerCommandProcessor,key.toArgument(),db.toArgument())
+
+    override suspend fun persist(key: String): Long = execute(PERSIST, IntegerCommandProcessor,key.toArgument())
+
+    override suspend fun pexpire(key: String, milliseconds: ULong, expireOption: PExpireOption?): Long =
+        execute(PEXPIRE, IntegerCommandProcessor, *createArguments(key,milliseconds,expireOption))
+
+    override suspend fun pexpireat(key: String, millisecondsTimestamp: ULong, expireOption: PExpireOption?): Long =
+        execute(PEXPIREAT, IntegerCommandProcessor,*createArguments(key,millisecondsTimestamp,expireOption))
+
+    override suspend fun pexpiretime(key: String): Long = execute(PEXPIRETIME, IntegerCommandProcessor,key.toArgument())
+
+    override suspend fun pttl(key: String): Long = execute(PTTL, IntegerCommandProcessor,key.toArgument())
+
+    override suspend fun randomKey(): String? = execute(RANDOMKEY, BulkStringCommandProcessor)
+
+    override suspend fun rename(key: String, newKey: String): String = execute(RENAME, SimpleStringCommandProcessor,*createArguments(key,newKey))
+
+    override suspend fun renamenx(key: String, newKey: String): Long = execute(RENAMENX, IntegerCommandProcessor,*createArguments(key,newKey))
+
+    override suspend fun touch(vararg keys: String): Long = execute(TOUCH, IntegerCommandProcessor,*createArguments(keys))
+
+    override suspend fun ttl(key: String): Long = execute(TTL, IntegerCommandProcessor,key.toArgument())
+
+    override suspend fun type(key: String): String = execute(TYPE, SimpleStringCommandProcessor,key.toArgument())
+
+    override suspend fun unlink(vararg keys: String): Long = execute(UNLINK, IntegerCommandProcessor,*createArguments(keys))
+}
