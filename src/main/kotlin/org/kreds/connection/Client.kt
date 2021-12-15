@@ -2,6 +2,8 @@ package org.kreds.connection
 
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.nio.NioEventLoopGroup
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.kreds.Argument
 import org.kreds.commands.*
 import org.kreds.protocol.*
@@ -25,15 +27,21 @@ interface KredsClient: KeyCommands,StringCommands,ConnectionCommands,PublisherCo
 
 abstract class AbstractKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):DefaultKConnection(endpoint,eventLoopGroup), CommandExecutor{
 
+    protected val mutex = Mutex()
+
     override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T {
-        writeAndFlush(processor.encode(command,*args))
-        return processor.decode(readChannel.receive())
+        return mutex.withLock {
+            writeAndFlush(processor.encode(command,*args))
+            processor.decode(readChannel.receive())
+        }
     }
 
     override suspend fun <T> execute(commandExecution: CommandExecution): T {
-        with(commandExecution){
-            writeAndFlush(processor.encode(command,*args))
-            return processor.decode(readChannel.receive())
+        return mutex.withLock {
+            with(commandExecution){
+                writeAndFlush(processor.encode(command,*args))
+                processor.decode(readChannel.receive())
+            }
         }
     }
 }
@@ -42,7 +50,7 @@ class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):Abst
     override fun pipelined(): Pipeline = PipelineImpl(this)
     override fun multi(): Transaction = TransactionImpl(this)
 
-    override suspend fun executePipeline(commands: List<CommandExecution>): List<Any?> {
+    override suspend fun executePipeline(commands: List<CommandExecution>): List<Any?>  = mutex.withLock {
         val head = commands.dropLast(1)
         head.forEach{
             with(it){
@@ -58,10 +66,10 @@ class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):Abst
             val cmd = commands[it]
             responseList.add(it,cmd.processor.decode(readChannel.receive()))
         }
-        return responseList
+        responseList
     }
 
-    override suspend fun executeTransaction(commands: List<CommandExecution>): List<Any?> {
+    override suspend fun executeTransaction(commands: List<CommandExecution>): List<Any?> = mutex.withLock {
         val head = commands.dropLast(1)
         head.forEach{
             with(it){
@@ -76,7 +84,7 @@ class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):Abst
         repeat(commands.size - 1){
             readChannel.receive()
         }
-        return commands.last().processor.decode(readChannel.receive())
+        commands.last().processor.decode(readChannel.receive())
     }
 }
 

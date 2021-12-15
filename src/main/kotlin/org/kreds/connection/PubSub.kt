@@ -3,6 +3,7 @@ package org.kreds.connection
 import KredsException
 import io.netty.channel.EventLoopGroup
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.withLock
 import org.kreds.KredsContext
 import org.kreds.commands.ConnectionCommand
 import org.kreds.connection.PubSubCommand.*
@@ -214,25 +215,25 @@ class DefaultKredsSubscriberClient(endpoint: Endpoint,
         }
     }
 
-    override suspend fun subscribe(vararg channels: String) {
+    override suspend fun subscribe(vararg channels: String) = mutex.withLock {
         connect()
         writeAndFlush(ArrayCommandProcessor.encode(SUBSCRIBE,*createArguments(*channels))) // do not wait for reply.
         subCoroutineJob = subCoroutineJob ?: startSubscriptionCoroutine()
     }
 
-    override suspend fun unsubscribe(vararg channels: String) {
+    override suspend fun unsubscribe(vararg channels: String) = mutex.withLock {
         if(isConnected()){
             writeAndFlush(ArrayCommandProcessor.encode(UNSUBSCRIBE,*createArguments(*channels)))
         }
     }
 
-    override suspend fun pSubscribe(vararg patterns: String) {
+    override suspend fun pSubscribe(vararg patterns: String) = mutex.withLock {
         connect()
         writeAndFlush(ArrayCommandProcessor.encode(PSUBSCRIBE,*createArguments(*patterns))) //do not wait for reply.
         subCoroutineJob = subCoroutineJob ?: startSubscriptionCoroutine()
     }
 
-    override suspend fun pUnsubscribe(vararg patterns: String) {
+    override suspend fun pUnsubscribe(vararg patterns: String) = mutex.withLock {
         if(!isConnected()){
             writeAndFlush(ArrayCommandProcessor.encode(PUNSUBSCRIBE,*createArguments(*patterns)))
         }
@@ -247,40 +248,43 @@ class DefaultKredsSubscriberClient(endpoint: Endpoint,
     override suspend fun quit(): String =
         execute(ConnectionCommand.QUIT, SimpleStringCommandProcessor)
 
+    private suspend inline fun dispatchPubSubEvent(crossinline action: () -> Unit){
+        withContext(Dispatchers.Default){
+            launch { action() }
+        }
+    }
+
     private suspend fun processPubSubReply(reply: List<Any?>){
         // Each subscription message has 3 elements, except pmessage, which has 4
         if(reply.isEmpty() || (reply.size !in 3 .. 4))
-            kredsSubscriber.onException(KredsPubSubException("Received invalid subscription message."))
+            dispatchPubSubEvent {
+                kredsSubscriber.onException(KredsPubSubException("Received invalid subscription message."))
+            }
         val kind = reply[0] as String
         val channelOrPattern = reply[1] as String
         val messageOrChannel : () -> String = { reply[2] as String }
         val subscribedChannels: () -> Long = { reply[2] as Long }
         val pmessage: () -> String = { reply[3] as String }
-        val exec: () -> Unit = when(kind){
-            "subscribe" -> {
-                { kredsSubscriber.onSubscribe(channelOrPattern,subscribedChannels()) }
-            }
+        when(kind){
+            "subscribe" -> dispatchPubSubEvent{ kredsSubscriber.onSubscribe(channelOrPattern,subscribedChannels()) }
+
             "unsubscribe" -> {
                 cScope.cancel()
-                fun() { kredsSubscriber.onUnsubscribe(channelOrPattern,subscribedChannels()) }
+                dispatchPubSubEvent { kredsSubscriber.onUnsubscribe(channelOrPattern,subscribedChannels()) }
             }
-            "psubscribe" -> {
-                { kredsSubscriber.onPSubscribe(channelOrPattern,subscribedChannels()) }
-            }
+
+            "psubscribe" -> dispatchPubSubEvent{ kredsSubscriber.onPSubscribe(channelOrPattern,subscribedChannels()) }
+
             "punsubscribe" -> {
                 cScope.cancel()
-                fun() { kredsSubscriber.onPUnsubscribe(channelOrPattern,subscribedChannels()) }
+                dispatchPubSubEvent { kredsSubscriber.onPUnsubscribe(channelOrPattern,subscribedChannels()) }
             }
-            "message" -> {
-                { kredsSubscriber.onMessage(channelOrPattern,messageOrChannel()) }
-            }
-            "pmessage" -> {
-                { kredsSubscriber.onPMessage(channelOrPattern,messageOrChannel(),pmessage()) }
-            }
-            else -> {
-                { kredsSubscriber.onException(KredsPubSubException("Unknown pubsub message kind $kind")) }
-            }
+
+            "message" -> dispatchPubSubEvent {  kredsSubscriber.onMessage(channelOrPattern,messageOrChannel()) }
+
+            "pmessage" -> dispatchPubSubEvent { kredsSubscriber.onPMessage(channelOrPattern,messageOrChannel(),pmessage()) }
+
+            else -> dispatchPubSubEvent { kredsSubscriber.onException(KredsPubSubException("Unknown pubsub message kind $kind")) }
         }
-        withContext(Dispatchers.Default){ exec() }
     }
 }

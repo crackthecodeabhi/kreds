@@ -83,4 +83,17 @@ class TestClient {
             }
         }
     }
+
+    @Test
+    fun failInterleavedRequests() : Unit = runBlocking {
+        val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
+        launch(Kreds) {
+            delay(1000)
+            println(client.set("num","159"))
+        }
+        launch(Kreds) {
+            delay(1000)
+            println(client.incr("num"))
+        }
+    }
 }
