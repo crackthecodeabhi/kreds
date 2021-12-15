@@ -1,6 +1,7 @@
 package org.kreds.protocol
 
 import org.kreds.commands.*
+import org.kreds.connection.DefaultKredsClient
 import org.kreds.connection.KredsClient
 import org.kreds.protocol.TransactionCommand.*
 
@@ -19,7 +20,7 @@ interface Transaction: PipelineKeyCommands,PipelineStringCommands{
     suspend fun exec(): List<Any?>
 }
 
-class TransactionImpl(private val client: KredsClient): Transaction,PipelineStringCommandsExecutor,PipelineKeyCommandExecutor{
+class TransactionImpl(private val client: DefaultKredsClient): Transaction,PipelineStringCommandsExecutor,PipelineKeyCommandExecutor{
 
     private val commands = mutableListOf(CommandExecution(MULTI, SimpleStringCommandProcessor))
     private val commandResponse = mutableListOf<Any?>()

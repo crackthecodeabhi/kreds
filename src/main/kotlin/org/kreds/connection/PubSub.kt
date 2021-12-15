@@ -189,7 +189,7 @@ interface SubscriberCommands{
     suspend fun unsubscribe(vararg channels: String)
 }
 
-interface KredsSubscriberClient: SubscriberCommands, CommandExecutor {
+interface KredsSubscriberClient: SubscriberCommands{
 
 }
 

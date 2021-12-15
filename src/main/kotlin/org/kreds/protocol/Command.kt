@@ -37,6 +37,7 @@ class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>)
     }
 
     @Throws(KredsRedisDataException::class)
+    @Suppress("UNCHECKED_CAST")
     override fun <T> decode(message:RedisMessage): T {
         if(message is ErrorRedisMessage) throw KredsRedisDataException(message.content())
         val handler = outputTypeHandlers.first { it.canHandle(message) }
@@ -92,10 +93,10 @@ object ArrayHandler: MessageHandler<List<Any?>>{
         else {
             msg.children().map {
                 when(true){
-                    SimpleStringHandler.canHandle(it) -> SimpleStringHandler.doHandle(it) as Any
-                    IntegerHandler.canHandle(it) -> IntegerHandler.doHandle(it) as Any
+                    SimpleStringHandler.canHandle(it) -> SimpleStringHandler.doHandle(it)
+                    IntegerHandler.canHandle(it) -> IntegerHandler.doHandle(it)
                     BulkStringHandler.canHandle(it) -> BulkStringHandler.doHandle(it) as Any
-                    else -> throw KredsRedisDataException("Unexpected")
+                    else -> throw KredsRedisDataException("Received unexpected data type from redis server.")
                 }
             }
         }

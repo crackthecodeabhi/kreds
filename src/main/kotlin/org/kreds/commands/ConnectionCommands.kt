@@ -193,7 +193,7 @@ interface ConnectionCommands{
      * @since 1.0.0
      * @return string reply
      */
-    suspend fun ping(message: String?): String
+    suspend fun ping(message: String? = null): String
 
     /**
      * ### QUIT
