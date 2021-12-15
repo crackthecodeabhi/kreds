@@ -83,10 +83,10 @@ object BulkStringHandler: MessageHandler<String?>{
     }
 }
 
-object ArrayHandler: MessageHandler<List<Any>>{
+object ArrayHandler: MessageHandler<List<Any?>>{
     override fun canHandle(message: RedisMessage): Boolean = message is ArrayRedisMessage
 
-    override fun doHandle(message: RedisMessage): List<Any> {
+    override fun doHandle(message: RedisMessage): List<Any?> {
         val msg = message as ArrayRedisMessage
         return if(msg.children().isEmpty()) emptyList()
         else {

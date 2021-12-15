@@ -9,21 +9,21 @@ import org.kreds.protocol.*
 
 object KredsClientGroup{
     private val eventLoopGroup = NioEventLoopGroup()
-    fun newClient(endpoint: Endpoint): KredsClient = DefaultKredsClient(endpoint, eventLoopGroup)
+    fun newClient(endpoint: Endpoint): KredsClient =
+        DefaultKredsClient(endpoint, eventLoopGroup)
+    fun newSubscriberClient(endpoint: Endpoint, handler: KredsSubscriber): KredsSubscriberClient =
+        DefaultKredsSubscriberClient(endpoint, eventLoopGroup, handler)
     suspend fun shutdown(){
         eventLoopGroup.shutdownGracefully().suspendableAwait()
     }
 }
 
-interface KredsClient: KeyCommands,StringCommands,ConnectionCommands, CommandExecutor, PipelineExecutor, TransactionExecutor{
+interface KredsClient: KeyCommands,StringCommands,ConnectionCommands,PublisherCommands, CommandExecutor, PipelineExecutor, TransactionExecutor{
     fun pipelined(): Pipeline
     fun multi(): Transaction
 }
 
-class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup): DefaultKConnection(endpoint,eventLoopGroup), KredsClient, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor{
-
-    override fun pipelined(): Pipeline = PipelineImpl(this)
-    override fun multi(): Transaction = TransactionImpl(this)
+abstract class AbstractKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):DefaultKConnection(endpoint,eventLoopGroup), CommandExecutor{
 
     override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T {
         writeAndFlush(processor.encode(command,*args))
@@ -36,6 +36,11 @@ class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup): Def
             return processor.decode(readChannel.receive())
         }
     }
+}
+class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):AbstractKredsClient(endpoint, eventLoopGroup),KredsClient, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor{
+
+    override fun pipelined(): Pipeline = PipelineImpl(this)
+    override fun multi(): Transaction = TransactionImpl(this)
 
     override suspend fun executePipeline(commands: List<CommandExecution>): List<Any?> {
         val head = commands.dropLast(1)

@@ -7,11 +7,12 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.redis.*
 import kotlinx.coroutines.*
+import org.kreds.KredsContext
 import kotlinx.coroutines.channels.Channel as KChannel
 
 open class DefaultKConnection(endpoint: Endpoint, eventLoopGroup: EventLoopGroup): KConnection {
     private var channel: SocketChannel? = null
-    private val cScope = CoroutineScope(Dispatchers.Default)
+    private val cScope = CoroutineScope(KredsContext.context)
     private val bootstrap: Bootstrap
 
     override val readChannel = KChannel<RedisMessage>()
@@ -26,8 +27,8 @@ open class DefaultKConnection(endpoint: Endpoint, eventLoopGroup: EventLoopGroup
                     val pipeline = ch.pipeline()
                     pipeline.addFirst(RedisEncoder())
                     pipeline.addFirst(responseHandler)
-                    pipeline.addFirst(RedisBulkStringAggregator())
                     pipeline.addFirst(RedisArrayAggregator())
+                    pipeline.addFirst(RedisBulkStringAggregator())
                     pipeline.addFirst(RedisDecoder())
                 }
             })
