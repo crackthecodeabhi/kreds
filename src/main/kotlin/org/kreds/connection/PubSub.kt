@@ -269,15 +269,15 @@ class DefaultKredsSubscriberClient(endpoint: Endpoint,
             "subscribe" -> dispatchPubSubEvent{ kredsSubscriber.onSubscribe(channelOrPattern,subscribedChannels()) }
 
             "unsubscribe" -> {
-                cScope.cancel()
                 dispatchPubSubEvent { kredsSubscriber.onUnsubscribe(channelOrPattern,subscribedChannels()) }
+                cScope.cancel()
             }
 
             "psubscribe" -> dispatchPubSubEvent{ kredsSubscriber.onPSubscribe(channelOrPattern,subscribedChannels()) }
 
             "punsubscribe" -> {
-                cScope.cancel()
                 dispatchPubSubEvent { kredsSubscriber.onPUnsubscribe(channelOrPattern,subscribedChannels()) }
+                cScope.cancel()
             }
 
             "message" -> dispatchPubSubEvent {  kredsSubscriber.onMessage(channelOrPattern,messageOrChannel()) }

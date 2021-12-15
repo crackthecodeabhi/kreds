@@ -71,7 +71,7 @@ class TestClient {
         val subscriber = KredsClientGroup.newSubscriberClient(Endpoint.from("127.0.0.1:6379"),handler)
         val publisher = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
         runBlocking {
-            launch(Kreds) {
+            val job = launch(Kreds) {
                 subscriber.subscribe("hello")
                 launch(Kreds) {
                     delay(10000)
@@ -81,6 +81,8 @@ class TestClient {
                     publisher.publish("hello","from IDE")
                 }
             }
+            job.join()
+            delay(1000)
         }
     }
 
