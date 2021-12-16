@@ -6,6 +6,7 @@ import org.kreds.Kreds
 import org.kreds.connection.AbstractKredsSubscriber
 import org.kreds.connection.Endpoint
 import org.kreds.connection.KredsClientGroup
+import org.kreds.toFV
 
 class TestClient {
 
@@ -14,6 +15,7 @@ class TestClient {
         launch(Kreds) {
             val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
             try {
+                client.hset("abhi","field" toFV "value1")
                 println(client.clientInfo())
                 println("Client id = ${client.clientGetName()}")
                 val pipeline = client.pipelined()

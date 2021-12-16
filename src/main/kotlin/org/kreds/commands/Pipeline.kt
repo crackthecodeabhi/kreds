@@ -1,8 +1,6 @@
 package org.kreds.commands
 
-import org.kreds.connection.AbstractKredsClient
 import org.kreds.connection.DefaultKredsClient
-import org.kreds.connection.KredsClient
 import org.kreds.protocol.CommandExecution
 
 
@@ -21,11 +19,11 @@ interface QueuedCommand {
     fun <T> add(commandExecution: CommandExecution): Response<T>
 }
 
-interface Pipeline: PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands {
+interface Pipeline: PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands {
     suspend fun execute()
 }
 
-class PipelineImpl(private val client: DefaultKredsClient): Pipeline, PipelineStringCommandsExecutor, PipelineKeyCommandExecutor,PipelineHashCommandExecutor{
+class PipelineImpl(private val client: DefaultKredsClient): Pipeline, PipelineStringCommandsExecutor, PipelineKeyCommandExecutor,PipelineHashCommandExecutor, PipelineSetCommandExecutor{
 
     private val commands = mutableListOf<CommandExecution>()
     private val commandResponse = mutableListOf<Any?>()
