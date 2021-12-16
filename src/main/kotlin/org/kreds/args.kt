@@ -6,8 +6,10 @@ import kotlin.IllegalArgumentException
 import kotlin.jvm.Throws
 
 data class KeyValuePair(val key: String, val value: String)
-infix fun String.to(other: String) = KeyValuePair(this,other)
+infix fun String.toKV(other: String) = KeyValuePair(this,other)
 
+data class FieldValuePair(val field: String,val value: String)
+infix fun String.toFV(other: String) = FieldValuePair(this,other)
 
 sealed interface Argument
 
@@ -53,6 +55,10 @@ fun createArguments(vararg args: Any?): Array<out Argument>{
             is BigDecimal -> argList.add(arg.toArgument())
             is KeyValuePair -> {
                 argList.add(arg.key.toArgument())
+                argList.add(arg.value.toArgument())
+            }
+            is FieldValuePair -> {
+                argList.add(arg.field.toArgument())
                 argList.add(arg.value.toArgument())
             }
             is Argument -> argList.add(arg)

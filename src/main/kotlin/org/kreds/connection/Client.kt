@@ -8,6 +8,7 @@ import org.kreds.Argument
 import org.kreds.commands.*
 import org.kreds.protocol.*
 
+//TODO: INCRBY can be negative also! check that in api, should accept long, not ulong
 
 object KredsClientGroup{
     private val eventLoopGroup = NioEventLoopGroup()
@@ -20,7 +21,7 @@ object KredsClientGroup{
     }
 }
 
-interface KredsClient: KeyCommands,StringCommands,ConnectionCommands,PublisherCommands{
+interface KredsClient: KeyCommands,StringCommands,ConnectionCommands,PublisherCommands, HashCommands{
     fun pipelined(): Pipeline
     fun multi(): Transaction
 }
@@ -45,7 +46,7 @@ abstract class AbstractKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopG
         }
     }
 }
-class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):AbstractKredsClient(endpoint, eventLoopGroup),KredsClient,PipelineExecutor, TransactionExecutor, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor{
+class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):AbstractKredsClient(endpoint, eventLoopGroup),KredsClient,PipelineExecutor, TransactionExecutor, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor{
 
     override fun pipelined(): Pipeline = PipelineImpl(this)
     override fun multi(): Transaction = TransactionImpl(this)
