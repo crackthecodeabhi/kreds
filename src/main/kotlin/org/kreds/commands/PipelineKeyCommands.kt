@@ -108,6 +108,11 @@ interface PipelineKeyCommands{
      * @see [KeyCommands.unlink]
      */
     fun unlink(vararg keys: String): Response<Long>
+
+    /**
+     * @see [KeyCommands.scan]
+     */
+    fun scan(cursor: Long, matchPattern: String? = null, count: Long? = null, type: String? = null): Response<ScanResult>
 }
 
 interface PipelineKeyCommandExecutor: QueuedCommand, PipelineKeyCommands, BaseKeyCommands {
@@ -171,4 +176,7 @@ interface PipelineKeyCommandExecutor: QueuedCommand, PipelineKeyCommands, BaseKe
 
     override fun unlink(vararg keys: String): Response<Long> =
         add(_unlink(*keys))
+
+    override fun scan(cursor: Long, matchPattern: String?, count: Long?, type: String?): Response<ScanResult> =
+        add(_scan(cursor, matchPattern, count, type))
 }

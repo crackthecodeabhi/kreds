@@ -15,6 +15,7 @@ class TestClient {
         launch(Kreds) {
             val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
             try {
+                client.hscan("abc",0)
                 client.hset("abhi","field" toFV "value1")
                 println(client.clientInfo())
                 println("Client id = ${client.clientGetName()}")

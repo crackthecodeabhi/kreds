@@ -1,11 +1,8 @@
 package org.kreds.commands
 
-import org.kreds.FieldValuePair
-import org.kreds.KeyOnlyArgument
+import org.kreds.*
 import org.kreds.commands.HashCommand.*
-import org.kreds.createArguments
 import org.kreds.protocol.*
-import org.kreds.toArgument
 
 enum class HashCommand: Command {
     HDEL, HEXISTS, HGET, HGETALL, HINCRBY, HINCRBYFLOAT, HKEYS, HLEN, HMGET, HMSET, HRANDFIELD, HSCAN,
@@ -60,6 +57,13 @@ interface BaseHashCommands{
          CommandExecution(HSTRLEN, IntegerCommandProcessor,key.toArgument(),field.toArgument())
 
      fun _hvals(key: String)= CommandExecution(HVALS, ArrayCommandProcessor,key.toArgument())
+
+     fun _hscan(key: String, cursor: Long, matchPattern: String?, count: Long?) =
+         CommandExecution(HSCAN,HScanResultProcessor,*createArguments(
+             cursor,
+             matchPattern?.let { KeyValueArgument("MATCH",it) },
+             count?.let { KeyValueArgument("COUNT",it.toString(10)) },
+         ))
 }
 
 //TODO: HSCAN
@@ -251,6 +255,14 @@ interface HashCommands {
      */
     suspend fun hvals(key: String): List<String>
 
+    /**
+     * ### ` HSCAN key cursor [MATCH pattern] [COUNT count] `
+     *
+     * [Doc](https://redis.io/commands/hscan)
+     * @since 2.8.0
+     * @return [HScanResult]
+     */
+    suspend fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): HScanResult
 }
 
 interface HashCommandsExecutor: HashCommands,BaseHashCommands, CommandExecutor{
@@ -301,4 +313,7 @@ interface HashCommandsExecutor: HashCommands,BaseHashCommands, CommandExecutor{
 
     override suspend fun hvals(key: String): List<String> =
         execute(_hvals(key))
+
+    override suspend fun hscan(key: String, cursor: Long, matchPattern: String?, count: Long?): HScanResult =
+        execute(_hscan(key, cursor, matchPattern, count))
 }

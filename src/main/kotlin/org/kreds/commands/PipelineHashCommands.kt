@@ -79,6 +79,11 @@ interface PipelineHashCommands{
      * @see [HashCommands.hvals]
      */
      fun hvals(key: String): Response<List<String>>
+
+    /**
+     * @see  [HashCommands.hscan]
+     */
+    fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): Response<HScanResult>
 }
 
 interface PipelineHashCommandExecutor: QueuedCommand, PipelineHashCommands, BaseHashCommands {
@@ -130,4 +135,7 @@ interface PipelineHashCommandExecutor: QueuedCommand, PipelineHashCommands, Base
 
     override fun hvals(key: String): Response<List<String>> =
         add(_hvals(key))
+
+    override fun hscan(key: String, cursor: Long, matchPattern: String?, count: Long?): Response<HScanResult> =
+        add(_hscan(key, cursor, matchPattern, count))
 }

@@ -27,7 +27,7 @@ interface CommandExecutor {
     suspend fun <T> execute(commandExecution: CommandExecution): T
 }
 
-class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>): ICommandProcessor {
+open class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>): ICommandProcessor {
 
     override fun encode(command: Command,vararg args: Argument): RedisMessage {
         if(args.isEmpty()) return ArrayRedisMessage(listOf(FullBulkStringRedisMessage(command.string.toByteBuf())))

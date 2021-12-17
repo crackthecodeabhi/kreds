@@ -36,6 +36,8 @@ interface PipelineSetCommands {
     fun sunion(key: String, vararg keys: String): Response<List<String>>
 
     fun sunionstore(destination: String, key: String, vararg keys: String): Response<Long>
+
+    fun sscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): Response<SScanResult>
 }
 
 interface PipelineSetCommandExecutor: BaseSetCommands,PipelineSetCommands, QueuedCommand{
@@ -92,4 +94,7 @@ interface PipelineSetCommandExecutor: BaseSetCommands,PipelineSetCommands, Queue
 
     override fun sunionstore(destination: String, key: String, vararg keys: String): Response<Long> =
         add(_sunionstore(destination, key, *keys))
+
+    override fun sscan(key: String, cursor: Long, matchPattern: String?, count: Long?): Response<SScanResult> =
+        add(_sscan(key, cursor, matchPattern, count))
 }

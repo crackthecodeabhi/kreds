@@ -81,6 +81,14 @@ interface BaseSetCommands {
 
     fun _sunionstore(destination: String, key: String, vararg keys: String) =
         CommandExecution(SUNIONSTORE, IntegerCommandProcessor,*createArguments(destination,key,*keys))
+
+    fun _sscan(key: String, cursor: Long, matchPattern: String?, count: Long?) =
+        CommandExecution(
+            KeyCommand.SCAN,SScanResultProcessor,*createArguments(
+            cursor,
+            matchPattern?.let { KeyValueArgument("MATCH",it) },
+            count?.let { KeyValueArgument("COUNT",it.toString(10)) }
+        ))
 }
 
 //TODO: SSCAN
@@ -299,6 +307,14 @@ interface SetCommands {
      */
     suspend fun sunionstore(destination: String, key: String, vararg keys: String): Long
 
+    /**
+     * ### ` SSCAN key cursor [MATCH pattern] [COUNT count]`
+     *
+     * [Doc](https://redis.io/commands/sscan)
+     * @since 2.8.0
+     * @return [SScanResult]
+     */
+    suspend fun sscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): SScanResult
 }
 
 interface SetCommandExecutor: BaseSetCommands,SetCommands, CommandExecutor {

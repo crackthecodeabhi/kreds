@@ -20,3 +20,5 @@ fun Int.toArgument() = StringArgument(this.toString(10))
 fun BigDecimal.toArgument() = StringArgument(this.toEngineeringString())
 
 fun Array<out String>.toArguments(): Array<out StringArgument> = this.map(String::toArgument).toTypedArray()
+
+data class FieldValue<out A, out B>(val field: A,val value: B)

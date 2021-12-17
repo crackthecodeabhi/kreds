@@ -7,7 +7,8 @@ import org.kreds.commands.KeyCommand.*
 enum class KeyCommand: Command{
     DEL,COPY,DUMP,EXISTS,EXPIRE,EXPIREAT,EXPIRETIME,
     KEYS,MOVE,PERSIST,PEXPIRE,PEXPIREAT,PEXPIRETIME,
-    PTTL,RANDOMKEY,RENAME,RENAMENX,TOUCH,TTL,TYPE,UNLINK;
+    PTTL,RANDOMKEY,RENAME,RENAMENX,TOUCH,TTL,TYPE,UNLINK,
+    SCAN;
 
     private val commandString = name.replace('_',' ');
     override val string: String = commandString
@@ -63,6 +64,14 @@ interface BaseKeyCommands{
     fun _type(key: String) = CommandExecution(TYPE, SimpleStringCommandProcessor,key.toArgument())
 
     fun _unlink(vararg keys: String)= CommandExecution(UNLINK, IntegerCommandProcessor,*createArguments(keys))
+
+    fun _scan(cursor: Long, matchPattern: String?, count: Long?, type: String?) =
+        CommandExecution(SCAN,ScanResultProcessor,*createArguments(
+            cursor,
+            matchPattern?.let { KeyValueArgument("MATCH",it) },
+            count?.let { KeyValueArgument("COUNT",it.toString(10)) },
+            type?.let { KeyValueArgument("TYPE",it) }
+        ))
 }
 interface KeyCommands {
     /**
@@ -312,6 +321,14 @@ interface KeyCommands {
      */
     suspend fun unlink(vararg keys: String): Long
 
+    /**
+     * ### `SCAN cursor [MATCH pattern] [COUNT count] [TYPE type]`
+     *
+     * [Doc](https://redis.io/commands/scan)
+     * @since 2.8.0
+     * @return [ScanResult]
+     */
+    suspend fun scan(cursor: Long, matchPattern: String? = null, count: Long? = null, type: String? = null): ScanResult
 }
 
 interface KeyCommandExecutor: CommandExecutor,KeyCommands,BaseKeyCommands {
@@ -363,4 +380,7 @@ interface KeyCommandExecutor: CommandExecutor,KeyCommands,BaseKeyCommands {
     override suspend fun type(key: String): String = execute(_type(key))
 
     override suspend fun unlink(vararg keys: String): Long = execute(_unlink(*keys))
+
+    override suspend fun scan(cursor: Long, matchPattern: String?, count: Long?, type: String?): ScanResult =
+        execute(_scan(cursor,matchPattern, count, type))
 }
