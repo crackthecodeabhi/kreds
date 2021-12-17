@@ -3,6 +3,7 @@ package org.kreds.connection
 import KredsException
 import io.netty.channel.EventLoopGroup
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.kreds.KredsContext
 import org.kreds.commands.ConnectionCommand
@@ -201,6 +202,8 @@ class DefaultKredsSubscriberClient(endpoint: Endpoint,
                                    eventLoopGroup: EventLoopGroup,
                                    private val kredsSubscriber: KredsSubscriber
 ): KredsSubscriberClient,AbstractKredsClient(endpoint,eventLoopGroup){
+
+    override val mutex: Mutex = Mutex()
 
     private val cScope = CoroutineScope(KredsContext.context)
     private var subCoroutineJob: Job? = null

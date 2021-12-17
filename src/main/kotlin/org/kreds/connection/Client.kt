@@ -26,27 +26,24 @@ interface KredsClient: KeyCommands,StringCommands,ConnectionCommands,PublisherCo
     fun multi(): Transaction
 }
 
-abstract class AbstractKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):DefaultKConnection(endpoint,eventLoopGroup), CommandExecutor{
+abstract class AbstractKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):KonnectionImpl(endpoint,eventLoopGroup), CommandExecutor{
 
-    protected val mutex = Mutex()
+    override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T = mutex.withLock {
+        writeAndFlush(processor.encode(command,*args))
+        processor.decode(readChannel.receive())
+    }
 
-    override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T {
-        return mutex.withLock {
+    override suspend fun <T> execute(commandExecution: CommandExecution): T = mutex.withLock {
+        with(commandExecution){
             writeAndFlush(processor.encode(command,*args))
             processor.decode(readChannel.receive())
         }
     }
-
-    override suspend fun <T> execute(commandExecution: CommandExecution): T {
-        return mutex.withLock {
-            with(commandExecution){
-                writeAndFlush(processor.encode(command,*args))
-                processor.decode(readChannel.receive())
-            }
-        }
-    }
 }
+
 class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):AbstractKredsClient(endpoint, eventLoopGroup),KredsClient,PipelineExecutor, TransactionExecutor, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor, SetCommandExecutor, ListCommandExecutor{
+
+    override val mutex: Mutex = Mutex()
 
     override fun pipelined(): Pipeline = PipelineImpl(this)
     override fun multi(): Transaction = TransactionImpl(this)

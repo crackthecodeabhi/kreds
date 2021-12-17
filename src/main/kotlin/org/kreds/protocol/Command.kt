@@ -95,7 +95,8 @@ object ArrayHandler: MessageHandler<List<Any?>>{
                 when(true){
                     SimpleStringHandler.canHandle(it) -> SimpleStringHandler.doHandle(it)
                     IntegerHandler.canHandle(it) -> IntegerHandler.doHandle(it)
-                    BulkStringHandler.canHandle(it) -> BulkStringHandler.doHandle(it) as Any
+                    BulkStringHandler.canHandle(it) -> BulkStringHandler.doHandle(it)
+                    canHandle(it) -> doHandle(it)
                     else -> throw KredsRedisDataException("Received unexpected data type from redis server.")
                 }
             }

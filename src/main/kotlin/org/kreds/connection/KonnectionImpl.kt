@@ -2,15 +2,16 @@ package org.kreds.connection
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
-import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.redis.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
 import org.kreds.KredsContext
 import kotlinx.coroutines.channels.Channel as KChannel
 
-open class DefaultKConnection(endpoint: Endpoint, eventLoopGroup: EventLoopGroup): KConnection {
+abstract class KonnectionImpl(endpoint: Endpoint, eventLoopGroup: EventLoopGroup): ExclusiveObject(), Konnection {
+
     private var channel: SocketChannel? = null
     private val cScope = CoroutineScope(KredsContext.context)
     private val bootstrap: Bootstrap

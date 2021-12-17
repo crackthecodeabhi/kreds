@@ -8,7 +8,7 @@ import kotlinx.coroutines.channels.Channel
  * Provides basic connection management and read and write operations
  * read is modeled as a Channel of RedisMessage
  */
-interface KConnection {
+interface Konnection {
     suspend fun connect()
     fun isConnected(): Boolean
     suspend fun disconnect()
