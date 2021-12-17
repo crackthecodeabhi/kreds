@@ -19,11 +19,11 @@ interface QueuedCommand {
     fun <T> add(commandExecution: CommandExecution): Response<T>
 }
 
-interface Pipeline: PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands {
+interface Pipeline: PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands, PipelineListCommands {
     suspend fun execute()
 }
 
-class PipelineImpl(private val client: DefaultKredsClient): Pipeline, PipelineStringCommandsExecutor, PipelineKeyCommandExecutor,PipelineHashCommandExecutor, PipelineSetCommandExecutor{
+class PipelineImpl(private val client: DefaultKredsClient): Pipeline, PipelineStringCommandsExecutor, PipelineKeyCommandExecutor,PipelineHashCommandExecutor, PipelineSetCommandExecutor, PipelineListCommandExecutor{
 
     private val commands = mutableListOf<CommandExecution>()
     private val commandResponse = mutableListOf<Any?>()

@@ -21,7 +21,7 @@ object KredsClientGroup{
     }
 }
 
-interface KredsClient: KeyCommands,StringCommands,ConnectionCommands,PublisherCommands, HashCommands, SetCommands{
+interface KredsClient: KeyCommands,StringCommands,ConnectionCommands,PublisherCommands, HashCommands, SetCommands, ListCommands{
     fun pipelined(): Pipeline
     fun multi(): Transaction
 }
@@ -46,7 +46,7 @@ abstract class AbstractKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopG
         }
     }
 }
-class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):AbstractKredsClient(endpoint, eventLoopGroup),KredsClient,PipelineExecutor, TransactionExecutor, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor, SetCommandExecutor{
+class DefaultKredsClient(endpoint: Endpoint,eventLoopGroup: EventLoopGroup):AbstractKredsClient(endpoint, eventLoopGroup),KredsClient,PipelineExecutor, TransactionExecutor, KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor, SetCommandExecutor, ListCommandExecutor{
 
     override fun pipelined(): Pipeline = PipelineImpl(this)
     override fun multi(): Transaction = TransactionImpl(this)

@@ -157,3 +157,13 @@ enum class ClientReplyOption: Argument{
     ON,OFF,SKIP;
     override fun toString() = name
 }
+
+enum class BeforeAfterOption: Argument{
+    BEFORE,AFTER;
+    override fun toString() = name
+}
+
+enum class LeftRightOption: Argument{
+    LEFT,RIGHT;
+    override fun toString(): String = name
+}

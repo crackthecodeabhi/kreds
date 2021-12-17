@@ -22,3 +22,15 @@ fun BigDecimal.toArgument() = StringArgument(this.toEngineeringString())
 fun Array<out String>.toArguments(): Array<out StringArgument> = this.map(String::toArgument).toTypedArray()
 
 data class FieldValue<out A, out B>(val field: A,val value: B)
+
+fun <T> List<T>.second(): T {
+    if (isEmpty() || size < 2)
+        throw NoSuchElementException("List doesn't have 2nd is empty.")
+    return this[1]
+}
+
+fun <T> List<T>.third(): T {
+    if (isEmpty() || size < 3)
+        throw NoSuchElementException("List doesn't have 2nd is empty.")
+    return this[2]
+}

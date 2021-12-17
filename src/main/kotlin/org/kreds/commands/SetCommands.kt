@@ -371,4 +371,7 @@ interface SetCommandExecutor: BaseSetCommands,SetCommands, CommandExecutor {
 
     override suspend fun sunionstore(destination: String, key: String, vararg keys: String): Long =
         execute(_sunionstore(destination, key, *keys))
+
+    override suspend fun sscan(key: String, cursor: Long, matchPattern: String?, count: Long?): SScanResult =
+        execute(_sscan(key, cursor, matchPattern, count))
 }

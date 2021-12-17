@@ -3,6 +3,7 @@ package org.kreds.commands
 import io.netty.handler.codec.redis.RedisMessage
 import org.kreds.FieldValue
 import org.kreds.protocol.*
+import org.kreds.second
 import java.lang.ClassCastException
 
 interface IScanResult<R>{
@@ -27,7 +28,7 @@ abstract class AbstractScanResultProcessor<R>: CommandProcessor(ArrayHandler),IC
             if(scanResult.size != 2) throw KredsRedisDataException("Failed to decode *SCAN result. Received Invalid response from server.")
             val cursor: Long = (scanResult.first() as String).toLong()
             @Suppress("UNCHECKED_CAST")
-            val list: List<R> = scanResult[1] as List<R>
+            val list: List<R> = scanResult.second() as List<R>
             @Suppress("UNCHECKED_CAST")
             return Pair(cursor,list) as T
         } catch (ex: Throwable){
