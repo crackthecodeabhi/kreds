@@ -1,31 +1,32 @@
 package org.kreds.protocol
 
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.kreds.commands.*
 import org.kreds.connection.DefaultKredsClient
 import org.kreds.connection.ExclusiveObject
-import org.kreds.connection.KredsClient
 import org.kreds.protocol.TransactionCommand.*
 
-enum class TransactionCommand: Command {
+enum class TransactionCommand : Command {
     MULTI, EXEC;
 
     private val command = name.replace('_', ' ')
     override val string: String = command
 }
 
-interface TransactionExecutor{
+interface TransactionExecutor {
     suspend fun executeTransaction(commands: List<CommandExecution>): List<Any?>
 }
 
-interface Transaction: PipelineKeyCommands,PipelineStringCommands, PipelineHashCommands, PipelineListCommands{
+interface Transaction : PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands,
+    PipelineListCommands, PipelineHyperLogLogCommands {
     suspend fun exec(): List<Any?>
 }
 
-class TransactionImpl(private val client: DefaultKredsClient): ExclusiveObject(), Transaction,PipelineStringCommandsExecutor,PipelineKeyCommandExecutor,PipelineHashCommandExecutor, PipelineListCommandExecutor{
+class TransactionImpl(private val client: DefaultKredsClient) : ExclusiveObject(), Transaction,
+    PipelineStringCommandsExecutor, PipelineKeyCommandExecutor, PipelineHashCommandExecutor,
+    PipelineListCommandExecutor, PipelineHyperLogLogCommandExecutor, PipelineSetCommandExecutor {
 
     override val mutex: Mutex = Mutex()
 
@@ -39,11 +40,11 @@ class TransactionImpl(private val client: DefaultKredsClient): ExclusiveObject()
         commands.add(commandExecution)
         //MULTI command response won't be available in response list. EXEC response will be list of response of command executed.
         // lastIndex will never be -1 because MULTI and above commands.add(), this tiny adjustment is for this reason.
-        Response(responseFlow,commands.lastIndex - 1)
+        Response(responseFlow, commands.lastIndex - 1)
     }
 
     override suspend fun exec(): List<Any?> = mutex.withLock {
-        return if(done) commandResponse
+        return if (done) commandResponse
         else {
             commands.add(CommandExecution(EXEC, ArrayCommandProcessor))
             commandResponse.addAll(client.executeTransaction(commands))
