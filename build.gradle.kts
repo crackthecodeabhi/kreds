@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.5.10"
+    kotlin("jvm") version "1.6.0"
     java
 }
 
@@ -21,4 +21,9 @@ dependencies {
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile::class){
+    targetCompatibility = "17"
+    sourceCompatibility = "17"
 }
