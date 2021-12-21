@@ -5,6 +5,21 @@ import io.netty.buffer.Unpooled
 import java.math.BigDecimal
 import java.nio.charset.Charset
 
+/**
+ * Any class marked with this annotation is **SAFE** to be called concurrently from coroutines.
+ */
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.CLASS)
+annotation class CoroutineSafe
+
+/**
+ * Any class marked with this annotation is **UNSAFE** to be called concurrently from coroutines.
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class CoroutineUnsafe
+
+
 fun String.toByteBuf(): ByteBuf = Unpooled.copiedBuffer(this, Charset.defaultCharset())
 
 fun ByteBuf.toDefaultCharset(): String = this.toString(Charset.defaultCharset())
