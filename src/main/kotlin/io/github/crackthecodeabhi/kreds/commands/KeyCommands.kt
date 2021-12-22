@@ -4,7 +4,7 @@ import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.commands.KeyCommand.*
 
-enum class KeyCommand(override val subCommand: Command? = null): Command{
+internal enum class KeyCommand(override val subCommand: Command? = null): Command{
     DEL,COPY,DUMP,EXISTS,EXPIRE,EXPIREAT,EXPIRETIME,
     KEYS,MOVE,PERSIST,PEXPIRE,PEXPIREAT,PEXPIRETIME,
     PTTL,RANDOMKEY,RENAME,RENAMENX,TOUCH,TTL,TYPE,UNLINK,
@@ -13,7 +13,7 @@ enum class KeyCommand(override val subCommand: Command? = null): Command{
     override val string = name
 }
 
-interface BaseKeyCommands{
+internal interface BaseKeyCommands{
     fun _del(vararg keys: String) = CommandExecution(DEL, IntegerCommandProcessor,*keys.toArguments())
     fun _copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): CommandExecution {
         val args =
@@ -72,7 +72,7 @@ interface BaseKeyCommands{
             type?.let { KeyValueArgument("TYPE",it) }
         ))
 }
-interface KeyCommands {
+public interface KeyCommands {
     /**
      * ### `DEL key [key ...]`
      * Removes the specified keys. A key is ignored if it does not exist.
@@ -81,7 +81,7 @@ interface KeyCommands {
      * @return The number of keys that were removed.
      * @since  1.0.0.
      */
-    suspend fun del(vararg keys: String): Long
+    public suspend fun del(vararg keys: String): Long
 
     /**
      * ### `COPY source destination [DB destination-db] [REPLACE]`
@@ -95,7 +95,7 @@ interface KeyCommands {
      * @return 1 if source was copied, else 0
      * @since 6.2.0
      */
-    suspend fun copy(source: String, destination: String, destinationDb: String? = null, replace: Boolean? = null): Long
+    public suspend fun copy(source: String, destination: String, destinationDb: String? = null, replace: Boolean? = null): Long
 
     /**
      * ### `DUMP key`
@@ -105,7 +105,7 @@ interface KeyCommands {
      * @since 2.6.0
      * @return If key does not exist a null is returned else serialized value
      */
-    suspend fun dump(key: String): String?
+    public suspend fun dump(key: String): String?
 
     /**
      * ### ` EXISTS key [key ...]`
@@ -115,7 +115,7 @@ interface KeyCommands {
      * @since 1.0.0
      * @return 1 if the key exists else 0
      */
-    suspend fun exists(vararg keys: String): Long
+    public suspend fun exists(vararg keys: String): Long
 
     /**
      * ### `EXPIRE key seconds [NX|XX|GT|LT]`
@@ -126,7 +126,7 @@ interface KeyCommands {
      * @since 1.0.0
      * @return 1 if the timeout was set else 0,e.g. key doesn't exist, or operation skipped due to the provided arguments.
      */
-    suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption? = null): Long
+    public suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption? = null): Long
 
     /**
      * ### `EXPIREAT key timestamp [NX|XX|GT|LT]`
@@ -140,7 +140,7 @@ interface KeyCommands {
      * @since 1.2.0
      * @return 1 if the timeout was set else 0. e.g. key doesn't exist, or operation skipped due to the provided arguments.
      */
-    suspend fun expireAt(key: String, timestamp: ULong, expireOption: ExpireOption? = null): Long
+    public suspend fun expireAt(key: String, timestamp: ULong, expireOption: ExpireOption? = null): Long
 
     /**
      * ###  EXPIRETIME key
@@ -152,7 +152,7 @@ interface KeyCommands {
      * The command returns -1 if the key exists but has no associated expiration time.
      * The command returns -2 if the key does not exist.
      */
-    suspend fun expireTime(key: String): Long
+    public suspend fun expireTime(key: String): Long
 
     /**
      * ###  KEYS pattern
@@ -163,7 +163,7 @@ interface KeyCommands {
      * @since 1.0.0
      * @return list of keys matching pattern.
      */
-    suspend fun keys(pattern: String): List<String>
+    public suspend fun keys(pattern: String): List<String>
 
     /**
      * ###  MOVE key db
@@ -176,7 +176,7 @@ interface KeyCommands {
      * @since 1.0.0
      * @return 1 if key was moved else 0
      */
-    suspend fun move(key: String, db: String): Long
+    public suspend fun move(key: String, db: String): Long
 
     /**
      * ###  PERSIST key
@@ -188,7 +188,7 @@ interface KeyCommands {
      * @since 2.2.0
      * @return 1 if the timeout was removed, 0 if key does not exist or does not have an associated timeout.
      */
-    suspend fun persist(key: String):Long
+    public suspend fun persist(key: String):Long
 
     /**
      * ###  `PEXPIRE key milliseconds [NX|XX|GT|LT]`
@@ -200,7 +200,7 @@ interface KeyCommands {
      * @return 1 if the timeout was set.
      * 0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
      */
-    suspend fun pexpire(key: String, milliseconds: ULong,expireOption: PExpireOption? = null): Long
+    public suspend fun pexpire(key: String, milliseconds: ULong,expireOption: PExpireOption? = null): Long
 
     /**
      * ### `PEXPIREAT key milliseconds-timestamp [NX|XX|GT|LT] `
@@ -212,7 +212,7 @@ interface KeyCommands {
      * @since 2.6.0
      * @return 1 if the timeout was set. 0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
      */
-    suspend fun pexpireat(key:String, millisecondsTimestamp: ULong, expireOption: PExpireOption? = null /* = org.kreds.ExpireOption? */): Long
+    public suspend fun pexpireat(key:String, millisecondsTimestamp: ULong, expireOption: PExpireOption? = null /* = org.kreds.ExpireOption? */): Long
 
     /**
      * ###  PEXPIRETIME key
@@ -223,7 +223,7 @@ interface KeyCommands {
      * @since 7.0.0
      * @return Expiration Unix timestamp in milliseconds, or a negative value in order to signal an error (see the description below). * The command returns -1 if the key exists but has no associated expiration time. * The command returns -2 if the key does not exist.
      */
-    suspend fun pexpiretime(key: String): Long
+    public suspend fun pexpiretime(key: String): Long
 
     /**
      * ###  PTTL key
@@ -238,7 +238,7 @@ interface KeyCommands {
      * @since 2.6.0
      * @return TTL in milliseconds, or a negative value in order to signal an error (see the description above).
      */
-    suspend fun pttl(key: String): Long
+    public suspend fun pttl(key: String): Long
 
 
     /**
@@ -250,7 +250,7 @@ interface KeyCommands {
      * @since 1.0.0
      * @return the random key, or null when the database is empty.
      */
-    suspend fun randomKey(): String?
+    public suspend fun randomKey(): String?
 
     /**
      * ##  RENAME key newkey
@@ -261,7 +261,7 @@ interface KeyCommands {
      * @since 1.0.0
      * @return OK
      */
-    suspend fun rename(key: String, newKey: String): String
+    public suspend fun rename(key: String, newKey: String): String
 
     /**
      * ###  RENAMENX key newkey
@@ -273,7 +273,7 @@ interface KeyCommands {
      * @return 1 if key was renamed to newkey.
      * 0 if newkey already exists.
      */
-    suspend fun renamenx(key: String, newKey: String): Long
+    public suspend fun renamenx(key: String, newKey: String): Long
 
     /**
      * ### ` TOUCH key [key ...] `
@@ -284,7 +284,7 @@ interface KeyCommands {
      * @since 3.2.1
      * @return The number of keys that were touched.
      */
-    suspend fun touch(vararg keys: String): Long
+    public suspend fun touch(vararg keys: String): Long
 
     /**
      * ### TTL key
@@ -295,7 +295,7 @@ interface KeyCommands {
      * @since 1.0.0
      * @return TTL in seconds, or a negative value in order to signal an error (see the description above).
      */
-    suspend fun ttl(key: String): Long
+    public suspend fun ttl(key: String): Long
 
     /**
      * ###  TYPE key
@@ -307,7 +307,7 @@ interface KeyCommands {
      * @since 1.0.0
      * @return type of key, or none when key does not exist.
      */
-    suspend fun type(key: String): String
+    public suspend fun type(key: String): String
 
     /**
      * ### ` UNLINK key [key ...] `
@@ -318,7 +318,7 @@ interface KeyCommands {
      * @since 4.0.0
      * @return The number of keys that were unlinked.
      */
-    suspend fun unlink(vararg keys: String): Long
+    public suspend fun unlink(vararg keys: String): Long
 
     /**
      * ### `SCAN cursor [MATCH pattern] [COUNT count] [TYPE type]`
@@ -327,10 +327,10 @@ interface KeyCommands {
      * @since 2.8.0
      * @return [ScanResult]
      */
-    suspend fun scan(cursor: Long, matchPattern: String? = null, count: Long? = null, type: String? = null): ScanResult
+    public suspend fun scan(cursor: Long, matchPattern: String? = null, count: Long? = null, type: String? = null): ScanResult
 }
 
-interface KeyCommandExecutor: CommandExecutor,KeyCommands,BaseKeyCommands {
+internal interface KeyCommandExecutor: CommandExecutor,KeyCommands,BaseKeyCommands {
 
     override suspend fun del(vararg keys: String): Long = execute(_del(*keys))
 

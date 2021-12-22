@@ -1,19 +1,19 @@
 package io.github.crackthecodeabhi.kreds.connection
 
-class KredsClientConfig private constructor(builder: Builder) {
+public class KredsClientConfig private constructor(builder: Builder) {
 
-    companion object{
-        const val NO_READ_TIMEOUT: Int = -1
+    public companion object{
+        public const val NO_READ_TIMEOUT: Int = -1
     }
 
-    val connectTimeOutMillis: Int
+    public val connectTimeOutMillis: Int
 
-    val soKeepAlive: Boolean
+    public val soKeepAlive: Boolean
 
     /**
      * In Subscriber client, readTimeout can be set to -1, to never timeout from reading from subscription connection.
      */
-    val readTimeoutSeconds: Int
+    public val readTimeoutSeconds: Int
 
     init {
         // init with configured values or default
@@ -22,7 +22,7 @@ class KredsClientConfig private constructor(builder: Builder) {
         soKeepAlive = builder.soKeepAlive ?: true
     }
 
-    data class Builder(
+    public data class Builder(
         var connectTimeOutMillis: Int? = null,
         var readTimeoutSeconds: Int? = null,
         var soKeepAlive: Boolean? = null
@@ -30,10 +30,10 @@ class KredsClientConfig private constructor(builder: Builder) {
         /**
          * @throws IllegalArgumentException if any argument is invalid or conflicts with other configuration
          */
-        fun build(): KredsClientConfig = KredsClientConfig(this)
+        public fun build(): KredsClientConfig = KredsClientConfig(this)
     }
 }
 
-val defaultClientConfig = KredsClientConfig.Builder().build()
+internal val defaultClientConfig : KredsClientConfig = KredsClientConfig.Builder().build()
 
-val defaultSubscriberClientConfig = KredsClientConfig.Builder(readTimeoutSeconds = KredsClientConfig.NO_READ_TIMEOUT).build()
+internal val defaultSubscriberClientConfig : KredsClientConfig = KredsClientConfig.Builder(readTimeoutSeconds = KredsClientConfig.NO_READ_TIMEOUT).build()

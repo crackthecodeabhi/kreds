@@ -4,14 +4,14 @@ import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.commands.SetCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 
-enum class SetCommand(override val subCommand: Command? = null): Command{
+internal enum class SetCommand(override val subCommand: Command? = null): Command{
     SADD,SCARD,SDIFF,SDIFFSTORE,SINTER,SINTERCARD,SINTERSTORE,SISMEMBER,SMISMEMBER,
     SMEMBERS,SMOVE,SPOP,SRANDMEMBER,SREM,SUNION,SUNIONSTORE,SSCAN;
 
     override val string = name
 }
 
-interface BaseSetCommands {
+internal interface BaseSetCommands {
 
     fun _sadd(key: String, member: String, vararg members: String)=
         CommandExecution(SADD, IntegerCommandProcessor,*createArguments(
@@ -91,7 +91,7 @@ interface BaseSetCommands {
 
 //TODO: SSCAN
 
-interface SetCommands {
+public interface SetCommands {
 
     /**
      * ### `SADD key member [member ...]`
@@ -105,7 +105,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return the number of elements that were added to the set, not including all the elements already present in the set.
      */
-    suspend fun sadd(key: String, member: String, vararg members: String): Long
+    public suspend fun sadd(key: String, member: String, vararg members: String): Long
 
     /**
      * ###  SCARD key
@@ -116,7 +116,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return the cardinality (number of elements) of the set, or 0 if key does not exist.
      */
-    suspend fun scard(key: String): Long
+    public suspend fun scard(key: String): Long
 
     /**
      * ###  `SDIFF key [key ...]`
@@ -127,7 +127,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return list with members of the resulting set.
      */
-    suspend fun sdiff(key: String, vararg keys: String): List<String>
+    public suspend fun sdiff(key: String, vararg keys: String): List<String>
 
     /**
      * ### ` SDIFFSTORE destination key [key ...] `
@@ -139,7 +139,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return the number of elements in the resulting set.
      */
-    suspend fun sdiffstore(destination: String, key: String, vararg keys: String): Long
+    public suspend fun sdiffstore(destination: String, key: String, vararg keys: String): Long
 
     /**
      * ###  `SINTER key [key ...]`
@@ -150,7 +150,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return list with members of the resulting set.
      */
-    suspend fun sinter(key: String, vararg keys: String): List<String>
+    public suspend fun sinter(key: String, vararg keys: String): List<String>
 
     /**
      * ### ` SINTERCARD numkeys key [key ...] [LIMIT limit] `
@@ -159,7 +159,7 @@ interface SetCommands {
      * @since 7.0.0
      * @return the number of elements in the resulting intersection.
      */
-    suspend fun sintercard(numkeys: Int,key: String, vararg keys: String, limit: Long?): Long
+    public suspend fun sintercard(numkeys: Int,key: String, vararg keys: String, limit: Long?): Long
 
     /**
      * ### ` SINTERSTORE destination key [key ...]`
@@ -171,7 +171,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return  the number of elements in the resulting set.
      */
-    suspend fun sinterstore(destination: String,key: String, vararg keys: String): Long
+    public suspend fun sinterstore(destination: String,key: String, vararg keys: String): Long
 
     /**
      * ###  SISMEMBER key member
@@ -183,7 +183,7 @@ interface SetCommands {
      * @return 1 if the element is a member of the set.
      * 0 if the element is not a member of the set, or if key does not exist.
      */
-    suspend fun sismember(key: String, member: String): Long
+    public suspend fun sismember(key: String, member: String): Long
 
     /**
      * ###  SMEMBERS key
@@ -194,7 +194,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return  all elements of the set.
      */
-    suspend fun smembers(key: String): List<String>
+    public suspend fun smembers(key: String): List<String>
 
 
     /**
@@ -208,7 +208,7 @@ interface SetCommands {
      * @since 6.2.0
      * @return list representing the membership of the given elements, in the same order as they are requested.
      */
-    suspend fun smismember(key: String, member: String, vararg  members: String): List<Long>
+    public suspend fun smismember(key: String, member: String, vararg  members: String): List<Long>
 
     /**
      * ###  SMOVE source destination member
@@ -220,7 +220,7 @@ interface SetCommands {
      * @return 1 if the element is moved.
      * 0 if the element is not a member of source and no operation was performed.
      */
-    suspend fun smove(source: String, destination: String, member: String): Long
+    public suspend fun smove(source: String, destination: String, member: String): Long
 
     /**
      * ### ` SPOP key`
@@ -231,7 +231,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return the removed member, or nil when key does not exist.
      */
-    suspend fun spop(key: String): String?
+    public suspend fun spop(key: String): String?
 
     /**
      * ### ` SPOP key count`
@@ -242,7 +242,7 @@ interface SetCommands {
      * @since 3.2.0
      * @return  the removed members, or an empty array when key does not exist.
      */
-    suspend fun spop(key: String, count: Int): List<String>
+    public suspend fun spop(key: String, count: Int): List<String>
 
     /**
      * ###  `SRANDMEMBER key`
@@ -253,7 +253,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return the command returns a String Reply with the randomly selected element, or null when key does not exist.
      */
-    suspend fun srandmember(key: String): String?
+    public suspend fun srandmember(key: String): String?
 
     /**
      * ###  `SRANDMEMBER key count`
@@ -264,7 +264,7 @@ interface SetCommands {
      * @since 2.6.0
      * @return the command returns an array of elements, or an empty array when key does not exist.
      */
-    suspend fun srandmember(key: String, count: Int): List<String>
+    public suspend fun srandmember(key: String, count: Int): List<String>
 
     /**
      * ### ` SREM key member [member ...] `
@@ -279,7 +279,7 @@ interface SetCommands {
      * @since 2.4.0
      * @return the number of members that were removed from the set, not including non existing members.
      */
-    suspend fun srem(key: String, member: String,vararg members: String): Long
+    public suspend fun srem(key: String, member: String,vararg members: String): Long
 
 
     /**
@@ -291,7 +291,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return list with members of the resulting set.
      */
-    suspend fun sunion(key: String, vararg keys: String): List<String>
+    public suspend fun sunion(key: String, vararg keys: String): List<String>
 
     /**
      * ### ` SUNIONSTORE destination key [key ...] `
@@ -303,7 +303,7 @@ interface SetCommands {
      * @since 1.0.0
      * @return the number of elements in the resulting set.
      */
-    suspend fun sunionstore(destination: String, key: String, vararg keys: String): Long
+    public suspend fun sunionstore(destination: String, key: String, vararg keys: String): Long
 
     /**
      * ### ` SSCAN key cursor [MATCH pattern] [COUNT count]`
@@ -312,10 +312,10 @@ interface SetCommands {
      * @since 2.8.0
      * @return [SScanResult]
      */
-    suspend fun sscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): SScanResult
+    public suspend fun sscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): SScanResult
 }
 
-interface SetCommandExecutor: BaseSetCommands,SetCommands, CommandExecutor {
+internal interface SetCommandExecutor: BaseSetCommands,SetCommands, CommandExecutor {
     override suspend fun sadd(key: String, member: String, vararg members: String): Long =
         execute(_sadd(key, member, *members))
 

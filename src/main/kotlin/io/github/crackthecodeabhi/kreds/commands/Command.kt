@@ -3,7 +3,7 @@ package io.github.crackthecodeabhi.kreds.commands
 import io.github.crackthecodeabhi.kreds.args.Argument
 import io.github.crackthecodeabhi.kreds.protocol.ICommandProcessor
 
-interface Command{
+internal interface Command{
     /**
      * Command string
      */
@@ -15,5 +15,5 @@ interface Command{
     val subCommand: Command?
 }
 
-class CommandExecution(val command: Command, val processor: ICommandProcessor, vararg val args: Argument)
+internal class CommandExecution(val command: Command, val processor: ICommandProcessor, vararg val args: Argument)
 

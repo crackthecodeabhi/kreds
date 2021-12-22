@@ -4,14 +4,14 @@ import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.commands.HashCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 
-enum class HashCommand(override val subCommand: Command? = null): Command {
+internal enum class HashCommand(override val subCommand: Command? = null): Command {
     HDEL, HEXISTS, HGET, HGETALL, HINCRBY, HINCRBYFLOAT, HKEYS, HLEN, HMGET, HMSET, HRANDFIELD, HSCAN,
     HSET, HSETNX, HSTRLEN, HVALS;
 
     override val string: String = name
 }
 
-interface BaseHashCommands{
+internal interface BaseHashCommands{
     fun _hdel(key: String, field: String, vararg moreFields: String) =
         CommandExecution(HDEL, IntegerCommandProcessor,*createArguments(key,field,*moreFields))
 
@@ -68,7 +68,7 @@ interface BaseHashCommands{
 
 //TODO: HSCAN
 
-interface HashCommands {
+public interface HashCommands {
 
     /**
      * ###  `HDEL key field [field ...]`
@@ -81,7 +81,7 @@ interface HashCommands {
      * @since 2.0.0
      * @return the number of fields that were removed from the hash, not including specified but non existing fields.
      */
-    suspend fun hdel(key: String, field: String, vararg moreFields: String): Long
+    public suspend fun hdel(key: String, field: String, vararg moreFields: String): Long
 
     /**
      * ###  HEXISTS key field
@@ -93,7 +93,7 @@ interface HashCommands {
      * @return 1 if the hash contains field.
      * 0 if the hash does not contain field, or key does not exist.
      */
-    suspend fun hexists(key: String, field: String): Long
+    public suspend fun hexists(key: String, field: String): Long
 
     /**
      * ###  HGET key field
@@ -104,7 +104,7 @@ interface HashCommands {
      * @since 2.0.0
      * @return the string value associated with field, or null when field is not present in the hash or key does not exist.
      */
-    suspend fun hget(key: String, field: String): String?
+    public suspend fun hget(key: String, field: String): String?
 
     /**
      * ###  HGETALL key
@@ -117,7 +117,7 @@ interface HashCommands {
      *  @since 2.0.0
      *  @return list of fields and their values stored in the hash, or an empty list when key does not exist.
      */
-    suspend fun hgetAll(key: String): List<String>
+    public suspend fun hgetAll(key: String): List<String>
 
     /***
      * ###  HINCRBY key field increment
@@ -130,7 +130,7 @@ interface HashCommands {
      * @since 2.0.0
      * @return the value at field after the increment operation.
      */
-    suspend fun hincrBy(key: String, field: String, increment: Long): Long
+    public suspend fun hincrBy(key: String, field: String, increment: Long): Long
 
     /**
      * ### HINCRBYFLOAT key field increment
@@ -141,7 +141,7 @@ interface HashCommands {
      * @since 2.6.0
      * @return the value of field after the increment.
      */
-    suspend fun hincrByFloat(key: String,field: String, increment: Long): String
+    public suspend fun hincrByFloat(key: String,field: String, increment: Long): String
 
     /**
      * ###  HKEYS key
@@ -152,7 +152,7 @@ interface HashCommands {
      * @since 2.0.0
      * @return list of fields in the hash, or an empty list when key does not exist.
      */
-    suspend fun hkeys(key: String): List<String>
+    public suspend fun hkeys(key: String): List<String>
 
     /**
      * ###  HLEN key
@@ -163,7 +163,7 @@ interface HashCommands {
      * @since 2.0.0
      * @return number of fields in the hash, or 0 when key does not exist.
      */
-    suspend fun hlen(key: String): Long
+    public suspend fun hlen(key: String): Long
 
     /**
      * ###  `HMGET key field [field ...]`
@@ -174,7 +174,7 @@ interface HashCommands {
      * @since 2.0.0
      * @return list of values associated with the given fields, in the same order as they are requested.
      */
-    suspend fun hmget(key: String, field: String, vararg fields: String): List<String?>
+    public suspend fun hmget(key: String, field: String, vararg fields: String): List<String?>
 
     /**
      * ### `HRANDFIELD key`
@@ -185,7 +185,7 @@ interface HashCommands {
      *  @since 6.2.0
      *  @return the command returns a String Reply with the randomly selected field, or null when key does not exist.
      */
-    suspend fun hrandfield(key: String): String?
+    public suspend fun hrandfield(key: String): String?
 
 
     /**
@@ -201,7 +201,7 @@ interface HashCommands {
      *  or an empty array when key does not exist.
      *  If the WITHVALUES modifier is used, the reply is a list fields and their values from the hash.
      */
-    suspend fun hrandfield(key: String, count: Int, withValues: Boolean? = null): List<String>
+    public suspend fun hrandfield(key: String, count: Int, withValues: Boolean? = null): List<String>
 
 
     /**
@@ -219,7 +219,7 @@ interface HashCommands {
      * @return The number of fields that were added.
      *
      */
-    suspend fun hset(key: String,fieldValuePair: FieldValuePair,vararg fieldValuePairs: FieldValuePair): Long
+    public suspend fun hset(key: String,fieldValuePair: FieldValuePair,vararg fieldValuePairs: FieldValuePair): Long
 
     /**
      * ###  HSETNX key field value
@@ -231,7 +231,7 @@ interface HashCommands {
      * @return 1 if field is a new field in the hash and value was set.
      * 0 if field already exists in the hash and no operation was performed.
      */
-    suspend fun hsetnx(key: String,field: String, value: String): Long
+    public suspend fun hsetnx(key: String,field: String, value: String): Long
 
     /**
      * ###  HSTRLEN key field
@@ -242,7 +242,7 @@ interface HashCommands {
      * @since 3.2.0
      * @return the string length of the value associated with field, or zero when field is not present in the hash or key does not exist at all.
      */
-    suspend fun hstrlen(key: String, field: String): Long
+    public suspend fun hstrlen(key: String, field: String): Long
 
     /**
      * ### HVALS key
@@ -253,7 +253,7 @@ interface HashCommands {
      * @since 2.0.0
      * @return list of values in the hash, or an empty list when key does not exist.
      */
-    suspend fun hvals(key: String): List<String>
+    public suspend fun hvals(key: String): List<String>
 
     /**
      * ### ` HSCAN key cursor [MATCH pattern] [COUNT count] `
@@ -262,10 +262,10 @@ interface HashCommands {
      * @since 2.8.0
      * @return [HScanResult]
      */
-    suspend fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): HScanResult
+    public suspend fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): HScanResult
 }
 
-interface HashCommandsExecutor: HashCommands,BaseHashCommands, CommandExecutor{
+internal interface HashCommandsExecutor: HashCommands,BaseHashCommands, CommandExecutor{
     override suspend fun hdel(key: String, field: String, vararg moreFields: String): Long =
         execute(_hdel(key, field, *moreFields))
 

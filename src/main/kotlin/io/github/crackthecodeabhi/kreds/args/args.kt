@@ -3,39 +3,38 @@ package io.github.crackthecodeabhi.kreds.args
 import io.github.crackthecodeabhi.kreds.KredsException
 import java.math.BigDecimal
 import kotlin.IllegalArgumentException
-import kotlin.jvm.Throws
 
-data class KeyValuePair(val key: String, val value: String)
-infix fun String.toKV(other: String) = KeyValuePair(this,other)
+public data class KeyValuePair(val key: String, val value: String)
+public infix fun String.toKV(other: String): KeyValuePair = KeyValuePair(this,other)
 
-data class FieldValuePair(val field: String,val value: String)
-infix fun String.toFV(other: String) = FieldValuePair(this,other)
+public data class FieldValuePair(val field: String,val value: String)
+public infix fun String.toFV(other: String): FieldValuePair = FieldValuePair(this,other)
 
-sealed interface Argument
+internal sealed interface Argument
 
-data class KeyValueArgument(val key: String, val value: String): Argument{
+internal data class KeyValueArgument(val key: String, val value: String): Argument{
     override fun toString() = "${key.uppercase()} $value"
 }
 
-data class KeyOnlyArgument(val key: String): Argument{
+internal data class KeyOnlyArgument(val key: String): Argument{
     override fun toString() = key.uppercase()
 }
 
-data class StringArgument(val value: String): Argument{
+internal data class StringArgument(val value: String): Argument{
     override fun toString() = value
 }
 
-fun String.toArgument() = StringArgument(this)
+internal fun String.toArgument() = StringArgument(this)
 
-fun ULong.toArgument() = StringArgument(this.toString())
+internal fun ULong.toArgument() = StringArgument(this.toString())
 
-fun Long.toArgument() = StringArgument(this.toString(10))
+internal fun Long.toArgument() = StringArgument(this.toString(10))
 
-fun Int.toArgument() = StringArgument(this.toString(10))
+internal fun Int.toArgument() = StringArgument(this.toString(10))
 
-fun BigDecimal.toArgument() = StringArgument(this.toEngineeringString())
+internal fun BigDecimal.toArgument() = StringArgument(this.toEngineeringString())
 
-fun Array<out String>.toArguments(): Array<out StringArgument> = this.map(String::toArgument).toTypedArray()
+internal fun Array<out String>.toArguments(): Array<out StringArgument> = this.map(String::toArgument).toTypedArray()
 
 
 /**
@@ -49,14 +48,14 @@ fun Array<out String>.toArguments(): Array<out StringArgument> = this.map(String
  *
  * LT -- Set expiry only when the new expiry is less than current one
  */
-enum class ExpireOption: Argument{
+public enum class ExpireOption: Argument{
     NX,XX,GT,LT;
     override fun toString(): String = name
 }
 
-typealias PExpireOption = ExpireOption
+public typealias PExpireOption = ExpireOption
 
-fun createArguments(vararg args: Any?): Array<out Argument>{
+internal fun createArguments(vararg args: Any?): Array<out Argument>{
     val argList = mutableListOf<Argument>()
     for(arg in args){
         if(arg == null) continue
@@ -81,17 +80,17 @@ fun createArguments(vararg args: Any?): Array<out Argument>{
     return argList.toTypedArray()
 }
 
-class SetOption private constructor(
-    val exSeconds:ULong? = null,
-    val pxMilliseconds: ULong? = null,
-    val exatTimestamp: ULong? = null,
-    val pxatMillisecondTimestamp: ULong? = null,
-    val keepTTL: Boolean? = null,
-    val nx: Boolean? = null,
-    val xx: Boolean? = null,
-    val get: Boolean? = null){
+public class SetOption private constructor(
+    public val exSeconds:ULong? = null,
+    public val pxMilliseconds: ULong? = null,
+    public val exatTimestamp: ULong? = null,
+    public val pxatMillisecondTimestamp: ULong? = null,
+    public val keepTTL: Boolean? = null,
+    public val nx: Boolean? = null,
+    public val xx: Boolean? = null,
+    public val get: Boolean? = null){
 
-    data class Builder(
+    public data class Builder(
         var exSeconds:ULong? = null,
         var pxMilliseconds: ULong? = null,
         var exatTimestamp: ULong? = null,
@@ -101,20 +100,19 @@ class SetOption private constructor(
         var xx: Boolean? = null,
         var get: Boolean? = null
     ){
-        fun exSeconds(exSeconds: ULong) = apply { this.exSeconds = exSeconds }
-        fun pxMilliseconds(pxMilliseconds: ULong) = apply { this.pxMilliseconds = pxMilliseconds }
-        fun exatTimestamp(exatTimestamp: ULong) = apply { this.exatTimestamp = exatTimestamp }
-        fun pxatMillisecondTimestamp(pxatMillisecondTimestamp: ULong) = apply { this.pxatMillisecondTimestamp = pxatMillisecondTimestamp }
-        fun keepTTL(keepTTL: Boolean)= apply { this.keepTTL = keepTTL }
-        fun nx(nx: Boolean) = apply { this.nx = nx }
-        fun xx(xx: Boolean) = apply { this.xx = xx }
-        fun get(get: Boolean) = apply { this.get = get }
+        public fun exSeconds(exSeconds: ULong): Builder = apply { this.exSeconds = exSeconds }
+        public fun pxMilliseconds(pxMilliseconds: ULong): Builder = apply { this.pxMilliseconds = pxMilliseconds }
+        public fun exatTimestamp(exatTimestamp: ULong) : Builder= apply { this.exatTimestamp = exatTimestamp }
+        public fun pxatMillisecondTimestamp(pxatMillisecondTimestamp: ULong) : Builder= apply { this.pxatMillisecondTimestamp = pxatMillisecondTimestamp }
+        public fun keepTTL(keepTTL: Boolean): Builder = apply { this.keepTTL = keepTTL }
+        public fun nx(nx: Boolean): Builder = apply { this.nx = nx }
+        public fun xx(xx: Boolean): Builder = apply { this.xx = xx }
+        public fun get(get: Boolean): Builder= apply { this.get = get }
 
         /**
          * @throws IllegalArgumentException in case the argument provided conflict
          */
-        @Throws(IllegalArgumentException::class)
-        fun build(): SetOption{
+        public fun build(): SetOption{
             if(listOfNotNull(exSeconds, pxMilliseconds, exatTimestamp, pxatMillisecondTimestamp, keepTTL).size>1)
                 throw IllegalArgumentException("Only one of the options (EX,PX,EXAT,PXAT,KEEPTTL) allowed or none.")
             if(listOfNotNull(nx,xx).size > 1)
@@ -124,28 +122,30 @@ class SetOption private constructor(
     }
 }
 
-class GetExOption private constructor(
-    val exSeconds: ULong? = null,
-    val pxMilliseconds: ULong? = null,
-    val exatTimestamp: ULong? = null,
-    val pxatMillisecondTimestamp: ULong? = null,
-    val persist: Boolean? = null){
+public class GetExOption private constructor(
+    public val exSeconds: ULong? = null,
+    public val pxMilliseconds: ULong? = null,
+    public val exatTimestamp: ULong? = null,
+    public val pxatMillisecondTimestamp: ULong? = null,
+    public val persist: Boolean? = null){
 
-    data class Builder(
+    public data class Builder(
         var exSeconds: ULong? = null,
         var pxMilliseconds: ULong? = null,
         var exatTimestamp: ULong? = null,
         var pxatMillisecondTimestamp: ULong? = null,
         var persist: Boolean? = null
     ){
-        fun exSeconds(exSeconds: ULong) = apply { this.exSeconds = exSeconds }
-        fun pxMilliseconds(pxMilliseconds: ULong) = apply { this.pxMilliseconds = pxMilliseconds }
-        fun exatTimestamp(exatTimestamp: ULong)= apply { this.exatTimestamp = exatTimestamp }
-        fun pxatMillisecondTimestamp(pxatMillisecondTimestamp: ULong)= apply { this.pxatMillisecondTimestamp = pxatMillisecondTimestamp }
-        fun persist(persist: Boolean) = apply { this.persist = persist }
+        public fun exSeconds(exSeconds: ULong): Builder = apply { this.exSeconds = exSeconds }
+        public fun pxMilliseconds(pxMilliseconds: ULong): Builder  = apply { this.pxMilliseconds = pxMilliseconds }
+        public fun exatTimestamp(exatTimestamp: ULong): Builder = apply { this.exatTimestamp = exatTimestamp }
+        public fun pxatMillisecondTimestamp(pxatMillisecondTimestamp: ULong): Builder = apply { this.pxatMillisecondTimestamp = pxatMillisecondTimestamp }
+        public fun persist(persist: Boolean): Builder  = apply { this.persist = persist }
 
-        @Throws(IllegalArgumentException::class)
-        fun build(): GetExOption{
+        /**
+         * @throws IllegalArgumentException in case the argument provided conflict
+         */
+        public fun build(): GetExOption {
             if(listOfNotNull(exSeconds,pxMilliseconds,exatTimestamp,pxatMillisecondTimestamp,persist).size>1)
                 throw IllegalArgumentException("Only one option is valid.")
             return GetExOption(exSeconds,pxMilliseconds,exatTimestamp,pxatMillisecondTimestamp,persist)
@@ -154,29 +154,29 @@ class GetExOption private constructor(
 }
 
 
-enum class ClientListType: Argument {
+public enum class ClientListType: Argument {
     normal, master, replica, pubsub;
 
     override fun toString(): String = "TYPE $name"
 }
 
-enum class ClientPauseOption: Argument{
+public enum class ClientPauseOption: Argument{
     WRITE,ALL;
 
     override fun toString(): String = name
 }
 
-enum class ClientReplyOption: Argument{
+public enum class ClientReplyOption: Argument{
     ON,OFF,SKIP;
-    override fun toString() = name
+    override fun toString(): String = name
 }
 
-enum class BeforeAfterOption: Argument{
+public enum class BeforeAfterOption: Argument{
     BEFORE,AFTER;
-    override fun toString() = name
+    override fun toString(): String = name
 }
 
-enum class LeftRightOption: Argument{
+public enum class LeftRightOption: Argument{
     LEFT,RIGHT;
     override fun toString(): String = name
 }

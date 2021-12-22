@@ -6,30 +6,30 @@ import io.github.crackthecodeabhi.kreds.commands.*
 import io.github.crackthecodeabhi.kreds.toByteBuf
 import kotlin.jvm.Throws
 
-fun Command.toRedisMessageList(): List<FullBulkStringRedisMessage> {
+internal fun Command.toRedisMessageList(): List<FullBulkStringRedisMessage> {
     return if(subCommand != null){
          listOf(FullBulkStringRedisMessage(string.toByteBuf()),*subCommand!!.toRedisMessageList().toTypedArray())
     } else listOf(FullBulkStringRedisMessage(string.toByteBuf()))
 }
 
-interface ICommandProcessor {
+internal interface ICommandProcessor {
     fun encode(command: Command, vararg args: Argument): RedisMessage
     @Throws(KredsRedisDataException::class)
     fun <T> decode(message: RedisMessage): T
 }
 
-interface CommandExecutor {
+internal interface CommandExecutor {
     suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T
     suspend fun <T> execute(commandExecution: CommandExecution): T
     suspend fun executeCommands(commands: List<CommandExecution>): List<RedisMessage>
 }
 
-val IntegerCommandProcessor = CommandProcessor(IntegerHandler)
-val BulkStringCommandProcessor = CommandProcessor(BulkStringHandler)
-val SimpleStringCommandProcessor = CommandProcessor(SimpleStringHandler)
-val ArrayCommandProcessor = CommandProcessor(ArrayHandler)
+internal val IntegerCommandProcessor = CommandProcessor(IntegerHandler)
+internal val BulkStringCommandProcessor = CommandProcessor(BulkStringHandler)
+internal val SimpleStringCommandProcessor = CommandProcessor(SimpleStringHandler)
+internal val ArrayCommandProcessor = CommandProcessor(ArrayHandler)
 
-open class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>): ICommandProcessor {
+internal open class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>): ICommandProcessor {
 
     override fun encode(command: Command,vararg args: Argument): RedisMessage {
         if(args.isEmpty()) return ArrayRedisMessage(command.toRedisMessageList())

@@ -4,29 +4,50 @@ import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 
-interface PipelineListCommands {
+public interface PipelineListCommands {
 
-    suspend fun lindex(key: String, index: Long): Response<String?>
+    /**
+     * @see [ListCommands.lindex]
+     */
+    public suspend fun lindex(key: String, index: Long): Response<String?>
 
-    suspend fun linsert(key: String, beforeAfterOption: BeforeAfterOption, pivot: String, element: String): Response<Long>
+    /**
+     * @see [ListCommands.linsert]
+     */
+    public suspend fun linsert(key: String, beforeAfterOption: BeforeAfterOption, pivot: String, element: String): Response<Long>
 
-    suspend fun llen(key: String): Response<Long>
+    /**
+     * @see [ListCommands.llen]
+     */
+    public suspend fun llen(key: String): Response<Long>
 
-    suspend fun lmove(
+    /**
+     * @see [ListCommands.lmove]
+     */
+    public suspend fun lmove(
         source: String,
         destination: String,
         leftRightOption1: LeftRightOption,
         leftRightOption2: LeftRightOption
     ): Response<String>
 
-    suspend fun lmpop(numkeys: Long, key: String, vararg keys: String, leftRight: LeftRightOption, count: Long?): Response<LMPOPResult?>
+    /**
+     * @see [ListCommands.lmpop]
+     */
+    public suspend fun lmpop(numkeys: Long, key: String, vararg keys: String, leftRight: LeftRightOption, count: Long?): Response<LMPOPResult?>
 
-    suspend fun lpop(key: String): Response<String?>
+    /**
+     * @see [ListCommands.lpop]
+     */
+    public suspend fun lpop(key: String): Response<String?>
 
-    suspend fun lpop(key: String, count: Long): Response<List<String>?>
+    /**
+     * @see [ListCommands.lpop]
+     */
+    public suspend fun lpop(key: String, count: Long): Response<List<String>?>
 }
 
-interface PipelineListCommandExecutor: PipelineListCommands, QueuedCommand, BaseListCommands{
+internal interface PipelineListCommandExecutor: PipelineListCommands, QueuedCommand, BaseListCommands{
     override suspend fun lindex(key: String, index: Long): Response<String?> = add(_lindex(key, index))
 
     override suspend fun linsert(

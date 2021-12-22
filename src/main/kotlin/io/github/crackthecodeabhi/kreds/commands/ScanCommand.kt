@@ -6,19 +6,19 @@ import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.second
 import java.lang.ClassCastException
 
-interface IScanResult<R>{
+internal interface IScanResult<R>{
     val cursor: Long
     val elements: List<R>
 }
 
-data class ScanResult(override val cursor: Long, override val elements: List<String>): IScanResult<String>
+public data class ScanResult(override val cursor: Long, override val elements: List<String>): IScanResult<String>
 
-typealias SScanResult = ScanResult
+public typealias SScanResult = ScanResult
 
-data class HScanResult(override val cursor: Long, override val elements: List<FieldValue<String,String>>): IScanResult<FieldValue<String, String>>
+public data class HScanResult(override val cursor: Long, override val elements: List<FieldValue<String,String>>): IScanResult<FieldValue<String, String>>
 
 
-abstract class AbstractScanResultProcessor<R>: CommandProcessor(ArrayHandler),ICommandProcessor{
+internal abstract class AbstractScanResultProcessor<R>: CommandProcessor(ArrayHandler),ICommandProcessor{
     override fun <T> decode(message: RedisMessage): T {
         val scanResult = super.decode<List<Any>>(message)
         //Scan result format:
@@ -41,7 +41,7 @@ abstract class AbstractScanResultProcessor<R>: CommandProcessor(ArrayHandler),IC
     }
 }
 
-object ScanResultProcessor: AbstractScanResultProcessor<String>(){
+internal object ScanResultProcessor: AbstractScanResultProcessor<String>(){
     override fun <T> decode(message: RedisMessage): T {
         val (cursor, list) = super.decode<Pair<Long,List<String>>>(message)
         @Suppress("UNCHECKED_CAST")
@@ -49,9 +49,9 @@ object ScanResultProcessor: AbstractScanResultProcessor<String>(){
     }
 }
 
-typealias SScanResultProcessor = ScanResultProcessor
+internal typealias SScanResultProcessor = ScanResultProcessor
 
-object HScanResultProcessor: AbstractScanResultProcessor<FieldValue<String,String>>(){
+internal object HScanResultProcessor: AbstractScanResultProcessor<FieldValue<String,String>>(){
     override fun <T> decode(message: RedisMessage): T {
         val (cursor, list) = super.decode<Pair<Long,List<FieldValue<String,String>>>>(message)
         @Suppress("UNCHECKED_CAST")

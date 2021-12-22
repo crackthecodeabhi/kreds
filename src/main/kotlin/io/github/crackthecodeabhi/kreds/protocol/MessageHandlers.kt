@@ -4,12 +4,12 @@ import io.netty.buffer.Unpooled
 import io.netty.handler.codec.redis.*
 import io.github.crackthecodeabhi.kreds.toDefaultCharset
 
-interface MessageHandler<T> {
+internal interface MessageHandler<T> {
     fun canHandle(message: RedisMessage): Boolean
     fun doHandle(message: RedisMessage): T
 }
 
-object SimpleStringHandler: MessageHandler<String>{
+internal object SimpleStringHandler: MessageHandler<String>{
     override fun canHandle(message: RedisMessage): Boolean = message is SimpleStringRedisMessage
 
     override fun doHandle(message: RedisMessage): String {
@@ -18,7 +18,7 @@ object SimpleStringHandler: MessageHandler<String>{
     }
 }
 
-object IntegerHandler: MessageHandler<Long>{
+internal object IntegerHandler: MessageHandler<Long>{
     override fun canHandle(message: RedisMessage): Boolean = message is IntegerRedisMessage
 
     override fun doHandle(message: RedisMessage): Long {
@@ -27,7 +27,7 @@ object IntegerHandler: MessageHandler<Long>{
     }
 }
 
-object BulkStringHandler: MessageHandler<String?>{
+internal object BulkStringHandler: MessageHandler<String?>{
     override fun canHandle(message: RedisMessage): Boolean = message is FullBulkStringRedisMessage
 
     override fun doHandle(message: RedisMessage): String? {
@@ -38,7 +38,7 @@ object BulkStringHandler: MessageHandler<String?>{
     }
 }
 
-object ArrayHandler: MessageHandler<List<Any?>>{
+internal object ArrayHandler: MessageHandler<List<Any?>>{
     override fun canHandle(message: RedisMessage): Boolean = message is ArrayRedisMessage
 
     override fun doHandle(message: RedisMessage): List<Any?> {

@@ -16,9 +16,9 @@ import io.github.crackthecodeabhi.kreds.protocol.ArrayHandler
 import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
 import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
 
-class KredsTransactionException(message: String): KredsException(message)
+public class KredsTransactionException internal constructor(message: String): KredsException(message)
 
-enum class TransactionCommand(override val subCommand: Command? = null) : Command {
+internal enum class TransactionCommand(override val subCommand: Command? = null) : Command {
     MULTI, EXEC, DISCARD, WATCH, UNWATCH;
     override val string = name
 }
@@ -29,7 +29,7 @@ enum class TransactionCommand(override val subCommand: Command? = null) : Comman
  * Each command returns a [Response] object, which can be queried after transaction execution to retrieve the result
  * of that command.
  */
-interface Transaction: PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands,
+public interface Transaction: PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands,
     PipelineListCommands, PipelineHyperLogLogCommands {
 
     /**
@@ -44,7 +44,7 @@ interface Transaction: PipelineStringCommands, PipelineKeyCommands, PipelineHash
      * @throws KredsTransactionException if transaction was aborted when using WATCH or if any command in transaction fails.
      *
      */
-    suspend fun exec()
+    public suspend fun exec()
 
     /**
      * ### MULTI
@@ -55,7 +55,7 @@ interface Transaction: PipelineStringCommands, PipelineKeyCommands, PipelineHash
      * @since 1.2.0
      * @return always OK.
      */
-    suspend fun multi(): Response<String>
+    public suspend fun multi(): Response<String>
 
     /**
      * ### DISCARD
@@ -63,7 +63,7 @@ interface Transaction: PipelineStringCommands, PipelineKeyCommands, PipelineHash
      * Discards this pipelined transaction. After transaction is discarded, any operation invoked on this transaction
      * throws [KredsTransactionException]
      */
-    suspend fun discard()
+    public suspend fun discard()
 }
 
 internal class TransactionImpl(private val client: DefaultKredsClient) : ExclusiveObject, Transaction,

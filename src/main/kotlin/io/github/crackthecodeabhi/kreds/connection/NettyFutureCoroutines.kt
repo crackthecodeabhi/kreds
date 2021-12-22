@@ -8,7 +8,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-suspend fun <V> Future<V>.suspendableAwait(): V {
+internal suspend fun <V> Future<V>.suspendableAwait(): V {
    return suspendCoroutine { cont ->
        addListener { f ->
            if(f.isDone && f.isSuccess) cont.resume(now)
@@ -17,7 +17,7 @@ suspend fun <V> Future<V>.suspendableAwait(): V {
    }
 }
 
-suspend fun ChannelFuture.suspendableAwait(): Channel {
+internal suspend fun ChannelFuture.suspendableAwait(): Channel {
     return suspendCoroutine { cont ->
         addListener(object : ChannelFutureListener{
             override fun operationComplete(future: ChannelFuture) {

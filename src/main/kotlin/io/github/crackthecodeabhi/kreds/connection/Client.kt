@@ -14,22 +14,22 @@ import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 
 //TODO: INCRBY can be negative also! check that in api, should accept long, not ulong
 
-object KredsClientGroup {
+public object KredsClientGroup {
     private val eventLoopGroup = NioEventLoopGroup()
-    fun newClient(endpoint: Endpoint, config: KredsClientConfig = defaultClientConfig): KredsClient =
+    public fun newClient(endpoint: Endpoint, config: KredsClientConfig = defaultClientConfig): KredsClient =
         DefaultKredsClient(endpoint, eventLoopGroup,config)
 
-    fun newSubscriberClient(endpoint: Endpoint, handler: KredsSubscriber, config: KredsClientConfig = defaultSubscriberClientConfig): KredsSubscriberClient =
+    public fun newSubscriberClient(endpoint: Endpoint, handler: KredsSubscriber, config: KredsClientConfig = defaultSubscriberClientConfig): KredsSubscriberClient =
         DefaultKredsSubscriberClient(endpoint, eventLoopGroup, handler, config)
 
-    suspend fun shutdown() {
+    public suspend fun shutdown() {
         eventLoopGroup.shutdownGracefully().suspendableAwait()
     }
 }
 
-interface KredsClient : AutoCloseable, KeyCommands, StringCommands, ConnectionCommands, PublisherCommands, HashCommands, SetCommands,
+public interface KredsClient : AutoCloseable, KeyCommands, StringCommands, ConnectionCommands, PublisherCommands, HashCommands, SetCommands,
     ListCommands, HyperLogLogCommands {
-    fun pipelined(): Pipeline
+    public fun pipelined(): Pipeline
 }
 
 internal abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :

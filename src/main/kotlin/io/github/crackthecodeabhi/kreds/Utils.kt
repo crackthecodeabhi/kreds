@@ -10,29 +10,29 @@ import java.nio.charset.Charset
  */
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS)
-annotation class CoroutineSafe
+internal annotation class CoroutineSafe
 
 /**
  * Any class marked with this annotation is **UNSAFE** to be called concurrently from coroutines.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class CoroutineUnsafe
+internal annotation class CoroutineUnsafe
 
 
-fun String.toByteBuf(): ByteBuf = Unpooled.copiedBuffer(this, Charset.defaultCharset())
+internal fun String.toByteBuf(): ByteBuf = Unpooled.copiedBuffer(this, Charset.defaultCharset())
 
-fun ByteBuf.toDefaultCharset(): String = this.toString(Charset.defaultCharset())
+internal fun ByteBuf.toDefaultCharset(): String = this.toString(Charset.defaultCharset())
 
-data class FieldValue<out A, out B>(val field: A,val value: B)
+public data class FieldValue<out A, out B>(val field: A,val value: B)
 
-fun <T> List<T>.second(): T {
+internal fun <T> List<T>.second(): T {
     if (isEmpty() || size < 2)
         throw NoSuchElementException("List doesn't have 2nd is empty.")
     return this[1]
 }
 
-fun <T> List<T>.third(): T {
+internal fun <T> List<T>.third(): T {
     if (isEmpty() || size < 3)
         throw NoSuchElementException("List doesn't have 2nd is empty.")
     return this[2]

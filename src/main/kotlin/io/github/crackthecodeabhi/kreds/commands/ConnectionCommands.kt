@@ -5,7 +5,7 @@ import io.github.crackthecodeabhi.kreds.commands.ConnectionCommand.*
 import io.github.crackthecodeabhi.kreds.commands.ClientConnectionCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 
-enum class ClientConnectionCommand(override val subCommand: Command? = null, override val string: String = "CLIENT"): Command{
+internal enum class ClientConnectionCommand(override val subCommand: Command? = null, override val string: String = "CLIENT"): Command{
     CLIENT_CACHING(CACHING),
     CLIENT_GETNAME(GETNAME),
     CLIENT_GETREDIR(GETREDIR),
@@ -18,14 +18,14 @@ enum class ClientConnectionCommand(override val subCommand: Command? = null, ove
     CLIENT_SETNAME(SETNAME),
     CLIENT_UNPAUSE(UNPAUSE),
 }
-enum class ConnectionCommand(command: String? = null, override val subCommand: Command? = null): Command{
+internal enum class ConnectionCommand(command: String? = null, override val subCommand: Command? = null): Command{
     AUTH,CACHING,GETNAME,GETREDIR,LIST,NO_EVICT("NO-EVICT"),
     ID,INFO,PAUSE,REPLY,SETNAME,UNPAUSE,ECHO,PING,QUIT,RESET,SELECT;
 
     override val string: String = command ?: name
 }
 
-interface BaseConnectionCommands{
+internal interface BaseConnectionCommands{
     fun _auth(password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor)
     fun _auth(username: String, password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor)
     fun _clientList(clientListType: ClientListType? = null, vararg clientIds: String): CommandExecution {
@@ -66,7 +66,7 @@ interface BaseConnectionCommands{
     fun _select(index: ULong)= CommandExecution(SELECT, SimpleStringCommandProcessor,index.toArgument())
 }
 
-interface ConnectionCommands{
+public interface ConnectionCommands{
     /**
      * ###  AUTH password
      *
@@ -74,7 +74,7 @@ interface ConnectionCommands{
      * @since 1.0.0
      * @return string reply an error if the password, or username/password pair, is invalid.
      */
-    suspend fun auth(password: String): String
+    public suspend fun auth(password: String): String
 
     /**
      * ###  AUTH username password
@@ -83,7 +83,7 @@ interface ConnectionCommands{
      * @since 1.0.0
      * @return string reply an error if the password, or username/password pair, is invalid.
      */
-    suspend fun auth(username: String, password: String): String
+    public suspend fun auth(username: String, password: String): String
 
     /**
      * ### CLIENT CACHING YES|NO
@@ -93,7 +93,7 @@ interface ConnectionCommands{
      * @since 6.0.0
      * @return OK
      */
-    suspend fun clientCaching(yes: Boolean): String
+    public suspend fun clientCaching(yes: Boolean): String
 
     /**
      * ### CLIENT GETNAME
@@ -103,7 +103,7 @@ interface ConnectionCommands{
      * @since 2.6.9
      * @return The connection name, or a null if no name is set.
      */
-    suspend fun clientGetName(): String?
+    public suspend fun clientGetName(): String?
 
     /**
      * ### CLIENT GETREDIR
@@ -113,7 +113,7 @@ interface ConnectionCommands{
      * @since 6.0.0
      * @return the ID of the client we are redirecting the notifications to. The command returns -1 if client tracking is not enabled, or 0 if client tracking is enabled but we are not redirecting the notifications to any client.
      */
-    suspend fun clientGetRedir(): Long
+    public suspend fun clientGetRedir(): Long
 
     /**
      * ### CLIENT ID
@@ -123,7 +123,7 @@ interface ConnectionCommands{
      * @since 5.0.0
      * @return The id of the client.
      */
-    suspend fun clientId(): Long
+    public suspend fun clientId(): Long
 
     /**
      * ### CLIENT INFO
@@ -133,7 +133,7 @@ interface ConnectionCommands{
      * @since 6.2.0
      * @return a unique string
      */
-    suspend fun clientInfo(): String
+    public suspend fun clientInfo(): String
 
     /**
      * ### ` CLIENT LIST [TYPE normal|master|replica|pubsub] [ID client-id [client-id ...]]`
@@ -142,7 +142,7 @@ interface ConnectionCommands{
      * @since 2.4.0
      * @return a unique string [refer](https://redis.io/commands/client-list)
      */
-    suspend fun clientList(clientListType: ClientListType? = null, vararg clientIds: String): String?
+    public suspend fun clientList(clientListType: ClientListType? = null, vararg clientIds: String): String?
 
     /**
      * ###  CLIENT NO-EVICT ON|OFF
@@ -151,7 +151,7 @@ interface ConnectionCommands{
      * @since 7.0.0
      * @return OK
      */
-    suspend fun clientNoEvict(on: Boolean): String
+    public suspend fun clientNoEvict(on: Boolean): String
 
     /**
      * ###  CLIENT PAUSE timeout [WRITE|ALL]
@@ -160,7 +160,7 @@ interface ConnectionCommands{
      * @since 2.9.50
      * @return OK or exception if the timeout is invalid.
      */
-    suspend fun clientPause(timeout: ULong, clientPauseOption: ClientPauseOption? = null): String
+    public suspend fun clientPause(timeout: ULong, clientPauseOption: ClientPauseOption? = null): String
 
     /**
      * ###  CLIENT REPLY ON|OFF|SKIP
@@ -169,7 +169,7 @@ interface ConnectionCommands{
      * @since 3.2.0
      * @return OK
      */
-    suspend fun clientReply(clientReplyOption: ClientReplyOption): String
+    public suspend fun clientReply(clientReplyOption: ClientReplyOption): String
 
     /**
      * ###  CLIENT SETNAME connection-name
@@ -178,7 +178,7 @@ interface ConnectionCommands{
      * @since 2.6.9
      * @return OK
      */
-    suspend fun clientSetname(connectionName: String): String
+    public suspend fun clientSetname(connectionName: String): String
 
     /**
      * ### CLIENT UNPAUSE
@@ -187,7 +187,7 @@ interface ConnectionCommands{
      * @since 6.2.0
      * @return OK
      */
-    suspend fun clientUnpause(): String
+    public suspend fun clientUnpause(): String
 
     /**
      * ###  ECHO message
@@ -196,7 +196,7 @@ interface ConnectionCommands{
      * @since 1.0.0
      * @return message
      */
-    suspend fun echo(message: String): String
+    public suspend fun echo(message: String): String
 
     /**
      * ###  `PING [message]`
@@ -205,7 +205,7 @@ interface ConnectionCommands{
      * @since 1.0.0
      * @return string reply
      */
-    suspend fun ping(message: String? = null): String
+    public suspend fun ping(message: String? = null): String
 
     /**
      * ### QUIT
@@ -214,7 +214,7 @@ interface ConnectionCommands{
      * @since 1.0.0
      * @return OK
      */
-    suspend fun quit(): String
+    public suspend fun quit(): String
 
     /**
      * ### RESET
@@ -223,7 +223,7 @@ interface ConnectionCommands{
      * @since 6.2
      * @return RESET
      */
-    suspend fun reset():String
+    public suspend fun reset():String
 
     /**
      * ### SELECT index
@@ -232,11 +232,11 @@ interface ConnectionCommands{
      * @since 1.0.0
      * @return String
      */
-    suspend fun select(index: ULong): String
+    public suspend fun select(index: ULong): String
 
 }
 
-interface ConnectionCommandsExecutor: CommandExecutor, ConnectionCommands, BaseConnectionCommands {
+internal interface ConnectionCommandsExecutor: CommandExecutor, ConnectionCommands, BaseConnectionCommands {
     override suspend fun auth(password: String): String = execute(_auth(password))
     override suspend fun auth(username: String, password: String): String =
         execute(_auth(username,password))

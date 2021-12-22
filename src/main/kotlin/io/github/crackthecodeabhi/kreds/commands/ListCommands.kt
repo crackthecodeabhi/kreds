@@ -8,7 +8,7 @@ import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.second
 import java.lang.ClassCastException
 
-enum class ListCommand(override val subCommand: Command? = null) : Command {
+internal enum class ListCommand(override val subCommand: Command? = null) : Command {
     BLMOVE, BLMPOP, BLPOP, BRPOP, BRPOPLPUSH, LINDEX, LINSERT, LLEN,
     LMOVE, LMPOP, LPOP, LPOS, LPUSH, LPUSHX, LRANGE, LREM, LSET, LTRIM,
     RPOP, RPOPLPUSH, RPUSH, RPUSHX;
@@ -16,7 +16,7 @@ enum class ListCommand(override val subCommand: Command? = null) : Command {
     override val string = name
 }
 
-interface BaseListCommands {
+internal interface BaseListCommands {
 
     fun _lindex(key: String, index: Long) =
         CommandExecution(LINDEX, BulkStringCommandProcessor,key.toArgument(),index.toArgument())
@@ -54,10 +54,10 @@ interface BaseListCommands {
         CommandExecution(LPOP,CommandProcessor(BulkStringHandler,ArrayHandler),key.toArgument(),count.toArgument())
 }
 
-data class LMPOPResult(val key: String, val elements: List<String>)
+public data class LMPOPResult(val key: String, val elements: List<String>)
 
 @Suppress("UNCHECKED_CAST")
-object LMPopResultProcessor : CommandProcessor(ArrayHandler, BulkStringHandler) {
+internal object LMPopResultProcessor : CommandProcessor(ArrayHandler, BulkStringHandler) {
     override fun <T> decode(message: RedisMessage): T {
         val reply: List<Any>? = super.decode(message)
         reply ?: return null as T
@@ -73,7 +73,7 @@ object LMPopResultProcessor : CommandProcessor(ArrayHandler, BulkStringHandler) 
     }
 }
 
-interface ListCommands {
+public interface ListCommands {
 
     /**
      * ###  LINDEX key index
@@ -84,7 +84,7 @@ interface ListCommands {
      * @since 1.0.0
      * @return the requested element, or null when index is out of range.
      */
-    suspend fun lindex(key: String, index: Long): String?
+    public suspend fun lindex(key: String, index: Long): String?
 
     /**
      * ### ` LINSERT key BEFORE|AFTER pivot element `
@@ -95,7 +95,7 @@ interface ListCommands {
      * @since 2.2.0
      * @return the length of the list after the insert operation, or -1 when the value pivot was not found
      */
-    suspend fun linsert(key: String, beforeAfterOption: BeforeAfterOption, pivot: String, element: String): Long
+    public suspend fun linsert(key: String, beforeAfterOption: BeforeAfterOption, pivot: String, element: String): Long
 
     /**
      * ### LLEN key
@@ -104,7 +104,7 @@ interface ListCommands {
      * @since 1.0.0
      * @return the length of the list at key.
      */
-    suspend fun llen(key: String): Long
+    public suspend fun llen(key: String): Long
 
     /**
      * ### ` LMOVE source destination LEFT|RIGHT LEFT|RIGHT `
@@ -113,7 +113,7 @@ interface ListCommands {
      * @since 6.2.0
      * @return the element being popped and pushed.
      */
-    suspend fun lmove(
+    public suspend fun lmove(
         source: String,
         destination: String,
         leftRightOption1: LeftRightOption,
@@ -130,7 +130,7 @@ interface ListCommands {
      * @return A null when no element could be popped.
      * A two-element array with the first element being the name of the key from which elements were popped, and the second element is an array of elements.
      */
-    suspend fun lmpop(
+    public suspend fun lmpop(
         numkeys: Long,
         key: String,
         vararg keys: String,
@@ -147,7 +147,7 @@ interface ListCommands {
      * @since 1.0.0
      * @return the value of the first element, or null when key does not exist.
      */
-    suspend fun lpop(key: String): String?
+    public suspend fun lpop(key: String): String?
 
     /**
      * ### ` LPOP key [count]`
@@ -158,11 +158,11 @@ interface ListCommands {
      * @since 1.0.0
      * @return list of popped elements, or null when key does not exist.
      */
-    suspend fun lpop(key: String, count: Long): List<String>?
+    public suspend fun lpop(key: String, count: Long): List<String>?
 
 }
 
-interface ListCommandExecutor : ListCommands, CommandExecutor, BaseListCommands {
+internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseListCommands {
     override suspend fun lindex(key: String, index: Long): String? =
         execute(_lindex(key, index))
 

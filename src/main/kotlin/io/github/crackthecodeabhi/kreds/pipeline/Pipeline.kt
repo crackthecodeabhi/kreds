@@ -12,23 +12,23 @@ import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
 import kotlin.jvm.Throws
 
 
-class Response<T>(private val responseFlow: Flow<List<Any?>>, private val index: Int){
+public class Response<T> internal constructor(private val responseFlow: Flow<List<Any?>>, private val index: Int){
 
     @Suppress("UNCHECKED_CAST")
     @Throws(KredsException::class,KredsRedisDataException::class)
-    suspend fun get(): T  = when(val value = responseFlow.first().ifEmpty { throw KredsException("Operation was cancelled.")  }[index]){
+    public suspend fun get(): T  = when(val value = responseFlow.first().ifEmpty { throw KredsException("Operation was cancelled.")  }[index]){
         is KredsException -> throw value
         else -> value as T
     }
 }
 
-interface QueuedCommand {
+internal interface QueuedCommand {
     suspend fun <T> add(commandExecution: CommandExecution): Response<T>
 }
 
-interface Pipeline : PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands,
+public interface Pipeline : PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands,
     PipelineListCommands, PipelineHyperLogLogCommands {
-    suspend fun execute()
+    public suspend fun execute()
 }
 
 

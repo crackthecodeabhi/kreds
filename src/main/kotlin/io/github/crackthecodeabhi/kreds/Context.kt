@@ -5,7 +5,7 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.*
 
 
-object KredsContext{
+public object KredsContext{
     @JvmStatic
     internal val context = Executors.newSingleThreadExecutor { r -> Thread(r, "KredsRunner") }.asCoroutineDispatcher()
 }
@@ -20,6 +20,6 @@ private class KredsContinuation<T>(val cont: Continuation<T>): Continuation<T>{
     }
 }
 
-object Kreds: AbstractCoroutineContextElement(ContinuationInterceptor), ContinuationInterceptor{
+public object Kreds: AbstractCoroutineContextElement(ContinuationInterceptor), ContinuationInterceptor{
     override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = KredsContinuation(continuation)
 }

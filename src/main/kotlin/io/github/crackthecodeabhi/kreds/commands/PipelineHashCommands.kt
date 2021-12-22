@@ -4,91 +4,91 @@ import io.github.crackthecodeabhi.kreds.args.FieldValuePair
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 
-interface PipelineHashCommands{
+public interface PipelineHashCommands{
     /**
      * @see [HashCommands.hdel]
      */
-    suspend fun hdel(key: String, field: String, vararg moreFields: String): Response<Long>
+    public suspend fun hdel(key: String, field: String, vararg moreFields: String): Response<Long>
 
     /**
      * @see [HashCommands.hexists]
      */
-    suspend fun hexists(key: String, field: String): Response<Long>
+    public suspend fun hexists(key: String, field: String): Response<Long>
 
     /**
      * @see [HashCommands.hget]
      */
-    suspend fun hget(key: String, field: String): Response<String?>
+    public suspend fun hget(key: String, field: String): Response<String?>
 
     /**
      * @see [HashCommands.hgetAll]
      */
-    suspend fun hgetAll(key: String): Response<List<String>>
+    public suspend fun hgetAll(key: String): Response<List<String>>
 
     /**
      * @see [HashCommands.hincrBy]
      */
-    suspend fun hincrBy(key: String, field: String, increment: Long): Response<Long>
+    public suspend fun hincrBy(key: String, field: String, increment: Long): Response<Long>
 
     /**
      * @see [HashCommands.hincrByFloat]
      */
-    suspend fun hincrByFloat(key: String,field: String, increment: Long): Response<String>
+    public suspend fun hincrByFloat(key: String,field: String, increment: Long): Response<String>
 
     /**
      * @see [HashCommands.hkeys]
      */
-    suspend fun hkeys(key: String): Response<List<String>>
+    public suspend fun hkeys(key: String): Response<List<String>>
 
     /**
      * @see [HashCommands.hlen]
      */
-    suspend fun hlen(key: String): Response<Long>
+    public suspend fun hlen(key: String): Response<Long>
 
     /**
      * @see [HashCommands.hmget]
      */
-    suspend fun hmget(key: String, field: String, vararg fields: String): Response<List<String?>>
+    public suspend fun hmget(key: String, field: String, vararg fields: String): Response<List<String?>>
 
     /**
      * @see [HashCommands.hrandfield]
      */
-    suspend fun hrandfield(key: String): Response<String?>
+    public suspend fun hrandfield(key: String): Response<String?>
 
 
     /**
      * @see [HashCommands.hrandfield]
      */
-    suspend fun hrandfield(key: String, count: Int, withValues: Boolean? = null): Response<List<String>>
+    public suspend fun hrandfield(key: String, count: Int, withValues: Boolean? = null): Response<List<String>>
 
 
     /**
      * @see [HashCommands.hset]
      */
-    suspend fun hset(key: String, fieldValuePair: FieldValuePair, vararg fieldValuePairs: FieldValuePair): Response<Long>
+    public suspend fun hset(key: String, fieldValuePair: FieldValuePair, vararg fieldValuePairs: FieldValuePair): Response<Long>
 
     /**
      * @see [HashCommands.hsetnx]
      */
-    suspend fun hsetnx(key: String,field: String, value: String): Response<Long>
+    public suspend fun hsetnx(key: String,field: String, value: String): Response<Long>
 
     /**
      * @see [HashCommands.hstrlen]
      */
-    suspend fun hstrlen(key: String, field: String): Response<Long>
+    public suspend fun hstrlen(key: String, field: String): Response<Long>
 
      /**
      * @see [HashCommands.hvals]
      */
-     suspend fun hvals(key: String): Response<List<String>>
+     public suspend fun hvals(key: String): Response<List<String>>
 
     /**
      * @see  [HashCommands.hscan]
      */
-    suspend fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): Response<HScanResult>
+    public suspend fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): Response<HScanResult>
 }
 
-interface PipelineHashCommandExecutor: QueuedCommand, PipelineHashCommands, BaseHashCommands {
+internal interface PipelineHashCommandExecutor: QueuedCommand, PipelineHashCommands, BaseHashCommands {
     override suspend fun hdel(key: String, field: String, vararg moreFields: String): Response<Long> =
         add(_hdel(key,field, *moreFields))
 

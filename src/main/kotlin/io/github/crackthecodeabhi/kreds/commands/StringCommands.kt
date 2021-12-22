@@ -5,7 +5,7 @@ import io.github.crackthecodeabhi.kreds.commands.StringCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 import java.math.BigDecimal
 
-interface BaseStringCommands{
+internal interface BaseStringCommands{
     fun _append(key: String, value: String)= CommandExecution(APPEND,IntegerCommandProcessor, key.toArgument(),value.toArgument())
 
     fun _get(key: String) = CommandExecution(GET, BulkStringCommandProcessor,key.toArgument())
@@ -54,7 +54,7 @@ interface BaseStringCommands{
 }
 
 
-interface StringCommands{
+public interface StringCommands{
     /**
      * ###  APPEND key value
      *
@@ -65,7 +65,7 @@ interface StringCommands{
      * @since 2.0.0
      * @return the length of the string after the append operation.
      */
-    suspend fun append(key: String, value: String): Long
+    public suspend fun append(key: String, value: String): Long
 
     /**
      * ###   DECR key
@@ -76,7 +76,7 @@ interface StringCommands{
      * @since 1.0.0
      * @return the value of key after the decrement
      */
-    suspend fun decr(key: String): Long
+    public suspend fun decr(key: String): Long
 
     /**
      * ###  DECRBY key decrement
@@ -87,7 +87,7 @@ interface StringCommands{
      * @since 1.0.0
      * @return the value of key after the decrement
      */
-    suspend fun decrBy(key: String, decrement: Long): Long
+    public suspend fun decrBy(key: String, decrement: Long): Long
 
     /**
      * ###  GET key
@@ -98,7 +98,7 @@ interface StringCommands{
      * @since 1.0.0
      * @return the value of key, or null when key does not exist.
      */
-    suspend fun get(key: String): String?
+    public suspend fun get(key: String): String?
 
     /**
      * ###  GETDEL key
@@ -109,7 +109,7 @@ interface StringCommands{
      * @since 6.2.0
      * @return the value of key, null when key does not exist, or an error if the key's value type isn't a string.
      */
-    suspend fun getDel(key: String): String?
+    public suspend fun getDel(key: String): String?
 
     /**
      * ###  GETEX key [EX seconds|PX milliseconds|EXAT timestamp|PXAT milliseconds-timestamp|PERSIST]
@@ -120,7 +120,7 @@ interface StringCommands{
      * @since 6.2.0
      * @return the value of key, or nil when key does not exist.
      */
-    suspend fun getEx(key: String, getExOption: GetExOption? = null): String?
+    public suspend fun getEx(key: String, getExOption: GetExOption? = null): String?
 
     /**
      * ###  GETRANGE key start end
@@ -131,7 +131,7 @@ interface StringCommands{
      * @since 2.4.0
      * @return string value or null
      */
-    suspend fun getRange(key: String, start: Int, end: Int): String?
+    public suspend fun getRange(key: String, start: Int, end: Int): String?
 
     /**
      * ###  GETSET key value
@@ -142,7 +142,7 @@ interface StringCommands{
      * @since 1.0.0
      * @return the old value stored at key, or null when key did not exist.
      */
-    suspend fun getSet(key: String,value: String): String?
+    public suspend fun getSet(key: String,value: String): String?
 
     /**
      * ###  INCR key
@@ -153,7 +153,7 @@ interface StringCommands{
      * @since 1.0.0
      * @return  the value of key after the increment
      */
-    suspend fun incr(key: String): Long
+    public suspend fun incr(key: String): Long
 
     /**
      * ###  INCRBY key increment
@@ -164,7 +164,7 @@ interface StringCommands{
      * @since 1.0.0
      * @return the value of key after the increment
      */
-    suspend fun incrBy(key: String, increment: Long): Long
+    public suspend fun incrBy(key: String, increment: Long): Long
 
     /**
      * ###  INCRBYFLOAT key increment
@@ -175,7 +175,7 @@ interface StringCommands{
      * @since 2.6.0
      * @return the value of key after the increment.
      */
-    suspend fun incrByFloat(key: String,increment: BigDecimal): String?
+    public suspend fun incrByFloat(key: String,increment: BigDecimal): String?
 
     /**
      * ### ` MGET key [key ...]`
@@ -188,7 +188,7 @@ interface StringCommands{
      * @since 1.0.0
      * @return list of values at the specified keys.
      */
-    suspend fun mget(vararg keys: String): List<String?>
+    public suspend fun mget(vararg keys: String): List<String?>
 
     /**
      * ### `MSET key value [key value ...]`
@@ -199,7 +199,7 @@ interface StringCommands{
      * @since 1.0.1
      * @return OK
      */
-    suspend fun mset(vararg keyValues: KeyValuePair): String
+    public suspend fun mset(vararg keyValues: KeyValuePair): String
 
 
     /**
@@ -227,15 +227,15 @@ interface StringCommands{
      * - Null if the key did not exist.
      * - Null if the SET operation was not performed because the user specified the NX or XX option but the condition was not met.
      */
-    suspend fun set(key: String, value: String, setOption: SetOption? = null): String?
+    public suspend fun set(key: String, value: String, setOption: SetOption? = null): String?
 }
 
-enum class StringCommand(override val subCommand: Command? = null): Command{
+internal enum class StringCommand(override val subCommand: Command? = null): Command{
     APPEND,DECR,DECRBY,GET,GETDEL,GETRANGE,GETSET,INCR,INCRBY,INCRBYFLOAT,MGET,MSET,SET,GETEX;
     override val string = name
 }
 
-interface StringCommandsExecutor: CommandExecutor, StringCommands, BaseStringCommands{
+internal interface StringCommandsExecutor: CommandExecutor, StringCommands, BaseStringCommands{
     override suspend fun append(key: String, value: String): Long = execute(_append(key,value))
 
     override suspend fun decr(key: String): Long = execute(_decr(key))

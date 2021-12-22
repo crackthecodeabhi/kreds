@@ -6,13 +6,13 @@ import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 
-enum class HyperLogLogCommand(override val subCommand: Command? = null): Command{
+internal enum class HyperLogLogCommand(override val subCommand: Command? = null): Command{
     PFADD,PFCOUNT,PFMERGE;
 
     override val string = name
 }
 
-interface BaseHyperLogLogCommands{
+internal interface BaseHyperLogLogCommands{
 
     fun _pfadd(key: String, vararg elements: String)=
         CommandExecution(PFADD, IntegerCommandProcessor,*createArguments(key,elements))
@@ -26,7 +26,7 @@ interface BaseHyperLogLogCommands{
         ))
 }
 
-interface HyperLogLogCommands {
+public interface HyperLogLogCommands {
 
     /**
      * ### ` PFADD key [element [element ...]] `
@@ -37,7 +37,7 @@ interface HyperLogLogCommands {
      * @since 2.8.9
      * @return 1 if at least 1 HyperLogLog internal register was altered. 0 otherwise.
      */
-    suspend fun pfadd(key: String, vararg elements: String): Long
+    public suspend fun pfadd(key: String, vararg elements: String): Long
 
     /**
      * ### ` PFCOUNT key [key ...]`
@@ -49,7 +49,7 @@ interface HyperLogLogCommands {
      * @since 2.8.9
      * @return The approximated number of unique elements observed via PFADD.
      */
-    suspend fun pfcount(key: String, vararg keys: String): Long
+    public suspend fun pfcount(key: String, vararg keys: String): Long
 
     /**
      * ### ` PFMERGE destkey sourcekey [sourcekey ...] `
@@ -60,10 +60,10 @@ interface HyperLogLogCommands {
      * @since 2.8.9
      * @return The command just returns OK.
      */
-    suspend fun pfmerge(destKey: String,sourceKey: String, vararg sourceKeys: String): String
+    public suspend fun pfmerge(destKey: String,sourceKey: String, vararg sourceKeys: String): String
 }
 
-interface HyperLogLogCommandExecutor: HyperLogLogCommands, CommandExecutor, BaseHyperLogLogCommands{
+internal interface HyperLogLogCommandExecutor: HyperLogLogCommands, CommandExecutor, BaseHyperLogLogCommands{
 
     override suspend fun pfadd(key: String, vararg elements: String): Long =
         execute(_pfadd(key, *elements))
@@ -76,25 +76,25 @@ interface HyperLogLogCommandExecutor: HyperLogLogCommands, CommandExecutor, Base
 }
 
 
-interface PipelineHyperLogLogCommands {
+public interface PipelineHyperLogLogCommands {
     /**
      * @see [HyperLogLogCommands.pfadd]
      */
-    suspend fun pfadd(key: String, vararg elements: String): Response<Long>
+    public suspend fun pfadd(key: String, vararg elements: String): Response<Long>
 
     /**
      * @see [HyperLogLogCommands.pfcount]
      */
-    suspend fun pfcount(key: String, vararg keys: String): Response<Long>
+    public suspend fun pfcount(key: String, vararg keys: String): Response<Long>
 
     /**
      * @see [HyperLogLogCommands.pfmerge]
      */
-    suspend fun pfmerge(destKey: String,sourceKey: String, vararg sourceKeys: String): Response<String>
+    public suspend fun pfmerge(destKey: String,sourceKey: String, vararg sourceKeys: String): Response<String>
 }
 
 
-interface PipelineHyperLogLogCommandExecutor: PipelineHyperLogLogCommands, QueuedCommand, BaseHyperLogLogCommands {
+internal interface PipelineHyperLogLogCommandExecutor: PipelineHyperLogLogCommands, QueuedCommand, BaseHyperLogLogCommands {
     override suspend fun pfadd(key: String, vararg elements: String): Response<Long> =
         add(_pfadd(key, *elements))
 

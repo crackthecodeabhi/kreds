@@ -5,80 +5,80 @@ import java.math.BigDecimal
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 
-interface PipelineStringCommands{
+public interface PipelineStringCommands{
     /**
      * @see [StringCommands.get]
      */
-    suspend fun get(key: String): Response<String?>
+    public suspend fun get(key: String): Response<String?>
 
     /**
      * @see [StringCommands.set]
      */
-    suspend fun set(key: String, value: String, setOption: SetOption? = null): Response<String?>
+    public suspend fun set(key: String, value: String, setOption: SetOption? = null): Response<String?>
 
     /**
      * @see [StringCommands.append]
      */
-    suspend fun append(key: String, value: String): Response<Long>
+    public suspend fun append(key: String, value: String): Response<Long>
 
     /**
      * @see [StringCommands.decr]
      */
-    suspend fun decr(key: String): Response<Long>
+    public suspend fun decr(key: String): Response<Long>
 
     /**
      * @see [StringCommands.decrBy]
      */
-    suspend fun decrBy(key: String, decrement: Long): Response<Long>
+    public suspend fun decrBy(key: String, decrement: Long): Response<Long>
 
     /**
      * @see [StringCommands.getDel]
      */
-    suspend fun getDel(key: String): Response<String?>
+    public suspend fun getDel(key: String): Response<String?>
 
     /**
      * @see [StringCommands.getRange]
      */
-    suspend fun getRange(key: String, start: Int, end: Int): Response<String?>
+    public suspend fun getRange(key: String, start: Int, end: Int): Response<String?>
 
     /**
      * @see [StringCommands.getSet]
      */
-    suspend fun getSet(key: String,value: String): Response<String?>
+    public suspend fun getSet(key: String,value: String): Response<String?>
 
     /**
      * @see [StringCommands.incr]
      */
-    suspend fun incr(key: String): Response<Long>
+    public suspend fun incr(key: String): Response<Long>
 
     /**
      * @see [StringCommands.incrBy]
      */
-    suspend fun incrBy(key: String, increment: Long): Response<Long>
+    public suspend fun incrBy(key: String, increment: Long): Response<Long>
 
     /**
      * @see [StringCommands.incrByFloat]
      */
-    suspend fun incrByFloat(key: String,increment: BigDecimal): Response<String?>
+    public suspend fun incrByFloat(key: String,increment: BigDecimal): Response<String?>
 
     /**
      * @see [StringCommands.mget]
      */
-    suspend fun mget(vararg keys: String): Response<List<String?>>
+    public suspend fun mget(vararg keys: String): Response<List<String?>>
 
     /**
      * @see [StringCommands.mset]
      */
-    suspend fun mset(vararg keyValues: KeyValuePair): Response<String>
+    public suspend fun mset(vararg keyValues: KeyValuePair): Response<String>
 
     /**
      * @see [StringCommands.getEx]
      */
-    suspend fun getEx(key: String, getExOption: GetExOption? = null): Response<String?>
+    public suspend fun getEx(key: String, getExOption: GetExOption? = null): Response<String?>
 }
 
 
-interface PipelineStringCommandsExecutor: PipelineStringCommands,BaseStringCommands, QueuedCommand {
+internal interface PipelineStringCommandsExecutor: PipelineStringCommands,BaseStringCommands, QueuedCommand {
     override suspend fun get(key: String): Response<String?> = add(_get(key))
 
     override suspend fun set(key: String, value: String, setOption: SetOption?): Response<String?> = add(_set(key,value,setOption))

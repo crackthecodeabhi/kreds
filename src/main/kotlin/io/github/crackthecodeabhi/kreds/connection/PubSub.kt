@@ -11,18 +11,18 @@ import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 import io.github.crackthecodeabhi.kreds.protocol.*
 
-class KredsPubSubException : KredsException {
-    companion object {
+public class KredsPubSubException : KredsException {
+    internal companion object {
         @JvmStatic
         val serialVersionUID = -942312382149778098L
     }
 
-    constructor(message: String) : super(message)
-    constructor(throwable: Throwable) : super(throwable)
-    constructor(message: String, throwable: Throwable) : super(message, throwable)
+    internal constructor(message: String) : super(message)
+    internal constructor(throwable: Throwable) : super(throwable)
+    internal constructor(message: String, throwable: Throwable) : super(message, throwable)
 }
 
-enum class PubSubCommand(override val subCommand: Command? = null, commandString: String? = null) : Command {
+internal enum class PubSubCommand(override val subCommand: Command? = null, commandString: String? = null) : Command {
     PSUBSCRIBE,PUBLISH, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE,
 
     CHANNELS,NUMPAT,NUMSUB,HELP,
@@ -39,22 +39,22 @@ enum class PubSubCommand(override val subCommand: Command? = null, commandString
  * New coroutines will be launched in the provided [scope] for each event,
  * clients have full control over context, dispatcher of the coroutines created to fire the events.
  */
-interface KredsSubscriber {
-    fun onMessage(channel: String, message: String)
-    fun onPMessage(pattern: String, channel: String, message: String)
-    fun onSubscribe(channel: String, subscribedChannels: Long)
-    fun onUnsubscribe(channel: String, subscribedChannels: Long)
-    fun onPUnsubscribe(pattern: String, subscribedChannels: Long)
-    fun onPSubscribe(pattern: String, subscribedChannels: Long)
-    fun onException(ex: Throwable)
-    val scope: CoroutineScope
+public interface KredsSubscriber {
+    public fun onMessage(channel: String, message: String)
+    public fun onPMessage(pattern: String, channel: String, message: String)
+    public fun onSubscribe(channel: String, subscribedChannels: Long)
+    public fun onUnsubscribe(channel: String, subscribedChannels: Long)
+    public fun onPUnsubscribe(pattern: String, subscribedChannels: Long)
+    public fun onPSubscribe(pattern: String, subscribedChannels: Long)
+    public fun onException(ex: Throwable)
+    public val scope: CoroutineScope
 }
 
 /**
  * Clients override the required methods to process those events else they are discarded by default.
  * @see KredsSubscriber
  */
-abstract class AbstractKredsSubscriber(override val scope: CoroutineScope) : KredsSubscriber {
+public abstract class AbstractKredsSubscriber(override val scope: CoroutineScope) : KredsSubscriber {
 
     override fun onMessage(channel: String, message: String) {}
 
@@ -70,7 +70,7 @@ abstract class AbstractKredsSubscriber(override val scope: CoroutineScope) : Kre
 
 }
 
-interface PublisherCommands {
+public interface PublisherCommands {
     /**
      * ###  PUBLISH channel message
      *
@@ -80,7 +80,7 @@ interface PublisherCommands {
      * @since 2.0.0
      * @return the number of clients that received the message. Note that in a Redis Cluster, only clients that are connected to the same node as the publishing client are included in the count
      */
-    suspend fun publish(channel: String, message: String): Long
+    public suspend fun publish(channel: String, message: String): Long
 
     /**
      * ###  PUBSUB CHANNELS [pattern]
@@ -91,7 +91,7 @@ interface PublisherCommands {
      * @since 2.8.0
      * @return a list of active channels, optionally matching the specified pattern.
      */
-    suspend fun pubsubChannels(pattern: String? = null): List<String>
+    public suspend fun pubsubChannels(pattern: String? = null): List<String>
 
     /**
      * ### PUBSUB NUMPAT
@@ -102,7 +102,7 @@ interface PublisherCommands {
      * @since 2.8.0
      * @return the number of patterns all the clients are subscribed to.
      */
-    suspend fun pubsubNumpat(): Long
+    public suspend fun pubsubNumpat(): Long
 
     /**
      * ###  `PUBSUB NUMSUB [channel [channel ...]]`
@@ -114,7 +114,7 @@ interface PublisherCommands {
      * @return  a list of channels and number of subscribers for every channel.
      * The format is channel, count, channel, count, ..., so the list is flat. The order in which the channels are listed is the same as the order of the channels specified in the command call.
      */
-    suspend fun pubsubNumsub(vararg channels: String): List<Any>
+    public suspend fun pubsubNumsub(vararg channels: String): List<Any>
 
     /**
      * ### PUBSUB HELP
@@ -125,11 +125,11 @@ interface PublisherCommands {
      * @since 6.2.0
      * @return a list of subcommands and their descriptions
      */
-    suspend fun pubsubHelp(): List<String>
+    public suspend fun pubsubHelp(): List<String>
 
 }
 
-interface PublishCommandExecutor : PublisherCommands, CommandExecutor {
+internal interface PublishCommandExecutor : PublisherCommands, CommandExecutor {
     override suspend fun publish(channel: String, message: String): Long =
         execute(PUBLISH, IntegerCommandProcessor, channel.toArgument(), message.toArgument())
 
@@ -146,7 +146,7 @@ interface PublishCommandExecutor : PublisherCommands, CommandExecutor {
         execute(PUBSUB_HELP, ArrayCommandProcessor)
 }
 
-interface SubscriberCommands {
+public interface SubscriberCommands {
     /**
      * ###  `SUBSCRIBE channel [channel ...]`
      *
@@ -155,7 +155,7 @@ interface SubscriberCommands {
      * [Doc](https://redis.io/commands/subscribe)
      * @since 2.0.0
      */
-    suspend fun subscribe(vararg channels: String)
+    public suspend fun subscribe(vararg channels: String)
 
     /**
      * ### `PSUBSCRIBE pattern [pattern ...]`
@@ -165,7 +165,7 @@ interface SubscriberCommands {
      * [Doc](https://redis.io/commands/psubscribe)
      * @since 2.0.0
      */
-    suspend fun pSubscribe(vararg patterns: String)
+    public suspend fun pSubscribe(vararg patterns: String)
 
     /**
      * ### PUNSUBSCRIBE [pattern [pattern ...]]
@@ -175,7 +175,7 @@ interface SubscriberCommands {
      * [Doc](https://redis.io/commands/punsubscribe)
      * @since 2.0.0
      */
-    suspend fun pUnsubscribe(vararg patterns: String)
+    public suspend fun pUnsubscribe(vararg patterns: String)
 
     /**
      * ## `PING [message]`
@@ -186,7 +186,7 @@ interface SubscriberCommands {
      * @since 1.0.0
      * @return PONG or message
      */
-    suspend fun ping(message: String? = null): String
+    public suspend fun ping(message: String? = null): String
 
     /**
      * ### RESET
@@ -197,7 +197,7 @@ interface SubscriberCommands {
      * @since 6.2
      * @return RESET
      */
-    suspend fun reset(): String
+    public suspend fun reset(): String
 
     /**
      * ### QUIT
@@ -208,7 +208,7 @@ interface SubscriberCommands {
      * @since 1.0.0
      * @return OK
      */
-    suspend fun quit(): String
+    public suspend fun quit(): String
 
     /**
      * ### `UNSUBSCRIBE [channel [channel ...]]`
@@ -218,10 +218,10 @@ interface SubscriberCommands {
      * [Doc](https://redis.io/commands/unsubscribe)
      * @since 2.0.0
      */
-    suspend fun unsubscribe(vararg channels: String)
+    public suspend fun unsubscribe(vararg channels: String)
 }
 
-interface KredsSubscriberClient : AutoCloseable, SubscriberCommands {
+public interface KredsSubscriberClient : AutoCloseable, SubscriberCommands {
 
 }
 

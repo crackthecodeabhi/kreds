@@ -4,119 +4,119 @@ import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 
-interface PipelineKeyCommands{
+public interface PipelineKeyCommands{
     /**
      * @see [KeyCommands.del]
      */
-    suspend fun del(vararg keys: String): Response<Long>
+    public suspend fun del(vararg keys: String): Response<Long>
 
     /**
      * @see [KeyCommands.copy]
      */
-    suspend fun copy(source: String, destination: String, destinationDb: String? = null, replace: Boolean? = null): Response<Long>
+    public suspend fun copy(source: String, destination: String, destinationDb: String? = null, replace: Boolean? = null): Response<Long>
 
     /**
      * @see [KeyCommands.dump]
      */
-    suspend fun dump(key: String): Response<String?>
+    public suspend fun dump(key: String): Response<String?>
 
     /**
      * @see [KeyCommands.exists]
      */
-    suspend fun exists(vararg keys: String): Response<Long>
+    public suspend fun exists(vararg keys: String): Response<Long>
 
     /**
      * @see [KeyCommands.expire]
      */
-    suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption? = null): Response<Long>
+    public suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption? = null): Response<Long>
 
     /**
      * @see [KeyCommands.expireAt]
      */
-    suspend fun expireAt(key: String, timestamp: ULong, expireOption: ExpireOption? = null): Response<Long>
+    public suspend fun expireAt(key: String, timestamp: ULong, expireOption: ExpireOption? = null): Response<Long>
 
     /**
      * @see [KeyCommands.expireTime]
      */
-    suspend fun expireTime(key: String): Response<Long>
+    public suspend fun expireTime(key: String): Response<Long>
 
     /**
      * @see [KeyCommands.keys]
      */
-    suspend fun keys(pattern: String): Response<List<String>>
+    public suspend fun keys(pattern: String): Response<List<String>>
 
     /**
      * @see [KeyCommands.move]
      */
-    suspend fun move(key: String, db: String): Response<Long>
+    public suspend fun move(key: String, db: String): Response<Long>
 
     /**
      * @see [KeyCommands.persist]
      */
-    suspend fun persist(key: String): Response<Long>
+    public suspend fun persist(key: String): Response<Long>
 
     /**
      * @see [KeyCommands.pexpire]
      */
-    suspend fun pexpire(key: String, milliseconds: ULong,expireOption: PExpireOption? = null): Response<Long>
+    public suspend fun pexpire(key: String, milliseconds: ULong,expireOption: PExpireOption? = null): Response<Long>
 
     /**
      * @see [KeyCommands.pexpireat]
      */
-    suspend fun pexpireat(key:String, millisecondsTimestamp: ULong, expireOption: PExpireOption? = null /* = org.kreds.ExpireOption? */): Response<Long>
+    public suspend fun pexpireat(key:String, millisecondsTimestamp: ULong, expireOption: PExpireOption? = null /* = org.kreds.ExpireOption? */): Response<Long>
 
     /**
      * @see [KeyCommands.pexpiretime]
      */
-    suspend fun pexpiretime(key: String): Response<Long>
+    public suspend fun pexpiretime(key: String): Response<Long>
 
     /**
      * @see [KeyCommands.pttl]
      */
-    suspend fun pttl(key: String): Response<Long>
+    public suspend fun pttl(key: String): Response<Long>
 
     /**
      * @see [KeyCommands.randomKey]
      */
-    suspend fun randomKey(): Response<String?>
+    public suspend fun randomKey(): Response<String?>
 
     /**
      * @see [KeyCommands.rename]
      */
-    suspend fun rename(key: String, newKey: String): Response<String>
+    public suspend fun rename(key: String, newKey: String): Response<String>
 
     /**
      * @see [KeyCommands.renamenx]
      */
-    suspend fun renamenx(key: String, newKey: String): Response<Long>
+    public suspend fun renamenx(key: String, newKey: String): Response<Long>
 
     /**
      * @see [KeyCommands.touch]
      */
-    suspend fun touch(vararg keys: String): Response<Long>
+    public suspend fun touch(vararg keys: String): Response<Long>
 
     /**
      * @see [KeyCommands.ttl]
      */
-    suspend fun ttl(key: String): Response<Long>
+    public suspend fun ttl(key: String): Response<Long>
 
     /**
      * @see [KeyCommands.type]
      */
-    suspend fun type(key: String): Response<String>
+    public suspend fun type(key: String): Response<String>
 
     /**
      * @see [KeyCommands.unlink]
      */
-    suspend fun unlink(vararg keys: String): Response<Long>
+    public suspend fun unlink(vararg keys: String): Response<Long>
 
     /**
      * @see [KeyCommands.scan]
      */
-    suspend fun scan(cursor: Long, matchPattern: String? = null, count: Long? = null, type: String? = null): Response<ScanResult>
+    public suspend fun scan(cursor: Long, matchPattern: String? = null, count: Long? = null, type: String? = null): Response<ScanResult>
 }
 
-interface PipelineKeyCommandExecutor: QueuedCommand, PipelineKeyCommands, BaseKeyCommands {
+internal interface PipelineKeyCommandExecutor: QueuedCommand, PipelineKeyCommands, BaseKeyCommands {
 
     override suspend fun del(vararg keys: String): Response<Long>  = add(_del(*keys))
 
