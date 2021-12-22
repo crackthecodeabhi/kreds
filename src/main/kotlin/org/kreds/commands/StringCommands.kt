@@ -230,11 +230,9 @@ interface StringCommands{
     suspend fun set(key: String, value: String, setOption: SetOption? = null): String?
 }
 
-enum class StringCommand: Command{
+enum class StringCommand(override val subCommand: Command? = null): Command{
     APPEND,DECR,DECRBY,GET,GETDEL,GETRANGE,GETSET,INCR,INCRBY,INCRBYFLOAT,MGET,MSET,SET,GETEX;
-
-    private val commandString = name.replace('_',' ');
-    override val string: String = commandString
+    override val string = name
 }
 
 interface StringCommandsExecutor: CommandExecutor, StringCommands, BaseStringCommands{

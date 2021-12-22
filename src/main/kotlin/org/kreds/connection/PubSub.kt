@@ -23,12 +23,17 @@ class KredsPubSubException : KredsException {
     constructor(message: String, throwable: Throwable) : super(message, throwable)
 }
 
-enum class PubSubCommand : Command {
-    PSUBSCRIBE, PUBSUB_CHANNELS, PUBSUB_NUMPAT, PUBSUB_NUMSUB, PUBSUB_HELP,
-    PUBLISH, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE;
+enum class PubSubCommand(override val subCommand: Command? = null, commandString: String? = null) : Command {
+    PSUBSCRIBE,PUBLISH, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE,
 
-    private val command = name.replace('_', ' ')
-    override val string = command
+    CHANNELS,NUMPAT,NUMSUB,HELP,
+
+    PUBSUB_CHANNELS(CHANNELS,"PUBSUB"),
+    PUBSUB_NUMPAT(NUMPAT,"PUBSUB"),
+    PUBSUB_NUMSUB(NUMSUB,"PUBSUB"),
+    PUBSUB_HELP(HELP,"PUBSUB");
+
+    override val string = commandString ?: name
 }
 
 /**
@@ -112,6 +117,17 @@ interface PublisherCommands {
      */
     suspend fun pubsubNumsub(vararg channels: String): List<Any>
 
+    /**
+     * ### PUBSUB HELP
+     *
+     * The PUBSUB HELP command returns a helpful text describing the different subcommands.
+     *
+     * [Doc](https://redis.io/commands/pubsub-help)
+     * @since 6.2.0
+     * @return a list of subcommands and their descriptions
+     */
+    suspend fun pubsubHelp(): List<String>
+
 }
 
 interface PublishCommandExecutor : PublisherCommands, CommandExecutor {
@@ -126,6 +142,9 @@ interface PublishCommandExecutor : PublisherCommands, CommandExecutor {
 
     override suspend fun pubsubNumsub(vararg channels: String): List<Any> =
         execute(PUBSUB_NUMSUB, ArrayCommandProcessor, *createArguments(*channels))
+
+    override suspend fun pubsubHelp(): List<String> =
+        execute(PUBSUB_HELP, ArrayCommandProcessor)
 }
 
 interface SubscriberCommands {

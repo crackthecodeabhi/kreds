@@ -23,6 +23,12 @@ class TestClient {
     fun testClient(): Unit = runBlocking {
         launch(Dispatchers.Default){
             KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379")).use { client ->
+                println("Client id = ${client.clientId()}")
+                println("Client setname = ${client.clientSetname("YAAAS")}")
+                println("Client getname = ${client.clientGetName()}")
+
+                client.pubsubHelp().forEach(::println)
+
                 client.set("abhi","100")
                 println("increment abhi ${client.incr("abhi")}")
                 client.keys("*").forEach {

@@ -4,7 +4,7 @@ import org.kreds.*
 import org.kreds.commands.HashCommand.*
 import org.kreds.protocol.*
 
-enum class HashCommand: Command {
+enum class HashCommand(override val subCommand: Command? = null): Command {
     HDEL, HEXISTS, HGET, HGETALL, HINCRBY, HINCRBYFLOAT, HKEYS, HLEN, HMGET, HMSET, HRANDFIELD, HSCAN,
     HSET, HSETNX, HSTRLEN, HVALS;
 

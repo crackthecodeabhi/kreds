@@ -7,7 +7,7 @@ import org.kreds.commands.ListCommand.*
 import org.kreds.protocol.*
 import java.lang.ClassCastException
 
-enum class ListCommand : Command {
+enum class ListCommand(override val subCommand: Command? = null) : Command {
     BLMOVE, BLMPOP, BLPOP, BRPOP, BRPOPLPUSH, LINDEX, LINSERT, LLEN,
     LMOVE, LMPOP, LPOP, LPOS, LPUSH, LPUSHX, LRANGE, LREM, LSET, LTRIM,
     RPOP, RPOPLPUSH, RPUSH, RPUSHX;

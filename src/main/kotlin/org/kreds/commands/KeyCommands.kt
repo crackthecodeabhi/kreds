@@ -4,14 +4,13 @@ import org.kreds.*
 import org.kreds.protocol.*
 import org.kreds.commands.KeyCommand.*
 
-enum class KeyCommand: Command{
+enum class KeyCommand(override val subCommand: Command? = null): Command{
     DEL,COPY,DUMP,EXISTS,EXPIRE,EXPIREAT,EXPIRETIME,
     KEYS,MOVE,PERSIST,PEXPIRE,PEXPIREAT,PEXPIRETIME,
     PTTL,RANDOMKEY,RENAME,RENAMENX,TOUCH,TTL,TYPE,UNLINK,
     SCAN;
 
-    private val commandString = name.replace('_',' ');
-    override val string: String = commandString
+    override val string = name
 }
 
 interface BaseKeyCommands{

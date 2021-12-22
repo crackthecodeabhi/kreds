@@ -12,6 +12,17 @@ interface Command{
      * Command string
      */
     val string: String
+
+    /**
+     * A sub command
+     */
+    val subCommand: Command?
+}
+
+fun Command.toRedisMessageList(): List<FullBulkStringRedisMessage> {
+    return if(subCommand != null){
+         listOf(FullBulkStringRedisMessage(string.toByteBuf()),*subCommand!!.toRedisMessageList().toTypedArray())
+    } else listOf(FullBulkStringRedisMessage(string.toByteBuf()))
 }
 
 class CommandExecution(val command: Command,val processor: ICommandProcessor, vararg val args: Argument)
@@ -31,8 +42,8 @@ interface CommandExecutor {
 open class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>): ICommandProcessor {
 
     override fun encode(command: Command,vararg args: Argument): RedisMessage {
-        if(args.isEmpty()) return ArrayRedisMessage(listOf(FullBulkStringRedisMessage(command.string.toByteBuf())))
-        val x = mutableListOf(FullBulkStringRedisMessage(command.string.toByteBuf()))
+        if(args.isEmpty()) return ArrayRedisMessage(command.toRedisMessageList())
+        val x = command.toRedisMessageList().toMutableList()
         x.addAll(args.map { FullBulkStringRedisMessage(it.toString().toByteBuf()) })
         return ArrayRedisMessage(x as List<RedisMessage>)
     }

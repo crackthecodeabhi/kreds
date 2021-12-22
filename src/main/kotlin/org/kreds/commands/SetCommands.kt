@@ -6,11 +6,11 @@ import org.kreds.createArguments
 import org.kreds.protocol.*
 import org.kreds.toArgument
 
-enum class SetCommand: Command{
+enum class SetCommand(override val subCommand: Command? = null): Command{
     SADD,SCARD,SDIFF,SDIFFSTORE,SINTER,SINTERCARD,SINTERSTORE,SISMEMBER,SMISMEMBER,
     SMEMBERS,SMOVE,SPOP,SRANDMEMBER,SREM,SUNION,SUNIONSTORE,SSCAN;
 
-    override val string: String = name
+    override val string = name
 }
 
 interface BaseSetCommands {

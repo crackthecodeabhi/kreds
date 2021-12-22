@@ -2,15 +2,27 @@ package org.kreds.commands
 
 import org.kreds.*
 import org.kreds.commands.ConnectionCommand.*
+import org.kreds.commands.ClientConnectionCommand.*
 import org.kreds.protocol.*
 
-enum class ConnectionCommand(cmd: String? = null): Command{
-    AUTH,CLIENT_CACHING,CLIENT_GETNAME,CLIENT_GETREDIR,CLIENT_LIST,
-    CLIENT_NO_EVICT("CLIENT NO-EVICT"),CLIENT_ID,CLIENT_INFO,CLIENT_PAUSE,
-    CLIENT_REPLY,CLIENT_SETNAME,CLIENT_UNPAUSE,ECHO,PING,QUIT,RESET,SELECT;
+enum class ClientConnectionCommand(override val subCommand: Command? = null, override val string: String = "CLIENT"): Command{
+    CLIENT_CACHING(CACHING),
+    CLIENT_GETNAME(GETNAME),
+    CLIENT_GETREDIR(GETREDIR),
+    CLIENT_LIST(LIST),
+    CLIENT_NO_EVICT(NO_EVICT),
+    CLIENT_ID(ID),
+    CLIENT_INFO(INFO),
+    CLIENT_PAUSE(PAUSE),
+    CLIENT_REPLY(REPLY),
+    CLIENT_SETNAME(SETNAME),
+    CLIENT_UNPAUSE(UNPAUSE),
+}
+enum class ConnectionCommand(command: String? = null, override val subCommand: Command? = null): Command{
+    AUTH,CACHING,GETNAME,GETREDIR,LIST,NO_EVICT("NO-EVICT"),
+    ID,INFO,PAUSE,REPLY,SETNAME,UNPAUSE,ECHO,PING,QUIT,RESET,SELECT;
 
-    private val commandString = cmd ?:name.replace('_',' ')
-    override val string: String = commandString
+    override val string: String = command ?: name
 }
 
 interface BaseConnectionCommands{

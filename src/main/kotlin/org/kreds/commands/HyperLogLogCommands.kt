@@ -4,7 +4,7 @@ import org.kreds.commands.HyperLogLogCommand.*
 import org.kreds.createArguments
 import org.kreds.protocol.*
 
-enum class HyperLogLogCommand: Command{
+enum class HyperLogLogCommand(override val subCommand: Command? = null): Command{
     PFADD,PFCOUNT,PFMERGE;
 
     override val string = name
