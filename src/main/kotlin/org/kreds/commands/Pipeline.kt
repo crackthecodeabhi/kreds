@@ -1,28 +1,25 @@
 package org.kreds.commands
 
+import KredsException
+import io.netty.handler.codec.redis.ErrorRedisMessage
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.kreds.connection.DefaultKredsClient
 import org.kreds.connection.ExclusiveObject
+import org.kreds.connection.lockByCoroutineJob
 import org.kreds.protocol.CommandExecution
-import java.util.concurrent.atomic.AtomicReference
+import org.kreds.protocol.KredsRedisDataException
+import kotlin.jvm.Throws
 
 
-class Response<T>(private val responseFlow: Flow<List<Any?>>, private val index: Int) {
-    private val response = AtomicReference<T>(null)
+class Response<T>(private val responseFlow: Flow<List<Any?>>, private val index: Int){
 
-    suspend fun get(): T {
-        if (response.get() == null) {
-            @Suppress("UNCHECKED_CAST")
-            response.compareAndSet(null, responseFlow.first()[index] as T)
-        }
-        return response.get()
+    @Suppress("UNCHECKED_CAST")
+    @Throws(KredsException::class,KredsRedisDataException::class)
+    suspend fun get(): T  = when(val value = responseFlow.first().ifEmpty { throw KredsException("Operation was cancelled.")  }[index]){
+        is KredsException -> throw value
+        else -> value as T
     }
-}
-
-interface PipelineExecutor {
-    suspend fun executePipeline(commands: List<CommandExecution>): List<Any?>
 }
 
 interface QueuedCommand {
@@ -35,7 +32,7 @@ interface Pipeline : PipelineStringCommands, PipelineKeyCommands, PipelineHashCo
 }
 
 
-class PipelineImpl(private val client: DefaultKredsClient) : ExclusiveObject(), Pipeline,
+internal class PipelineImpl(private val client: DefaultKredsClient) : ExclusiveObject, Pipeline,
     PipelineStringCommandsExecutor, PipelineKeyCommandExecutor, PipelineHashCommandExecutor, PipelineSetCommandExecutor,
     PipelineListCommandExecutor, PipelineHyperLogLogCommandExecutor {
 
@@ -45,19 +42,35 @@ class PipelineImpl(private val client: DefaultKredsClient) : ExclusiveObject(), 
 
     private val responseFlow = MutableSharedFlow<List<Any?>>(1)
 
+    private val sharedResponseFlow: Flow<List<Any?>> = responseFlow.asSharedFlow()
+
     private val commands = mutableListOf<CommandExecution>()
     private val commandResponse = mutableListOf<Any?>()
 
-    override suspend fun <T> add(commandExecution: CommandExecution): Response<T> = mutex.withLock {
+    override suspend fun <T> add(commandExecution: CommandExecution): Response<T> = lockByCoroutineJob {
         commands.add(commandExecution)
-        return Response(responseFlow.asSharedFlow(), commands.lastIndex)
+        return Response(sharedResponseFlow, commands.lastIndex)
     }
 
-    override suspend fun execute(): Unit = mutex.withLock {
+    private suspend fun executePipeline(commands: List<CommandExecution>):List<Any?> = lockByCoroutineJob {
+        val responseList = mutableListOf<Any?>()
+        val responseMessages = client.executeCommands(commands)
+        responseList.addAll(
+            responseMessages.mapIndexed { idx, it ->
+                when(it){
+                    //TODO: check this
+                    is ErrorRedisMessage -> KredsRedisDataException(it.content(),null,enableSuppression = true, writableStackTrace = false)
+                    else -> commands[idx].processor.decode(it)
+                }
+            })
+        return responseList
+    }
+
+    override suspend fun execute(): Unit = lockByCoroutineJob {
         if (!done) {
-            commandResponse.addAll(client.executePipeline(commands))
+            commandResponse.addAll(executePipeline(commands))
             done = true
-            responseFlow.tryEmit(commandResponse)
+            responseFlow.tryEmit(commandResponse.toMutableList())
         }
     }
 }

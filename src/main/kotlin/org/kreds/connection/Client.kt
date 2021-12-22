@@ -2,8 +2,9 @@ package org.kreds.connection
 
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.handler.codec.redis.RedisMessage
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.kreds.Argument
 import org.kreds.commands.*
 import org.kreds.protocol.*
@@ -23,74 +24,59 @@ object KredsClientGroup {
     }
 }
 
-interface KredsClient : KeyCommands, StringCommands, ConnectionCommands, PublisherCommands, HashCommands, SetCommands,
+interface KredsClient : AutoCloseable, KeyCommands, StringCommands, ConnectionCommands, PublisherCommands, HashCommands, SetCommands,
     ListCommands, HyperLogLogCommands {
     fun pipelined(): Pipeline
-    fun multi(): Transaction
 }
 
-abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup) :
-    KonnectionImpl(endpoint, eventLoopGroup), CommandExecutor {
+internal abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup) :
+    KonnectionImpl(endpoint, eventLoopGroup), CommandExecutor{
 
     override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T =
-        mutex.withLock {
-            writeAndFlush(processor.encode(command, *args))
-            processor.decode(readChannel.receive())
+        lockByCoroutineJob {
+            connectWriteAndFlush(processor.encode(command, *args))
+            processor.decode(read())
         }
 
-    override suspend fun <T> execute(commandExecution: CommandExecution): T = mutex.withLock {
+    override suspend fun <T> execute(commandExecution: CommandExecution): T = lockByCoroutineJob {
         with(commandExecution) {
-            writeAndFlush(processor.encode(command, *args))
-            processor.decode(readChannel.receive())
+            connectWriteAndFlush(processor.encode(command, *args))
+            processor.decode(read())
         }
+    }
+
+    override suspend fun executeCommands(commands: List<CommandExecution>): List<RedisMessage> = lockByCoroutineJob {
+        connect()
+        commands.forEach {
+            with(it){
+                write(processor.encode(command, *args))
+            }
+        }
+        flush()
+        // collect the response messages.
+        val responseList = mutableListOf<RedisMessage>()
+        repeat(commands.size) {
+            responseList.add(it,read())
+        }
+        responseList
     }
 }
 
-class DefaultKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup) :
-    AbstractKredsClient(endpoint, eventLoopGroup), KredsClient, PipelineExecutor, TransactionExecutor,
-    KeyCommandExecutor, StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor,
-    HashCommandsExecutor, SetCommandExecutor, ListCommandExecutor, HyperLogLogCommandExecutor {
+internal class DefaultKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup) :
+    AbstractKredsClient(endpoint, eventLoopGroup), KredsClient, KeyCommandExecutor, StringCommandsExecutor,
+    ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor, SetCommandExecutor, ListCommandExecutor,
+    HyperLogLogCommandExecutor {
 
     override val mutex: Mutex = Mutex()
 
     override fun pipelined(): Pipeline = PipelineImpl(this)
-    override fun multi(): Transaction = TransactionImpl(this)
 
-    override suspend fun executePipeline(commands: List<CommandExecution>): List<Any?> = mutex.withLock {
-        val head = commands.dropLast(1)
-        head.forEach {
-            with(it) {
-                write(processor.encode(command, *args))
+    override fun close() {
+        runBlocking {
+            lockByCoroutineJob {
+                disconnect()
             }
         }
-        with(commands.last()) {
-            writeAndFlush(processor.encode(command, *args))
-        }
-        // collect the response.
-        val responseList = mutableListOf<Any?>()
-        repeat(commands.size) {
-            val cmd = commands[it]
-            responseList.add(it, cmd.processor.decode(readChannel.receive()))
-        }
-        responseList
-    }
-
-    override suspend fun executeTransaction(commands: List<CommandExecution>): List<Any?> = mutex.withLock {
-        val head = commands.dropLast(1)
-        head.forEach {
-            with(it) {
-                write(processor.encode(command, *args))
-            }
-        }
-        with(commands.last()) {
-            writeAndFlush(processor.encode(command, *args))
-        }
-
-        // Drop all the QUEUED messages
-        repeat(commands.size - 1) {
-            readChannel.receive()
-        }
-        commands.last().processor.decode(readChannel.receive())
     }
 }
 

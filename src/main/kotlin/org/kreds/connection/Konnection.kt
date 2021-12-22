@@ -61,4 +61,27 @@ internal interface Konnection: ExclusiveObject {
      * @throws KredsConnectionException
      */
     suspend fun read(): RedisMessage
+
+    /**
+     * Reads a [RedisMessage] from the connection if available else returns null.
+     * @throws KredsNotYetConnectedException
+     * @throws KredsTimeoutException
+     * @throws KredsConnectionException
+     */
+    suspend fun tryRead(): RedisMessage?
+}
+
+
+/**
+ * Connects to the Redis server, writes the message and flushes.
+ * @throws KredsConnectionException
+ * @throws KredsTimeoutException
+ * @throws KredsNotYetConnectedException
+ */
+internal suspend inline fun Konnection.connectWriteAndFlush(message: RedisMessage) = lockByCoroutineJob {
+    if(isConnected()) writeAndFlush(message)
+    else {
+        connect()
+        writeAndFlush(message)
+    }
 }

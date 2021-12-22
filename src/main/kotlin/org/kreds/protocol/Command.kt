@@ -25,6 +25,7 @@ interface ICommandProcessor {
 interface CommandExecutor {
     suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T
     suspend fun <T> execute(commandExecution: CommandExecution): T
+    suspend fun executeCommands(commands: List<CommandExecution>): List<RedisMessage>
 }
 
 open class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>): ICommandProcessor {

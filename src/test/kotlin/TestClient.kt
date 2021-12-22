@@ -1,8 +1,7 @@
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
+import org.kreds.ExpireOption
 import org.kreds.Kreds
 import org.kreds.connection.AbstractKredsSubscriber
 import org.kreds.connection.Endpoint
@@ -11,29 +10,34 @@ import org.kreds.toFV
 
 class TestClient {
 
-    @Test
-    fun testClient(): Unit = runBlocking {
-            launch(Dispatchers.Default){
-                val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
-                try {
-                    //client.hset("abhi","field" toFV "value1")
-                    //println(client.hscan("abhi",0))
-                    val pipeline = client.pipelined()
-                    val setResp = pipeline.set("abhi", "590")
-                    val getResp = pipeline.get("abhi")
-                    val incrResp = pipeline.incr("abhi")
-                    pipeline.execute()
-                    println("setResp = ${setResp.get()}")
-                    println("getResp = ${getResp.get()}")
-                    println("incrResp = ${incrResp.get()}")
-                }
-                finally {
-                    KredsClientGroup.shutdown()
-                }
+    companion object{
+        @JvmStatic
+        @AfterAll
+        fun shutdown(){
+            runBlocking {
+                KredsClientGroup.shutdown()
             }
         }
-
+    }
     @Test
+    fun testClient(): Unit = runBlocking {
+        launch(Dispatchers.Default){
+            KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379")).use { client ->
+                client.set("abhi","100")
+                println("increment abhi ${client.incr("abhi")}")
+                client.keys("*").forEach {
+                    println("key = $it")
+                }
+                if(client.expire("abhi",3u) == 1L){
+                    println("abhi set to expire in 3 seconds")
+                } else println("failed to expire key")
+                delay(3500)
+                println("Expecting to get null for abhi now ${client.get("abhi")}")
+            }
+        }
+    }
+
+    /*@Test
     fun transactionTest(): Unit = runBlocking {
         launch(Kreds) {
             val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
@@ -51,11 +55,12 @@ class TestClient {
                 KredsClientGroup.shutdown()
             }
         }
-    }
+    }*/
 
     @Test
-    fun pubsubTest(){
-        val handler = object : AbstractKredsSubscriber(){
+    fun pubsubTest() : Unit = runBlocking {
+        val eventsScope = CoroutineScope(coroutineContext + CoroutineName("Client Event Handler Scope") + Dispatchers.Default.limitedParallelism(1))
+        val handler = object : AbstractKredsSubscriber(eventsScope){
             override fun onMessage(channel: String, message: String) {
                 println(message)
             }
@@ -73,20 +78,25 @@ class TestClient {
             }
         }
         val subscriber = KredsClientGroup.newSubscriberClient(Endpoint.from("127.0.0.1:6379"),handler)
-        val publisher = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
-        runBlocking {
-            val job = launch(Kreds) {
+        withContext(Dispatchers.Default){
+            launch {
                 subscriber.subscribe("hello")
-                launch(Kreds) {
-                    delay(10000)
-                    subscriber.unsubscribe("hello")
-                }
-                repeat(10) {
-                    publisher.publish("hello","from IDE")
-                }
+                println("subscribed")
             }
-            job.join()
-            delay(1000)
+            launch{
+                delay(30000)
+                subscriber.unsubscribe("hello")
+                println("unsubscribed")
+            }
+            launch {
+                val publisher = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
+                repeat(100000){
+                    if(publisher.publish("hello","$it: Publisher!") == 0L)
+                        println("No one subscribed at $it")
+                }
+                publisher.close()
+            }
+
         }
     }
 
