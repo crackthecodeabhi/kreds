@@ -3,7 +3,7 @@ plugins {
     java
 }
 
-group = "org.kreds"
+group = "io.github.crackthecodeabhi"
 version = "1.0-SNAPSHOT"
 
 repositories {
