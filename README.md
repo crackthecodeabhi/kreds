@@ -29,7 +29,7 @@ More features will be added in upcoming releases.
 ## How do I use it?
 
 To use it just:
-```
+```kotlin
 launch {
 
     KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379")).use { client ->
