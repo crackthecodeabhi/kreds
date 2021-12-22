@@ -1,6 +1,8 @@
 package org.kreds.commands
 
-import org.kreds.FieldValuePair
+import org.kreds.args.FieldValuePair
+import org.kreds.pipeline.QueuedCommand
+import org.kreds.pipeline.Response
 
 interface PipelineHashCommands{
     /**

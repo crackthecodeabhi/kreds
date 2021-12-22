@@ -1,6 +1,6 @@
-package org.kreds
+package org.kreds.args
 
-import KredsException
+import org.kreds.KredsException
 import java.math.BigDecimal
 import kotlin.IllegalArgumentException
 import kotlin.jvm.Throws
@@ -24,6 +24,19 @@ data class KeyOnlyArgument(val key: String): Argument{
 data class StringArgument(val value: String): Argument{
     override fun toString() = value
 }
+
+fun String.toArgument() = StringArgument(this)
+
+fun ULong.toArgument() = StringArgument(this.toString())
+
+fun Long.toArgument() = StringArgument(this.toString(10))
+
+fun Int.toArgument() = StringArgument(this.toString(10))
+
+fun BigDecimal.toArgument() = StringArgument(this.toEngineeringString())
+
+fun Array<out String>.toArguments(): Array<out StringArgument> = this.map(String::toArgument).toTypedArray()
+
 
 /**
  * The EXPIRE,EXPIREAT commands supports a set of options since Redis 7.0:

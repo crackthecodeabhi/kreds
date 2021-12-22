@@ -1,12 +1,9 @@
+package org.kreds.connection
+
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import org.kreds.ExpireOption
 import org.kreds.Kreds
-import org.kreds.connection.AbstractKredsSubscriber
-import org.kreds.connection.Endpoint
-import org.kreds.connection.KredsClientGroup
-import org.kreds.toFV
 
 class TestClient {
 

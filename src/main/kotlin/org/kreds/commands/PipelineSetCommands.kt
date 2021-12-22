@@ -1,4 +1,6 @@
 package org.kreds.commands
+import org.kreds.pipeline.QueuedCommand
+import org.kreds.pipeline.Response
 
 interface PipelineSetCommands {
     suspend fun sadd(key: String, member: String, vararg members: String): Response<Long>

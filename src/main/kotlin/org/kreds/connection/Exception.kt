@@ -1,8 +1,8 @@
 package org.kreds.connection
 
-import KredsException
+import org.kreds.KredsException
 
-open class KredsConnectionException: KredsException{
+open class KredsConnectionException: KredsException {
     companion object {
         @JvmStatic val serialVersionUID = -942312682189773098L
     }

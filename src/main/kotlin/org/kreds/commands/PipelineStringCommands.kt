@@ -1,7 +1,9 @@
 package org.kreds.commands
 
-import org.kreds.*
+import org.kreds.args.*
 import java.math.BigDecimal
+import org.kreds.pipeline.QueuedCommand
+import org.kreds.pipeline.Response
 
 interface PipelineStringCommands{
     /**

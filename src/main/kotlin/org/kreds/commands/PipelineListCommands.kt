@@ -1,7 +1,8 @@
 package org.kreds.commands
 
-import org.kreds.BeforeAfterOption
-import org.kreds.LeftRightOption
+import org.kreds.args.*
+import org.kreds.pipeline.QueuedCommand
+import org.kreds.pipeline.Response
 
 interface PipelineListCommands {
 

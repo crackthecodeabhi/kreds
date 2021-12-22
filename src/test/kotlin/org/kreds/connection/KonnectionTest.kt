@@ -11,12 +11,12 @@ import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.kreds.toByteBuf
 import org.kreds.toDefaultCharset
 import java.util.concurrent.atomic.AtomicInteger
+import org.kreds.lockByCoroutineJob
 
 internal class TestConnectionImpl(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig): KonnectionImpl(endpoint, eventLoopGroup,config){
     override val mutex: Mutex = Mutex()

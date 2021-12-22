@@ -1,6 +1,6 @@
 package org.kreds.commands
 
-import org.kreds.*
+import org.kreds.args.*
 import org.kreds.protocol.*
 import org.kreds.commands.KeyCommand.*
 

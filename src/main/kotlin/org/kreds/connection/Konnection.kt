@@ -2,6 +2,8 @@ package org.kreds.connection
 
 import io.netty.handler.codec.redis.RedisMessage
 import org.kreds.CoroutineSafe
+import org.kreds.ExclusiveObject
+import org.kreds.lockByCoroutineJob
 
 /**
  * Interface which models a connection to a redis server.

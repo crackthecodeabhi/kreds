@@ -1,10 +1,8 @@
 package org.kreds.commands
 
-import org.kreds.KeyValueArgument
+import org.kreds.args.*
 import org.kreds.commands.SetCommand.*
-import org.kreds.createArguments
 import org.kreds.protocol.*
-import org.kreds.toArgument
 
 enum class SetCommand(override val subCommand: Command? = null): Command{
     SADD,SCARD,SDIFF,SDIFFSTORE,SINTER,SINTERCARD,SINTERSTORE,SISMEMBER,SMISMEMBER,

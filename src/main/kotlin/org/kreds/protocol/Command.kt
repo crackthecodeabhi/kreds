@@ -1,31 +1,16 @@
 package org.kreds.protocol
 
-import io.netty.buffer.Unpooled
 import io.netty.handler.codec.redis.*
-import org.kreds.Argument
+import org.kreds.args.*
+import org.kreds.commands.*
 import org.kreds.toByteBuf
-import org.kreds.toDefaultCharset
 import kotlin.jvm.Throws
-
-interface Command{
-    /**
-     * Command string
-     */
-    val string: String
-
-    /**
-     * A sub command
-     */
-    val subCommand: Command?
-}
 
 fun Command.toRedisMessageList(): List<FullBulkStringRedisMessage> {
     return if(subCommand != null){
          listOf(FullBulkStringRedisMessage(string.toByteBuf()),*subCommand!!.toRedisMessageList().toTypedArray())
     } else listOf(FullBulkStringRedisMessage(string.toByteBuf()))
 }
-
-class CommandExecution(val command: Command,val processor: ICommandProcessor, vararg val args: Argument)
 
 interface ICommandProcessor {
     fun encode(command: Command, vararg args: Argument): RedisMessage
@@ -38,6 +23,11 @@ interface CommandExecutor {
     suspend fun <T> execute(commandExecution: CommandExecution): T
     suspend fun executeCommands(commands: List<CommandExecution>): List<RedisMessage>
 }
+
+val IntegerCommandProcessor = CommandProcessor(IntegerHandler)
+val BulkStringCommandProcessor = CommandProcessor(BulkStringHandler)
+val SimpleStringCommandProcessor = CommandProcessor(SimpleStringHandler)
+val ArrayCommandProcessor = CommandProcessor(ArrayHandler)
 
 open class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>): ICommandProcessor {
 
@@ -54,64 +44,5 @@ open class CommandProcessor(private vararg val outputTypeHandlers: MessageHandle
         if(message is ErrorRedisMessage) throw KredsRedisDataException(message.content())
         val handler = outputTypeHandlers.first { it.canHandle(message) }
         return handler.doHandle(message) as T
-    }
-}
-
-val IntegerCommandProcessor = CommandProcessor(IntegerHandler)
-val BulkStringCommandProcessor = CommandProcessor(BulkStringHandler)
-val SimpleStringCommandProcessor = CommandProcessor(SimpleStringHandler)
-val ArrayCommandProcessor = CommandProcessor(ArrayHandler)
-
-interface MessageHandler<T> {
-    fun canHandle(message: RedisMessage): Boolean
-    fun doHandle(message: RedisMessage): T
-}
-
-object SimpleStringHandler: MessageHandler<String>{
-    override fun canHandle(message: RedisMessage): Boolean = message is SimpleStringRedisMessage
-
-    override fun doHandle(message: RedisMessage): String {
-        val msg = message as SimpleStringRedisMessage
-        return msg.content()?: throw KredsRedisDataException("Unexpected: received null as RESP Simple String")
-    }
-}
-
-object IntegerHandler: MessageHandler<Long>{
-    override fun canHandle(message: RedisMessage): Boolean = message is IntegerRedisMessage
-
-    override fun doHandle(message: RedisMessage): Long {
-        val msg = message as IntegerRedisMessage
-        return msg.value()
-    }
-}
-
-object BulkStringHandler: MessageHandler<String?>{
-    override fun canHandle(message: RedisMessage): Boolean = message is FullBulkStringRedisMessage
-
-    override fun doHandle(message: RedisMessage): String? {
-        val msg = message as FullBulkStringRedisMessage
-        return if(msg.isNull) null
-        else if(msg.content() == Unpooled.EMPTY_BUFFER) ""
-        else msg.content().toDefaultCharset()
-    }
-}
-
-object ArrayHandler: MessageHandler<List<Any?>>{
-    override fun canHandle(message: RedisMessage): Boolean = message is ArrayRedisMessage
-
-    override fun doHandle(message: RedisMessage): List<Any?> {
-        val msg = message as ArrayRedisMessage
-        return if(msg.children().isEmpty()) emptyList()
-        else {
-            msg.children().map {
-                when(true){
-                    SimpleStringHandler.canHandle(it) -> SimpleStringHandler.doHandle(it)
-                    IntegerHandler.canHandle(it) -> IntegerHandler.doHandle(it)
-                    BulkStringHandler.canHandle(it) -> BulkStringHandler.doHandle(it)
-                    canHandle(it) -> doHandle(it)
-                    else -> throw KredsRedisDataException("Received unexpected data type from redis server.")
-                }
-            }
-        }
     }
 }

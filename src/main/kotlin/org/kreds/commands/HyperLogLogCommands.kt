@@ -1,8 +1,10 @@
 package org.kreds.commands
 
 import org.kreds.commands.HyperLogLogCommand.*
-import org.kreds.createArguments
+import org.kreds.args.*
 import org.kreds.protocol.*
+import org.kreds.pipeline.Response
+import org.kreds.pipeline.QueuedCommand
 
 enum class HyperLogLogCommand(override val subCommand: Command? = null): Command{
     PFADD,PFCOUNT,PFMERGE;

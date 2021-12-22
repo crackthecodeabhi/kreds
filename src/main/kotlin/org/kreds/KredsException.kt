@@ -1,3 +1,5 @@
+package org.kreds
+
 /**
  * Base exception for all exceptions throws by Kreds
  */

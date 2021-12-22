@@ -1,6 +1,6 @@
 package org.kreds.commands
 
-import org.kreds.*
+import org.kreds.args.*
 import org.kreds.commands.ConnectionCommand.*
 import org.kreds.commands.ClientConnectionCommand.*
 import org.kreds.protocol.*

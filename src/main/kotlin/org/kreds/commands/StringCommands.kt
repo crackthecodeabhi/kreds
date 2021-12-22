@@ -1,6 +1,6 @@
 package org.kreds.commands
 
-import org.kreds.*
+import org.kreds.args.*
 import org.kreds.commands.StringCommand.*
 import org.kreds.protocol.*
 import java.math.BigDecimal

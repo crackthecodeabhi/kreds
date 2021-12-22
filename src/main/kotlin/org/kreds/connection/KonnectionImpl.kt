@@ -10,6 +10,8 @@ import io.netty.handler.timeout.TimeoutException
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import java.net.SocketException
 import kotlinx.coroutines.channels.Channel as KChannel
+import org.kreds.ExclusiveObject
+import org.kreds.lockByCoroutineJob
 
 /**
  * The state of this Konnection is protected with the abstract [kotlinx.coroutines.sync.Mutex] defined by [ExclusiveObject]

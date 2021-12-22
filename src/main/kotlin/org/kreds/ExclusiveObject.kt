@@ -1,4 +1,4 @@
-package org.kreds.connection
+package org.kreds
 
 import kotlinx.coroutines.job
 import kotlinx.coroutines.sync.Mutex

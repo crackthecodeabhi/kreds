@@ -1,7 +1,8 @@
 package org.kreds.commands
 
-import org.kreds.ExpireOption
-import org.kreds.PExpireOption
+import org.kreds.args.*
+import org.kreds.pipeline.QueuedCommand
+import org.kreds.pipeline.Response
 
 interface PipelineKeyCommands{
     /**
