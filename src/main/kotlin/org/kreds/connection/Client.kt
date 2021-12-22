@@ -13,11 +13,11 @@ import org.kreds.protocol.*
 
 object KredsClientGroup {
     private val eventLoopGroup = NioEventLoopGroup()
-    fun newClient(endpoint: Endpoint): KredsClient =
-        DefaultKredsClient(endpoint, eventLoopGroup)
+    fun newClient(endpoint: Endpoint, config: KredsClientConfig = defaultClientConfig): KredsClient =
+        DefaultKredsClient(endpoint, eventLoopGroup,config)
 
-    fun newSubscriberClient(endpoint: Endpoint, handler: KredsSubscriber): KredsSubscriberClient =
-        DefaultKredsSubscriberClient(endpoint, eventLoopGroup, handler)
+    fun newSubscriberClient(endpoint: Endpoint, handler: KredsSubscriber, config: KredsClientConfig = defaultSubscriberClientConfig): KredsSubscriberClient =
+        DefaultKredsSubscriberClient(endpoint, eventLoopGroup, handler, config)
 
     suspend fun shutdown() {
         eventLoopGroup.shutdownGracefully().suspendableAwait()
@@ -29,8 +29,8 @@ interface KredsClient : AutoCloseable, KeyCommands, StringCommands, ConnectionCo
     fun pipelined(): Pipeline
 }
 
-internal abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup) :
-    KonnectionImpl(endpoint, eventLoopGroup), CommandExecutor{
+internal abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :
+    KonnectionImpl(endpoint, eventLoopGroup,config), CommandExecutor{
 
     override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T =
         lockByCoroutineJob {
@@ -62,8 +62,8 @@ internal abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: 
     }
 }
 
-internal class DefaultKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup) :
-    AbstractKredsClient(endpoint, eventLoopGroup), KredsClient, KeyCommandExecutor, StringCommandsExecutor,
+internal class DefaultKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :
+    AbstractKredsClient(endpoint, eventLoopGroup,config), KredsClient, KeyCommandExecutor, StringCommandsExecutor,
     ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor, SetCommandExecutor, ListCommandExecutor,
     HyperLogLogCommandExecutor {
 

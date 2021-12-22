@@ -28,12 +28,13 @@ class TestClient {
                 println("Client getname = ${client.clientGetName()}")
 
                 client.pubsubHelp().forEach(::println)
-
-                client.set("abhi","100")
-                println("increment abhi ${client.incr("abhi")}")
+                if(client.del("abhi") == 1L) println("Deleted key: abhi")
                 client.keys("*").forEach {
                     println("key = $it")
                 }
+                client.set("abhi","100")
+                println("increment abhi ${client.incr("abhi")}")
+
                 if(client.expire("abhi",3u) == 1L){
                     println("abhi set to expire in 3 seconds")
                 } else println("failed to expire key")

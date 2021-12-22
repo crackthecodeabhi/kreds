@@ -27,12 +27,12 @@ import kotlinx.coroutines.channels.Channel as KChannel
  * On any I/O error, connection is closed.
  *
  */
-internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoopGroup: EventLoopGroup) : Konnection {
+internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoopGroup: EventLoopGroup, val config: KredsClientConfig) : Konnection {
 
     private val bootstrap: Bootstrap = Bootstrap().group(eventLoopGroup)
         .remoteAddress(endpoint.toSocketAddress())
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,5000) //TODO: client configurable
-        .option(ChannelOption.SO_KEEPALIVE,true) //TODO: configurable
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,config.connectTimeOutMillis)
+        .option(ChannelOption.SO_KEEPALIVE,config.soKeepAlive)
         .channel(NioSocketChannel::class.java)
 
     private var channel: SocketChannel? = null
@@ -49,7 +49,10 @@ internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoop
                 pipeline.addLast(RedisDecoder()) // inbound 1
                 pipeline.addLast(RedisBulkStringAggregator()) // inbound 2
                 pipeline.addLast(RedisArrayAggregator()) // inbound 3
-                pipeline.addLast(ReadTimeoutHandler(10)) // duplex 4 //TODO: not required for Pub sub client
+
+                if(config.readTimeoutSeconds != KredsClientConfig.NO_READ_TIMEOUT)
+                    pipeline.addLast(ReadTimeoutHandler(config.readTimeoutSeconds)) // duplex 4
+
                 pipeline.addLast(ResponseHandler(readChannel)) // inbound 5
 
             }

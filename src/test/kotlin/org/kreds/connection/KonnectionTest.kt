@@ -18,7 +18,7 @@ import org.kreds.toByteBuf
 import org.kreds.toDefaultCharset
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class TestConnectionImpl(endpoint: Endpoint, eventLoopGroup: EventLoopGroup): KonnectionImpl(endpoint, eventLoopGroup){
+internal class TestConnectionImpl(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig): KonnectionImpl(endpoint, eventLoopGroup,config){
     override val mutex: Mutex = Mutex()
 }
 
@@ -43,7 +43,7 @@ class KonnectionTest {
 
     @Test
     fun testConnectionExclusivity(){
-        val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:6379"), eventLoopGroup)
+        val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:6379"), eventLoopGroup, defaultClientConfig)
         val correctReplyCount = AtomicInteger(0)
         runBlocking {
             coroutineScope {
@@ -75,7 +75,7 @@ class KonnectionTest {
 
     @Test
     fun testConnectionFail(){
-        val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:6373"), eventLoopGroup)
+        val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:6373"), eventLoopGroup, defaultClientConfig)
         val ex = assertThrows<KredsConnectionException> {
             runBlocking {
                 conn.lockByCoroutineJob {
@@ -88,7 +88,7 @@ class KonnectionTest {
 
     @Test
     fun testConnectionTimeout(){
-        val conn = TestConnectionImpl(Endpoint.from("www.google.com:81"), eventLoopGroup)
+        val conn = TestConnectionImpl(Endpoint.from("www.google.com:81"), eventLoopGroup, defaultClientConfig)
         val ex = assertThrows<KredsConnectionException> {
             runBlocking {
                 conn.lockByCoroutineJob {
@@ -117,7 +117,7 @@ class KonnectionTest {
                 }
             }).bind(8081).sync()
 
-        val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:8081"), eventLoopGroup)
+        val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:8081"), eventLoopGroup, defaultClientConfig)
         val cause = assertThrows<KredsConnectionException> {
             runBlocking {
                 conn.connect()

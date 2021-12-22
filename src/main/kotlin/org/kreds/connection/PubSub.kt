@@ -232,8 +232,9 @@ interface KredsSubscriberClient : AutoCloseable, SubscriberCommands {
 internal class DefaultKredsSubscriberClient(
     endpoint: Endpoint,
     eventLoopGroup: EventLoopGroup,
-    private val kredsSubscriber: KredsSubscriber
-) : KredsSubscriberClient, AbstractKredsClient(endpoint, eventLoopGroup) {
+    private val kredsSubscriber: KredsSubscriber,
+    config: KredsClientConfig
+) : KredsSubscriberClient, AbstractKredsClient(endpoint, eventLoopGroup, config) {
 
     override val mutex: Mutex = Mutex()
 
