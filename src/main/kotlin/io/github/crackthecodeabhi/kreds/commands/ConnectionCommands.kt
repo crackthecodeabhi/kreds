@@ -26,8 +26,8 @@ internal enum class ConnectionCommand(command: String? = null, override val subC
 }
 
 internal interface BaseConnectionCommands{
-    fun _auth(password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor)
-    fun _auth(username: String, password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor)
+    fun _auth(password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor,password.toArgument())
+    fun _auth(username: String, password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor,username.toArgument(),password.toArgument())
     fun _clientList(clientListType: ClientListType? = null, vararg clientIds: String): CommandExecution {
         val idArg = if(clientIds.isEmpty()) null else {
             "ID ${clientIds.joinToString(" ")}"
