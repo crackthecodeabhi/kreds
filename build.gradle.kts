@@ -5,6 +5,7 @@ plugins {
     `java-library`
     `maven-publish`
     signing
+    id("com.dorongold.task-tree") version "2.1.0"
 }
 
 group = "io.github.crackthecodeabhi"
@@ -19,11 +20,6 @@ nexusPublishing {
         sonatype{
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            val sonaTypeUsername = System.getProperty("SONATYPE_USERNAME")
-            val sonaTypePassword = System.getProperty("SONATYPE_PASSWORD")
-            if(sonaTypeUsername == null || sonaTypePassword == null || sonaTypeUsername.isBlank() || sonaTypePassword.isBlank())
-                throw GradleException("Did you forget to provide SONATYPE_USERNAME || SONATYPE_PASSWORD as System property?")
-            println("sonaTypeUsername Length = ${sonaTypeUsername.length}, sonaTypePassword Length =  ${sonaTypePassword.length} ")
             username.set(System.getProperty("SONATYPE_USERNAME"))
             password.set(System.getProperty("SONATYPE_PASSWORD"))
         }
@@ -58,6 +54,22 @@ tasks {
         dependsOn(dokkaHtml)
         archiveClassifier.set("javadoc")
     }
+
+    /*withType<PublishToMavenRepository>{
+        doFirst {
+            val sonaTypeUsername = System.getProperty("SONATYPE_USERNAME")
+            val sonaTypePassword = System.getProperty("SONATYPE_PASSWORD")
+            if(sonaTypeUsername == null || sonaTypePassword == null || sonaTypeUsername.isBlank() || sonaTypePassword.isBlank())
+                throw GradleException("Did you forget to provide SONATYPE_USERNAME || SONATYPE_PASSWORD as System property?")
+            println("sonaTypeUsername Length = ${sonaTypeUsername.length}, sonaTypePassword Length =  ${sonaTypePassword.length} ")
+
+            val privateKey = System.getProperty("GPG_PRIVATE_KEY")
+            val privatePassword = System.getProperty("GPG_PRIVATE_PASSWORD")
+            if(privateKey == null || privatePassword == null || privateKey.isBlank() || privatePassword.isBlank())
+                throw GradleException("Did you forget to provide GPG_PRIVATE_KEY || GPG_PRIVATE_PASSWORD as System property?")
+            println("GPG_PRIVATE_KEY Length = ${privateKey.length}, GPG_PRIVATE_PASSWORD Length = ${privatePassword.length}")
+        }
+    }*/
 }
 
 publishing {
@@ -102,12 +114,6 @@ publishing {
 }
 
 signing {
-    val privateKey = System.getProperty("GPG_PRIVATE_KEY")
-    val privatePassword = System.getProperty("GPG_PRIVATE_PASSWORD")
-    if(privateKey == null || privatePassword == null || privateKey.isBlank() || privatePassword.isBlank())
-        throw GradleException("Did you forget to provide GPG_PRIVATE_KEY || GPG_PRIVATE_PASSWORD as System property?")
-    println("GPG_PRIVATE_KEY Length = ${privateKey.length}, GPG_PRIVATE_PASSWORD Length = ${privatePassword.length}")
-
     useInMemoryPgpKeys(
         System.getProperty("GPG_PRIVATE_KEY"),
         System.getProperty("GPG_PRIVATE_PASSWORD")
