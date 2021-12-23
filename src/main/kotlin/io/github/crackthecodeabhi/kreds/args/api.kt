@@ -130,3 +130,9 @@ public enum class LeftRightOption : Argument {
 
     override fun toString(): String = name
 }
+
+public enum class FailOverOption: Argument {
+    FORCE,TAKEOVER;
+
+    override fun toString(): String = name
+}
