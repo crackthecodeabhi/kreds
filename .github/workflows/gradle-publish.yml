@@ -1,15 +1,6 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-# This workflow will build a package using Gradle and then publish it to GitHub packages when a release is created
-# For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#Publishing-using-gradle
-
 name: CD
-
 on:
   workflow_dispatch:
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -32,9 +23,9 @@ jobs:
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
         
-      # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
+      # The USERNAME and TOKEN need to correspond to the credential's environment variables used in
       # the publishing section of your build.gradle
-      #- name: Publish to GitHub Packages
+      # - name: Publish to GitHub Packages
       #  uses: gradle/gradle-build-action@4137be6a8bf7d7133955359dbd952c0ca73b1021
       #  with:
       #    arguments: publish
