@@ -1,5 +1,7 @@
 # Kreds 
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.crackthecodeabhi/kreds.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.crackthecodeabhi%22%20AND%20a:%22kreds%22)
+
 Kreds is a non-blocking, coroutine based redis client for Kotlin.
 
 Kreds is designed to be EASY to use.
@@ -40,6 +42,27 @@ launch {
     }
     KredsClientGroup.shutdown() // shutdown the client group.
 }
+```
+
+## How to get it?
+
+```xml
+<dependency>
+  <groupId>io.github.crackthecodeabhi</groupId>
+  <artifactId>kreds</artifactId>
+  <version>0.3</version>
+</dependency>
+```
+
+Gradle Groovy DSL
+
+```groovy
+implementation 'io.github.crackthecodeabhi:kreds:0.3'
+
+```
+Gradle Kotlin DSL
+```kotlin
+implementation("io.github.crackthecodeabhi:kreds:0.3")
 ```
 
 ## License
