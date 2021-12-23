@@ -19,6 +19,7 @@ nexusPublishing {
         sonatype{
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            println("username = ${System.getProperty("SONATYPE_USERNAME")}, password empty: ${System.getProperty("SONATYPE_PASSWORD").isEmpty()} ")
             username.set(System.getProperty("SONATYPE_USERNAME"))
             password.set(System.getProperty("SONATYPE_PASSWORD"))
         }
@@ -97,6 +98,7 @@ publishing {
 }
 
 signing {
+    println("Private_key len = ${System.getProperty("GPG_PRIVATE_KEY").length}, password len = ${System.getProperty("GPG_PRIVATE_PASSWORD").length}")
     useInMemoryPgpKeys(
         System.getProperty("GPG_PRIVATE_KEY"),
         System.getProperty("GPG_PRIVATE_PASSWORD")
