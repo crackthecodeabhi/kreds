@@ -69,7 +69,7 @@ public interface PipelineStringCommands{
     /**
      * @see [StringCommands.mset]
      */
-    public suspend fun mset(vararg keyValues: KeyValuePair): Response<String>
+    public suspend fun mset(vararg keyValues: Pair<String,String>): Response<String>
 
     /**
      * @see [StringCommands.getEx]
@@ -103,7 +103,7 @@ internal interface PipelineStringCommandsExecutor: PipelineStringCommands,BaseSt
 
     override suspend fun mget(vararg keys: String): Response<List<String?>> = add(_mget(*keys))
 
-    override suspend fun mset(vararg keyValues: KeyValuePair): Response<String> = add(_mset(*keyValues))
+    override suspend fun mset(vararg keyValues: Pair<String,String>): Response<String> = add(_mset(*keyValues))
 
     override suspend fun getEx(key: String, getExOption: GetExOption?): Response<String?> = add(_getEx(key, getExOption))
 }

@@ -1,6 +1,5 @@
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.FieldValuePair
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 
@@ -65,7 +64,7 @@ public interface PipelineHashCommands{
     /**
      * @see [HashCommands.hset]
      */
-    public suspend fun hset(key: String, fieldValuePair: FieldValuePair, vararg fieldValuePairs: FieldValuePair): Response<Long>
+    public suspend fun hset(key: String, fieldValuePair: Pair<String,String>, vararg fieldValuePairs: Pair<String,String>): Response<Long>
 
     /**
      * @see [HashCommands.hsetnx]
@@ -124,8 +123,8 @@ internal interface PipelineHashCommandExecutor: QueuedCommand, PipelineHashComma
 
     override suspend fun hset(
         key: String,
-        fieldValuePair: FieldValuePair,
-        vararg fieldValuePairs: FieldValuePair
+        fieldValuePair: Pair<String,String>,
+        vararg fieldValuePairs: Pair<String,String>
     ): Response<Long> =
         add(_hset(key, fieldValuePair, *fieldValuePairs))
 

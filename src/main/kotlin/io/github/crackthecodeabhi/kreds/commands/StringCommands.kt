@@ -28,7 +28,7 @@ internal interface BaseStringCommands{
 
     fun _mget(vararg keys: String) = CommandExecution(MGET, ArrayCommandProcessor,*createArguments(keys))
 
-    fun _mset(vararg keyValues: KeyValuePair) = CommandExecution(MSET, SimpleStringCommandProcessor,*createArguments(keyValues))
+    fun _mset(vararg keyValues: Pair<String,String>) = CommandExecution(MSET, SimpleStringCommandProcessor,*createArguments(keyValues))
 
     fun _set(key: String, value: String, setOption: SetOption?) =
         CommandExecution(SET,CommandProcessor(SimpleStringHandler,BulkStringHandler),*createArguments(
@@ -199,7 +199,7 @@ public interface StringCommands{
      * @since 1.0.1
      * @return OK
      */
-    public suspend fun mset(vararg keyValues: KeyValuePair): String
+    public suspend fun mset(vararg keyValues: Pair<String,String>): String
 
 
     /**
@@ -258,7 +258,7 @@ internal interface StringCommandsExecutor: CommandExecutor, StringCommands, Base
 
     override suspend fun mget(vararg keys: String): List<String?> = execute(_mget(*keys))
 
-    override suspend fun mset(vararg keyValues: KeyValuePair): String = execute(_mset(*keyValues))
+    override suspend fun mset(vararg keyValues: Pair<String,String>): String = execute(_mset(*keyValues))
 
     override suspend fun set(key: String, value: String, setOption: SetOption?): String? = execute(_set(key,value,setOption))
 

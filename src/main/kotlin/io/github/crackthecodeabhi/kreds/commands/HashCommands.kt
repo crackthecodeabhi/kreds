@@ -45,7 +45,7 @@ internal interface BaseHashCommands{
              withValues?.let { KeyOnlyArgument("WITHVALUES") }
          ))
 
-     fun _hset(key: String,fieldValuePair: FieldValuePair,vararg fieldValuePairs: FieldValuePair) =
+     fun _hset(key: String,fieldValuePair: Pair<String,String>,vararg fieldValuePairs: Pair<String,String>) =
          CommandExecution(HSET, IntegerCommandProcessor,*createArguments(
              key,fieldValuePair,*fieldValuePairs
          ))
@@ -219,7 +219,7 @@ public interface HashCommands {
      * @return The number of fields that were added.
      *
      */
-    public suspend fun hset(key: String,fieldValuePair: FieldValuePair,vararg fieldValuePairs: FieldValuePair): Long
+    public suspend fun hset(key: String,fieldValuePair: Pair<String,String>,vararg fieldValuePairs: Pair<String,String>): Long
 
     /**
      * ###  HSETNX key field value
@@ -301,8 +301,8 @@ internal interface HashCommandsExecutor: HashCommands,BaseHashCommands, CommandE
 
     override suspend fun hset(
         key: String,
-        fieldValuePair: FieldValuePair,
-        vararg fieldValuePairs: FieldValuePair
+        fieldValuePair: Pair<String,String>,
+        vararg fieldValuePairs: Pair<String,String>
     ): Long = execute(_hset(key, fieldValuePair, *fieldValuePairs))
 
     override suspend fun hsetnx(key: String, field: String, value: String): Long =
