@@ -4,6 +4,8 @@
 [![javadoc](https://javadoc.io/badge2/io.github.crackthecodeabhi/kreds/javadoc.svg)](https://javadoc.io/doc/io.github.crackthecodeabhi/kreds)
 [![CD](https://github.com/crackthecodeabhi/kreds/actions/workflows/gradle-publish.yml/badge.svg?branch=release)](https://github.com/crackthecodeabhi/kreds/actions/workflows/gradle-publish.yml)
 [![Pure Kotlin](https://img.shields.io/badge/100%25-kotlin-blue.svg)](https://kotlinlang.org/)
+
+
 Kreds is a non-blocking, coroutine based redis client for Kotlin.
 
 Kreds is designed to be EASY to use.
