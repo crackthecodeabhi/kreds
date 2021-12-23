@@ -29,7 +29,7 @@ jobs:
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Publish
-      run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository --stacktrace -DSONATYPE_USERNAME=$SONATYPE_USERNAME -DSONATYPE_PASSWORD=$SONATYPE_PASSWORD -DGPG_PRIVATE_PASSWORD=$GPG_PRIVATE_PASSWORD -DGPG_PRIVATE_KEY=$GPG_PRIVATE_KEY
+      run: ./gradlew tasks --all
       env:
         SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
