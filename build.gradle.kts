@@ -18,12 +18,14 @@ repositories {
 
 jacoco {
     toolVersion = "0.8.7"
+    reportsDirectory.set(layout.buildDirectory.dir("reports/jacoco"))
 }
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
     reports {
-        html.required.set(true)
+        html.required.set(false)
+        xml.required.set(true)
     }
 }
 
