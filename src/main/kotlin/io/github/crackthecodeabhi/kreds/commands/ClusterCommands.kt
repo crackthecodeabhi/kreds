@@ -1,5 +1,6 @@
 package io.github.crackthecodeabhi.kreds.commands
 
+import io.github.crackthecodeabhi.kreds.args.Argument
 import io.github.crackthecodeabhi.kreds.args.FailOverOption
 import io.github.crackthecodeabhi.kreds.args.createArguments
 import io.github.crackthecodeabhi.kreds.args.toArgument
@@ -36,7 +37,7 @@ internal enum class ClusterCommand(override val subCommand: Command? = null, com
     CLUSTER_MEET(MEET),
     CLUSTER_MY_ID(MYID),
     CLUSTER_NODES(NODES),
-    CLUSER_REPLICAS(REPLICAS),
+    CLUSTER_REPLICAS(REPLICAS),
     CLUSTER_REPLICATE(REPLICATE),
     CLUSTER_RESET(RESET),
     CLUSTER_SAVE_CONFIG(SAVECONFIG),
@@ -86,6 +87,41 @@ internal interface BaseClusterCommands {
 
     fun _clusterInfo() =
         CommandExecution(CLUSTER_INFO, BulkStringCommandProcessor)
+
+    fun _clusterKeySlot(key: String) =
+        CommandExecution(CLUSTER_KEY_SLOT,IntegerCommandProcessor,key.toArgument())
+
+    fun _clusterMeet(ip: String, port: String) =
+        CommandExecution(CLUSTER_MEET, SimpleStringCommandProcessor, ip.toArgument(), port.toArgument())
+
+    fun _clusterMyId() =
+        CommandExecution(CLUSTER_MY_ID, BulkStringCommandProcessor)
+
+    fun _clusterNodes() =
+        CommandExecution(CLUSTER_NODES, BulkStringCommandProcessor)
+
+    fun _clusterReplicas(nodeId: String) =
+        CommandExecution(CLUSTER_REPLICAS, BulkStringCommandProcessor)
+
+    fun _clusterReplicate(nodeId: String) =
+        CommandExecution(CLUSTER_REPLICATE, SimpleStringCommandProcessor, nodeId.toArgument())
+
+    fun _clusterReset(option: ClusterResetOption?) =
+        CommandExecution(CLUSTER_RESET, SimpleStringCommandProcessor,
+            option?.toArgument() ?: emptyArray<Argument>())
+
+    fun _clusterSaveConfig() =
+        CommandExecution(CLUSTER_SAVE_CONFIG, SimpleStringCommandProcessor)
+
+    fun _clusterSetConfigEpoch(configEpoch: String) =
+        CommandExecution(CLUSTER_SET_CONFIG_EPOCH, SimpleStringCommandProcessor)
+
+    fun _clusterSlaves(nodeId: String)=
+        CommandExecution(CLUSTER_SLAVES, BulkStringCommandProcessor)
+
+    fun _readOnly() = CommandExecution(READONLY, SimpleStringCommandProcessor)
+
+    fun _readWrite() = CommandExecution(READWRITE, SimpleStringCommandProcessor)
 }
 
 public interface ClusterCommands {
@@ -216,7 +252,115 @@ public interface ClusterCommands {
      */
     public suspend fun clusterInfo(): String
 
-    //TODO: continue from CLUSTER KEYSLOT
+    /**
+     * ###  CLUSTER KEYSLOT key
+     *
+     * [Doc](https://redis.io/commands/cluster-keyslot)
+     * @since 3.0.0
+     * @return The hash slot number
+     */
+    public suspend fun clusterKeySlot(key: String): Long
+
+    /**
+     * ###  CLUSTER MEET ip port
+     *
+     * [Doc](https://redis.io/commands/cluster-meet)
+     * @since 3.0.0
+     * @return OK if the command was successful. If the address or port specified are invalid an error is returned.
+     */
+    public suspend fun clusterMeet(ip: String, port: String): String
+
+    /**
+     * ### CLUSTER MYID
+     *
+     * Returns the node's id.
+     *
+     * [Doc](https://redis.io/commands/cluster-myid)
+     * @since 3.0.0
+     * @return The node id.
+     */
+    public suspend fun clusterMyId(): String
+
+    /**
+     * ### CLUSTER NODES
+     *
+     * [Doc](https://redis.io/commands/cluster-nodes)
+     * @since 3.0.0
+     * @return The serialized cluster configuration.
+     */
+    public suspend fun clusterNodes(): String
+
+    /**
+     * ###  CLUSTER REPLICAS node-id
+     *
+     * [Doc](https://redis.io/commands/cluster-replicas)
+     * @since 5.0.0
+     * @return The serialized cluster configuration.
+     */
+    public suspend fun clusterReplicas(nodeId: String): String
+
+    /**
+     * ###  CLUSTER REPLICATE node-id
+     *
+     * [Doc](https://redis.io/commands/cluster-replicate)
+     * @since 3.0.0
+     * @return OK if the command was executed successfully, otherwise an error is returned.
+     */
+    public suspend fun clusterReplicate(nodeId: String): String
+
+    /**
+     * ### ` CLUSTER RESET [HARD|SOFT] `
+     *
+     * [Doc](https://redis.io/commands/cluster-reset)
+     * @since 3.0.0
+     * @return  OK if the command was successful. Otherwise an error is returned.
+     */
+    public suspend fun clusterReset(option: ClusterResetOption? = null)
+
+    /**
+     * ### CLUSTER SAVECONFIG
+     *
+     * [Doc](https://redis.io/commands/cluster-saveconfig)
+     * @since 3.0.0
+     * @return OK or an error if the operation fails.
+     */
+    public suspend fun clusterSaveConfig(): String
+
+    /**
+     * ###  CLUSTER SET-CONFIG-EPOCH config-epoch
+     *
+     * [Doc](https://redis.io/commands/cluster-set-config-epoch)
+     * @since 3.0.0
+     * @return OK if the command was executed successfully, otherwise an error is returned.
+     */
+    public suspend fun clusterSetConfigEpoch(configEpoch: String): String
+
+    /**
+     * ###  CLUSTER SLAVES node-id
+     *
+     * [Doc](https://redis.io/commands/cluster-slaves)
+     * @since 3.0.0
+     * @return The serialized cluster configuration.
+     */
+    public suspend fun clusterSlaves(nodeId: String): String
+
+    /**
+     * ### READONLY
+     *
+     * [Doc](https://redis.io/commands/readonly)
+     * @since 3.0.0
+     * @return String reply
+     */
+    public suspend fun readOnly(): String
+
+    /**
+     * ### READWRITE
+     *
+     * [Doc](https://redis.io/commands/readwrite)
+     * @since 3.0.0
+     * @return String reply
+     */
+    public suspend fun readWrite(): String
 }
 
 internal interface ClusterCommandExecutor: BaseClusterCommands, ClusterCommands, CommandExecutor {
