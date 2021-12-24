@@ -2,8 +2,10 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.crackthecodeabhi/kreds.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.crackthecodeabhi%22%20AND%20a:%22kreds%22)
 [![javadoc](https://javadoc.io/badge2/io.github.crackthecodeabhi/kreds/javadoc.svg)](https://javadoc.io/doc/io.github.crackthecodeabhi/kreds)
+[![CI](https://github.com/crackthecodeabhi/kreds/actions/workflows/ci.yml/badge.svg)](https://github.com/crackthecodeabhi/kreds/actions/workflows/ci.yml)
 [![CD](https://github.com/crackthecodeabhi/kreds/actions/workflows/gradle-publish.yml/badge.svg?branch=release)](https://github.com/crackthecodeabhi/kreds/actions/workflows/gradle-publish.yml)
 [![Pure Kotlin](https://img.shields.io/badge/100%25-kotlin-blue.svg)](https://kotlinlang.org/)
+[![codecov](https://codecov.io/gh/crackthecodeabhi/kreds/branch/main/graph/badge.svg?token=Y4XBBIH4BC)](https://codecov.io/gh/crackthecodeabhi/kreds)
 
 
 Kreds is a non-blocking, coroutine based redis client for Kotlin.
