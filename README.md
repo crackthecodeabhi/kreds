@@ -21,14 +21,10 @@ Kreds is compatible with redis 6.x.x and above.
 
 All the following redis features are supported:
 
-* Connection handling
+* Connection handling commands
+* Server commands
 * Cluster commands
-* Commands operating on any kind of values
-* Commands operating on string values
-* Commands operating on hashes
-* Commands operating on lists 
-* Commands operating on sets 
-* Commands operating on sorted sets 
+* Commands operating on strings,hashes,lists,keys,sets,sorted sets 
 * Transactions 
 * Pipelining 
 * Publish/Subscribe
