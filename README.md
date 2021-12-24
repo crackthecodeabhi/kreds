@@ -6,6 +6,7 @@
 [![CD](https://github.com/crackthecodeabhi/kreds/actions/workflows/gradle-publish.yml/badge.svg?branch=release)](https://github.com/crackthecodeabhi/kreds/actions/workflows/gradle-publish.yml)
 [![Pure Kotlin](https://img.shields.io/badge/100%25-kotlin-blue.svg)](https://kotlinlang.org/)
 [![codecov](https://codecov.io/gh/crackthecodeabhi/kreds/branch/main/graph/badge.svg?token=Y4XBBIH4BC)](https://codecov.io/gh/crackthecodeabhi/kreds)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcrackthecodeabhi%2Fkreds.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcrackthecodeabhi%2Fkreds?ref=badge_shield)
 
 
 Kreds is a non-blocking, coroutine based redis client for Kotlin.
@@ -79,3 +80,6 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcrackthecodeabhi%2Fkreds.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcrackthecodeabhi%2Fkreds?ref=badge_large)
