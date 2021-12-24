@@ -1,0 +1,19 @@
+name: FOSSA License Scan
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  fossa-scan:
+    if: ${{ github.repository == 'crackthecodeabhi/kreds' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Run FOSSA Scan
+        uses: fossas/fossa-action@v1
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
