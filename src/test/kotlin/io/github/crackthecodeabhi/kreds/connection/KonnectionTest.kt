@@ -43,12 +43,13 @@ class KonnectionTest {
 
     @Test
     fun testConnectionExclusivity(){
+        val concurrencyCount = 100
         val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:6379"), eventLoopGroup, defaultClientConfig)
         val correctReplyCount = AtomicInteger(0)
         runBlocking {
             coroutineScope {
                 withContext(Dispatchers.Default){
-                    repeat(10000){
+                    repeat(concurrencyCount){
                         launch {
                             val count = it.toString(10)
                             conn.lockByCoroutineJob {
@@ -69,7 +70,7 @@ class KonnectionTest {
                 }
             }
         }
-        assert(correctReplyCount.get() == 10000)
+        assert(correctReplyCount.get() == concurrencyCount)
         println("Correct Reply count = ${correctReplyCount.get()}")
     }
 

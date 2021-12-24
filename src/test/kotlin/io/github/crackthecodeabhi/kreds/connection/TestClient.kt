@@ -41,27 +41,7 @@ class TestClient {
         }
     }
 
-    /*@Test
-    fun transactionTest(): Unit = runBlocking {
-        launch(Kreds) {
-            val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
-            try{
-                val transaction = client.multi()
-                transaction.set("abhi","150")
-                val incrResp = transaction.incr("abhi")
-                transaction.del("abhi")
-                val keys = transaction.keys("*")
-                transaction.exec()
-                println("incr resp = ${incrResp.get()}")
-                println("keys = ${keys.get().joinToString(",")}")
-            }
-            finally {
-                KredsClientGroup.shutdown()
-            }
-        }
-    }*/
-
-    @Test
+   /* @Test
     fun pubsubTest() : Unit = runBlocking {
         val eventsScope = CoroutineScope(coroutineContext + CoroutineName("Client Event Handler Scope") + Dispatchers.Default.limitedParallelism(1))
         val handler = object : AbstractKredsSubscriber(eventsScope){
@@ -102,9 +82,9 @@ class TestClient {
             }
 
         }
-    }
+    }*/
 
-    @Test
+    /*@Test
     fun failInterleavedRequests() : Unit = runBlocking {
         val client = KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379"))
         launch(Kreds) {
@@ -115,5 +95,5 @@ class TestClient {
             delay(1000)
             println(client.incr("num"))
         }
-    }
+    }*/
 }
