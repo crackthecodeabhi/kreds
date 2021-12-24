@@ -6,6 +6,7 @@ plugins {
     `maven-publish`
     signing
     id("com.dorongold.task-tree") version "2.1.0"
+    id("io.gitlab.arturbosch.detekt") version "1.18.0"
     jacoco
 }
 
@@ -77,6 +78,11 @@ tasks {
         dependsOn(dokkaHtml)
         archiveClassifier.set("javadoc")
     }
+    afterEvaluate {
+        check {
+            dependsOn(withType<io.gitlab.arturbosch.detekt.Detekt>())
+        }
+    }
 
     /*withType<PublishToMavenRepository>{
         doFirst {
@@ -142,4 +148,15 @@ signing {
         System.getProperty("GPG_PRIVATE_PASSWORD")
     )
     sign(publishing.publications)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config = files(rootDir.resolve("detekt.yml"))
+    parallel = true
+    ignoreFailures = true
+    reports {
+        html.enabled = false
+        txt.enabled = false
+    }
 }
