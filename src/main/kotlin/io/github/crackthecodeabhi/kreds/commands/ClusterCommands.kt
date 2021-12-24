@@ -4,6 +4,7 @@ import io.github.crackthecodeabhi.kreds.args.Argument
 import io.github.crackthecodeabhi.kreds.args.FailOverOption
 import io.github.crackthecodeabhi.kreds.args.createArguments
 import io.github.crackthecodeabhi.kreds.args.toArgument
+import io.github.crackthecodeabhi.kreds.args.ClusterResetOption
 import io.github.crackthecodeabhi.kreds.commands.ClusterCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.protocol.ArrayCommandProcessor
@@ -107,8 +108,10 @@ internal interface BaseClusterCommands {
         CommandExecution(CLUSTER_REPLICATE, SimpleStringCommandProcessor, nodeId.toArgument())
 
     fun _clusterReset(option: ClusterResetOption?) =
-        CommandExecution(CLUSTER_RESET, SimpleStringCommandProcessor,
-            option?.toArgument() ?: emptyArray<Argument>())
+        if(option != null)
+            CommandExecution(CLUSTER_RESET, SimpleStringCommandProcessor,option.toArgument())
+        else
+            CommandExecution(CLUSTER_RESET, SimpleStringCommandProcessor)
 
     fun _clusterSaveConfig() =
         CommandExecution(CLUSTER_SAVE_CONFIG, SimpleStringCommandProcessor)
@@ -315,7 +318,7 @@ public interface ClusterCommands {
      * @since 3.0.0
      * @return  OK if the command was successful. Otherwise an error is returned.
      */
-    public suspend fun clusterReset(option: ClusterResetOption? = null)
+    public suspend fun clusterReset(option: ClusterResetOption? = null): String
 
     /**
      * ### CLUSTER SAVECONFIG
@@ -402,4 +405,40 @@ internal interface ClusterCommandExecutor: BaseClusterCommands, ClusterCommands,
 
     override suspend fun clusterInfo(): String =
         execute(_clusterInfo())
+
+    override suspend fun clusterKeySlot(key: String): Long =
+        execute(_clusterKeySlot(key))
+
+    override suspend fun clusterMeet(ip: String, port: String): String =
+        execute(_clusterMeet(ip, port))
+
+    override suspend fun clusterMyId(): String =
+        execute(_clusterMyId())
+
+    override suspend fun clusterNodes(): String =
+        execute(_clusterNodes())
+
+    override suspend fun clusterReplicas(nodeId: String): String =
+        execute(_clusterReplicas(nodeId))
+
+    override suspend fun clusterReplicate(nodeId: String): String =
+        execute(_clusterReplicate(nodeId))
+
+    override suspend fun clusterReset(option: ClusterResetOption?) : String =
+        execute(_clusterReset(option))
+
+    override suspend fun clusterSaveConfig(): String =
+        execute(_clusterSaveConfig())
+
+    override suspend fun clusterSetConfigEpoch(configEpoch: String): String =
+        execute(_clusterSetConfigEpoch(configEpoch))
+
+    override suspend fun clusterSlaves(nodeId: String): String =
+        execute(_clusterSlaves(nodeId))
+
+    override suspend fun readOnly(): String =
+        execute(_readOnly())
+
+    override suspend fun readWrite(): String =
+        execute(_readWrite())
 }
