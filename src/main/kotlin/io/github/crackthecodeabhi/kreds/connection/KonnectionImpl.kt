@@ -12,6 +12,7 @@ import java.net.SocketException
 import kotlinx.coroutines.channels.Channel as KChannel
 import io.github.crackthecodeabhi.kreds.ExclusiveObject
 import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
+import mu.KotlinLogging
 
 /**
  * The state of this Konnection is protected with the abstract [kotlinx.coroutines.sync.Mutex] defined by [ExclusiveObject]
@@ -29,6 +30,7 @@ import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
  * On any I/O error, connection is closed.
  *
  */
+private val logger = KotlinLogging.logger {}
 internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoopGroup: EventLoopGroup, val config: KredsClientConfig) : Konnection {
 
     private val bootstrap: Bootstrap = Bootstrap().group(eventLoopGroup)
@@ -142,6 +144,7 @@ internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoop
         if (!isConnected()) {
             try {
                 val (channel, readChannel) = createNewConnection()
+                logger.trace { "New connection created to $endpoint" }
                 this.channel = channel
                 this.readChannel = readChannel
             } catch (ex: SocketException) {

@@ -6,6 +6,7 @@ plugins {
     `maven-publish`
     signing
     id("com.dorongold.task-tree") version "2.1.0"
+    jacoco
 }
 
 group = "io.github.crackthecodeabhi"
@@ -13,6 +14,21 @@ version = "0.5"
 
 repositories {
     mavenCentral()
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        html.required.set(true)
+    }
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
 }
 
 nexusPublishing {
@@ -27,11 +43,16 @@ nexusPublishing {
 }
 
 dependencies {
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
     implementation("io.netty:netty-codec-redis:4.1.72.Final")
     implementation("io.netty:netty-handler:4.1.72.Final")
     implementation(kotlin("stdlib"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC3")
+
+    testImplementation ("io.kotest:kotest-runner-junit5:5.0.2")
+    testImplementation("io.kotest:kotest-assertions-core:5.0.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testRuntimeOnly("ch.qos.logback:logback-classic:1.3.0-alpha11")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 

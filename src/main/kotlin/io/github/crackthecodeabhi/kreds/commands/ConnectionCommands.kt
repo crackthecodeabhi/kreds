@@ -232,6 +232,7 @@ public interface ConnectionCommands{
      * @since 1.0.0
      * @return String
      */
+    //TODO: should be Int?
     public suspend fun select(index: ULong): String
 
 }
