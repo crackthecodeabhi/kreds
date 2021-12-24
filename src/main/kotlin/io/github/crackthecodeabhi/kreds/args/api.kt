@@ -136,3 +136,9 @@ public enum class FailOverOption: Argument {
 
     override fun toString(): String = name
 }
+
+public enum class ClusterResetOption: Argument{
+    HARD,SOFT;
+
+    override fun toString(): String = name
+}
