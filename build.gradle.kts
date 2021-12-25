@@ -36,7 +36,7 @@ tasks.test {
 
 nexusPublishing {
     repositories {
-        sonatype{
+        sonatype {
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
             username.set(System.getProperty("SONATYPE_USERNAME"))
@@ -52,7 +52,7 @@ dependencies {
     implementation(kotlin("stdlib"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC3")
 
-    testImplementation ("io.kotest:kotest-runner-junit5:5.0.2")
+    testImplementation("io.kotest:kotest-runner-junit5:5.0.2")
     testImplementation("io.kotest:kotest-assertions-core:5.0.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
     testRuntimeOnly("ch.qos.logback:logback-classic:1.3.0-alpha11")
@@ -73,10 +73,17 @@ kotlin {
 }
 
 tasks {
-    register<Jar>("dokkaJar"){
+    register<Jar>("dokkaJar") {
         from(dokkaHtml)
         dependsOn(dokkaHtml)
         archiveClassifier.set("javadoc")
+    }
+    withType<Jar> {
+        metaInf.with(
+            copySpec {
+                from("${project.rootDir}/LICENSE")
+            }
+        )
     }
     afterEvaluate {
         check {
@@ -132,9 +139,9 @@ publishing {
             artifactId = project.name
             version = project.version as String
             from(components["java"])
-            artifacts{
+            artifacts {
                 artifact(tasks["dokkaJar"])
-                artifact(tasks.kotlinSourcesJar){
+                artifact(tasks.kotlinSourcesJar) {
                     classifier = "sources"
                 }
             }
