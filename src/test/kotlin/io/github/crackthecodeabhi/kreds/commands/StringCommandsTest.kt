@@ -25,7 +25,9 @@ import io.github.crackthecodeabhi.kreds.connection.KredsClient
 import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import java.math.BigDecimal
 
 private lateinit var client: KredsClient
 private lateinit var c: StringCommands
@@ -72,5 +74,34 @@ class StringCommandsTest : BehaviorSpec({
                 }
             }
         }
+    }
+
+    Given("append") {
+        When("append to existing key") {
+            Then("length of string after append") {
+                c.set("appendKey", "abc")
+                c.append("appendKey", "xyz") shouldBe 6
+            }
+        }
+    }
+})
+
+class StringCommandTestFunc : FunSpec({
+    beforeSpec {
+        client = getTestClient()
+        client.flushAll(SyncOption.SYNC)
+        c = client
+    }
+    afterSpec {
+        client.close()
+    }
+
+    test("increment/decrement") {
+        c.set("number", "100")
+        c.incr("number") shouldBe 101
+        c.decr("number") shouldBe 100
+        c.incrBy("number", 10) shouldBe 110
+        c.decrBy("number", 20) shouldBe 90
+        c.incrByFloat("number", BigDecimal.valueOf(0.00005)) shouldBe "90.00005"
     }
 })
