@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2021 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.commands.HyperLogLogCommand.*
@@ -6,24 +25,26 @@ import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 
-internal enum class HyperLogLogCommand(override val subCommand: Command? = null): Command{
-    PFADD,PFCOUNT,PFMERGE;
+internal enum class HyperLogLogCommand(override val subCommand: Command? = null) : Command {
+    PFADD, PFCOUNT, PFMERGE;
 
     override val string = name
 }
 
-internal interface BaseHyperLogLogCommands{
+internal interface BaseHyperLogLogCommands {
 
-    fun _pfadd(key: String, vararg elements: String)=
-        CommandExecution(PFADD, IntegerCommandProcessor,*createArguments(key,elements))
+    fun _pfadd(key: String, vararg elements: String) =
+        CommandExecution(PFADD, IntegerCommandProcessor, key.toArgument(), *createArguments(*elements))
 
     fun _pfcount(key: String, vararg keys: String) =
-        CommandExecution(PFCOUNT, IntegerCommandProcessor, *createArguments(key,keys))
+        CommandExecution(PFCOUNT, IntegerCommandProcessor, *createArguments(key, keys))
 
-    fun _pfmerge(destKey: String,sourceKey: String, vararg sourceKeys: String)=
-        CommandExecution(PFMERGE, SimpleStringCommandProcessor,*createArguments(
-            destKey,sourceKey,sourceKeys
-        ))
+    fun _pfmerge(destKey: String, sourceKey: String, vararg sourceKeys: String) =
+        CommandExecution(
+            PFMERGE, SimpleStringCommandProcessor, *createArguments(
+                destKey, sourceKey, sourceKeys
+            )
+        )
 }
 
 public interface HyperLogLogCommands {
@@ -60,10 +81,10 @@ public interface HyperLogLogCommands {
      * @since 2.8.9
      * @return The command just returns OK.
      */
-    public suspend fun pfmerge(destKey: String,sourceKey: String, vararg sourceKeys: String): String
+    public suspend fun pfmerge(destKey: String, sourceKey: String, vararg sourceKeys: String): String
 }
 
-internal interface HyperLogLogCommandExecutor: HyperLogLogCommands, CommandExecutor, BaseHyperLogLogCommands{
+internal interface HyperLogLogCommandExecutor : HyperLogLogCommands, CommandExecutor, BaseHyperLogLogCommands {
 
     override suspend fun pfadd(key: String, vararg elements: String): Long =
         execute(_pfadd(key, *elements))
@@ -90,11 +111,12 @@ public interface PipelineHyperLogLogCommands {
     /**
      * @see [HyperLogLogCommands.pfmerge]
      */
-    public suspend fun pfmerge(destKey: String,sourceKey: String, vararg sourceKeys: String): Response<String>
+    public suspend fun pfmerge(destKey: String, sourceKey: String, vararg sourceKeys: String): Response<String>
 }
 
 
-internal interface PipelineHyperLogLogCommandExecutor: PipelineHyperLogLogCommands, QueuedCommand, BaseHyperLogLogCommands {
+internal interface PipelineHyperLogLogCommandExecutor : PipelineHyperLogLogCommands, QueuedCommand,
+    BaseHyperLogLogCommands {
     override suspend fun pfadd(key: String, vararg elements: String): Response<Long> =
         add(_pfadd(key, *elements))
 

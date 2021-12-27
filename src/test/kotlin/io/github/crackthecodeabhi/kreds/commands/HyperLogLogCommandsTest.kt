@@ -19,18 +19,16 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.SetOption
 import io.github.crackthecodeabhi.kreds.args.SyncOption
 import io.github.crackthecodeabhi.kreds.connection.KredsClient
-import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 
 private lateinit var client: KredsClient
-private lateinit var c: StringCommands
+private lateinit var c: HyperLogLogCommands
 
-class StringCommandsTest : BehaviorSpec({
+class HyperLogLogCommandsTest : BehaviorSpec({
+
     beforeSpec {
         client = getTestClient()
         client.flushAll(SyncOption.SYNC)
@@ -40,36 +38,10 @@ class StringCommandsTest : BehaviorSpec({
         client.close()
     }
 
-    Given("set") {
+    Given("pfadd") {
         When("new key") {
-            Then("return OK") {
-                c.set("newKey", "100") shouldBe "OK"
-            }
-        }
-        When("existing key with GET option") {
-            Then("return old value") {
-                c.set("newKey", "101", SetOption.Builder(get = true).build()) shouldBe "100"
-            }
-        }
-        When("key does not exist with GET option") {
-            Then("return null") {
-                c.set("noKey", "100", SetOption.Builder(get = true).build()) shouldBe null
-            }
-        }
-    }
-
-    Given("get") {
-        When("non-existing key") {
-            Then("return null") {
-                c.get("non-existing") shouldBe null
-            }
-        }
-        When("non-string type") {
-            Then("throws exception") {
-                client.hset("hashKey", "foo" to "bar")
-                shouldThrow<KredsRedisDataException> {
-                    c.get("hashKey")
-                }
+            Then("returns 1") {
+                c.pfadd("newkey", "element1", "element2") shouldBe 1
             }
         }
     }
