@@ -11,7 +11,9 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/crackthecodeabhi/kreds)
 ![GitHub](https://img.shields.io/github/license/crackthecodeabhi/kreds)
 
-Kreds is a non-blocking, coroutine based redis client for Kotlin.
+### NOT production ready. Work in Progress. Any help appreciated.
+
+Kreds is a idiomatic, non-blocking, coroutine based redis client for Kotlin.
 
 Kreds is designed to be EASY to use.
 
