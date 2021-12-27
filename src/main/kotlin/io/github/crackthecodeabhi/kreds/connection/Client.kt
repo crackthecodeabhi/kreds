@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2021 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.connection
 
 import io.netty.channel.EventLoopGroup
@@ -17,9 +36,13 @@ import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 public object KredsClientGroup {
     private val eventLoopGroup = NioEventLoopGroup()
     public fun newClient(endpoint: Endpoint, config: KredsClientConfig = defaultClientConfig): KredsClient =
-        DefaultKredsClient(endpoint, eventLoopGroup,config)
+        DefaultKredsClient(endpoint, eventLoopGroup, config)
 
-    public fun newSubscriberClient(endpoint: Endpoint, handler: KredsSubscriber, config: KredsClientConfig = defaultSubscriberClientConfig): KredsSubscriberClient =
+    public fun newSubscriberClient(
+        endpoint: Endpoint,
+        handler: KredsSubscriber,
+        config: KredsClientConfig = defaultSubscriberClientConfig
+    ): KredsSubscriberClient =
         DefaultKredsSubscriberClient(endpoint, eventLoopGroup, handler, config)
 
     public suspend fun shutdown() {
@@ -27,13 +50,18 @@ public object KredsClientGroup {
     }
 }
 
-public interface KredsClient : AutoCloseable, KeyCommands, StringCommands, ConnectionCommands, PublisherCommands, HashCommands, SetCommands,
-    ListCommands, HyperLogLogCommands, ClusterCommands {
+public interface KredsClient : AutoCloseable, KeyCommands, StringCommands, ConnectionCommands, PublisherCommands,
+    HashCommands, SetCommands,
+    ListCommands, HyperLogLogCommands, ClusterCommands, ServerCommands {
     public fun pipelined(): Pipeline
 }
 
-internal abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :
-    KonnectionImpl(endpoint, eventLoopGroup,config), CommandExecutor{
+internal abstract class AbstractKredsClient(
+    endpoint: Endpoint,
+    eventLoopGroup: EventLoopGroup,
+    config: KredsClientConfig
+) :
+    KonnectionImpl(endpoint, eventLoopGroup, config), CommandExecutor {
 
     override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T =
         lockByCoroutineJob {
@@ -51,7 +79,7 @@ internal abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: 
     override suspend fun executeCommands(commands: List<CommandExecution>): List<RedisMessage> = lockByCoroutineJob {
         connect()
         commands.forEach {
-            with(it){
+            with(it) {
                 write(processor.encode(command, *args))
             }
         }
@@ -59,16 +87,16 @@ internal abstract class AbstractKredsClient(endpoint: Endpoint, eventLoopGroup: 
         // collect the response messages.
         val responseList = mutableListOf<RedisMessage>()
         repeat(commands.size) {
-            responseList.add(it,read())
+            responseList.add(it, read())
         }
         responseList
     }
 }
 
 internal class DefaultKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :
-    AbstractKredsClient(endpoint, eventLoopGroup,config), KredsClient, KeyCommandExecutor, StringCommandsExecutor,
+    AbstractKredsClient(endpoint, eventLoopGroup, config), KredsClient, KeyCommandExecutor, StringCommandsExecutor,
     ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor, SetCommandExecutor, ListCommandExecutor,
-    HyperLogLogCommandExecutor, ClusterCommandExecutor {
+    HyperLogLogCommandExecutor, ClusterCommandExecutor, ServerCommandExecutor {
 
     override val mutex: Mutex = Mutex()
 
@@ -82,4 +110,3 @@ internal class DefaultKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopG
         }
     }
 }
-
