@@ -9,6 +9,7 @@
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcrackthecodeabhi%2Fkreds.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcrackthecodeabhi%2Fkreds?ref=badge_shield)
 [![Join the chat at https://gitter.im/kreds-redis/community](https://badges.gitter.im/kreds-redis/community.svg)](https://gitter.im/kreds-redis/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/crackthecodeabhi/kreds)
+![GitHub](https://img.shields.io/github/license/crackthecodeabhi/kreds)
 
 Kreds is a non-blocking, coroutine based redis client for Kotlin.
 
