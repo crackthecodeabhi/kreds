@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2021 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.args.*
@@ -5,7 +24,10 @@ import io.github.crackthecodeabhi.kreds.commands.ConnectionCommand.*
 import io.github.crackthecodeabhi.kreds.commands.ClientConnectionCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 
-internal enum class ClientConnectionCommand(override val subCommand: Command? = null, override val string: String = "CLIENT"): Command{
+internal enum class ClientConnectionCommand(
+    override val subCommand: Command? = null,
+    override val string: String = "CLIENT"
+) : Command {
     CLIENT_CACHING(CACHING),
     CLIENT_GETNAME(GETNAME),
     CLIENT_GETREDIR(GETREDIR),
@@ -14,59 +36,69 @@ internal enum class ClientConnectionCommand(override val subCommand: Command? = 
     CLIENT_ID(ID),
     CLIENT_INFO(INFO),
     CLIENT_PAUSE(PAUSE),
-    CLIENT_REPLY(REPLY),
     CLIENT_SETNAME(SETNAME),
     CLIENT_UNPAUSE(UNPAUSE),
 }
-internal enum class ConnectionCommand(command: String? = null, override val subCommand: Command? = null): Command{
-    AUTH,CACHING,GETNAME,GETREDIR,LIST,NO_EVICT("NO-EVICT"),
-    ID,INFO,PAUSE,REPLY,SETNAME,UNPAUSE,ECHO,PING,QUIT,RESET,SELECT;
+
+internal enum class ConnectionCommand(command: String? = null, override val subCommand: Command? = null) : Command {
+    AUTH, CACHING, GETNAME, GETREDIR, LIST, NO_EVICT("NO-EVICT"),
+    ID, INFO, PAUSE, SETNAME, UNPAUSE, ECHO, PING, QUIT, RESET, SELECT;
 
     override val string: String = command ?: name
 }
 
-internal interface BaseConnectionCommands{
-    fun _auth(password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor,password.toArgument())
-    fun _auth(username: String, password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor,username.toArgument(),password.toArgument())
+internal interface BaseConnectionCommands {
+    fun _auth(password: String) = CommandExecution(AUTH, SimpleStringCommandProcessor, password.toArgument())
+    fun _auth(username: String, password: String) =
+        CommandExecution(AUTH, SimpleStringCommandProcessor, username.toArgument(), password.toArgument())
+
     fun _clientList(clientListType: ClientListType? = null, vararg clientIds: String): CommandExecution {
-        val idArg = if(clientIds.isEmpty()) null else {
+        val idArg = if (clientIds.isEmpty()) null else {
             "ID ${clientIds.joinToString(" ")}"
         }
         return CommandExecution(
             CLIENT_LIST, BulkStringCommandProcessor, *createArguments(
                 clientListType,
                 idArg
-            ))
+            )
+        )
     }
+
     fun _clientNoEvict(on: Boolean) =
         CommandExecution(
             CLIENT_NO_EVICT,
             SimpleStringCommandProcessor,
-            if(on) "ON".toArgument() else "OFF".toArgument()
+            if (on) "ON".toArgument() else "OFF".toArgument()
         )
+
     fun _clientCaching(yes: Boolean) =
-        CommandExecution(CLIENT_CACHING, SimpleStringCommandProcessor,(if(yes) "YES" else "NO").toArgument())
+        CommandExecution(CLIENT_CACHING, SimpleStringCommandProcessor, (if (yes) "YES" else "NO").toArgument())
+
     fun _clientGetName() = CommandExecution(CLIENT_GETNAME, BulkStringCommandProcessor)
     fun _clientGetRedir() = CommandExecution(CLIENT_GETREDIR, IntegerCommandProcessor)
     fun _clientId() = CommandExecution(CLIENT_ID, IntegerCommandProcessor)
-    fun _clientInfo()=CommandExecution(CLIENT_INFO, BulkStringCommandProcessor)
+    fun _clientInfo() = CommandExecution(CLIENT_INFO, BulkStringCommandProcessor)
     fun _clientPause(timeout: ULong, clientPauseOption: ClientPauseOption? = null) =
-        CommandExecution(CLIENT_PAUSE, SimpleStringCommandProcessor,*createArguments(
-            timeout,clientPauseOption
-        ))
-    fun _clientReply(clientReplyOption: ClientReplyOption)=
-        CommandExecution(CLIENT_REPLY, SimpleStringCommandProcessor,clientReplyOption)
+        CommandExecution(
+            CLIENT_PAUSE, SimpleStringCommandProcessor, *createArguments(
+                timeout, clientPauseOption
+            )
+        )
 
-    fun _clientSetname(connectionName: String)= CommandExecution(CLIENT_SETNAME, SimpleStringCommandProcessor,connectionName.toArgument())
+    fun _clientSetname(connectionName: String) =
+        CommandExecution(CLIENT_SETNAME, SimpleStringCommandProcessor, connectionName.toArgument())
+
     fun _clientUnpause() = CommandExecution(CLIENT_UNPAUSE, SimpleStringCommandProcessor)
     fun _echo(message: String) = CommandExecution(ECHO, BulkStringCommandProcessor, message.toArgument())
-    fun _ping(message: String?)= CommandExecution(PING, SimpleStringCommandProcessor,*createArguments(message))
+    fun _ping(message: String?) =
+        CommandExecution(PING, CommandProcessor(SimpleStringHandler, BulkStringHandler), *createArguments(message))
+
     fun _quit() = CommandExecution(QUIT, SimpleStringCommandProcessor)
     fun _reset() = CommandExecution(RESET, SimpleStringCommandProcessor)
-    fun _select(index: ULong)= CommandExecution(SELECT, SimpleStringCommandProcessor,index.toArgument())
+    fun _select(index: ULong) = CommandExecution(SELECT, SimpleStringCommandProcessor, index.toArgument())
 }
 
-public interface ConnectionCommands{
+public interface ConnectionCommands {
     /**
      * ###  AUTH password
      *
@@ -163,15 +195,6 @@ public interface ConnectionCommands{
     public suspend fun clientPause(timeout: ULong, clientPauseOption: ClientPauseOption? = null): String
 
     /**
-     * ###  CLIENT REPLY ON|OFF|SKIP
-     *
-     * [Doc](https://redis.io/commands/client-reply)
-     * @since 3.2.0
-     * @return OK
-     */
-    public suspend fun clientReply(clientReplyOption: ClientReplyOption): String
-
-    /**
      * ###  CLIENT SETNAME connection-name
      *
      * [Doc](https://redis.io/commands/client-setname)
@@ -223,7 +246,7 @@ public interface ConnectionCommands{
      * @since 6.2
      * @return RESET
      */
-    public suspend fun reset():String
+    public suspend fun reset(): String
 
     /**
      * ### SELECT index
@@ -237,10 +260,10 @@ public interface ConnectionCommands{
 
 }
 
-internal interface ConnectionCommandsExecutor: CommandExecutor, ConnectionCommands, BaseConnectionCommands {
+internal interface ConnectionCommandsExecutor : CommandExecutor, ConnectionCommands, BaseConnectionCommands {
     override suspend fun auth(password: String): String = execute(_auth(password))
     override suspend fun auth(username: String, password: String): String =
-        execute(_auth(username,password))
+        execute(_auth(username, password))
 
     override suspend fun clientCaching(yes: Boolean): String =
         execute(_clientCaching(yes))
@@ -258,16 +281,13 @@ internal interface ConnectionCommandsExecutor: CommandExecutor, ConnectionComman
         execute(_clientInfo())
 
     override suspend fun clientList(clientListType: ClientListType?, vararg clientIds: String): String? =
-        execute(_clientList(clientListType,*clientIds))
+        execute(_clientList(clientListType, *clientIds))
 
     override suspend fun clientNoEvict(on: Boolean): String =
         execute(_clientNoEvict(on))
 
     override suspend fun clientPause(timeout: ULong, clientPauseOption: ClientPauseOption?): String =
         execute(_clientPause(timeout, clientPauseOption))
-
-    override suspend fun clientReply(clientReplyOption: ClientReplyOption): String =
-        execute(_clientReply(clientReplyOption))
 
     override suspend fun clientSetname(connectionName: String): String =
         execute(_clientSetname(connectionName))

@@ -83,6 +83,11 @@ class StringCommandsTest : BehaviorSpec({
                 c.append("appendKey", "xyz") shouldBe 6
             }
         }
+        When("append to non-existing key") {
+            Then("length of appended string") {
+                c.append("appendToNoExistingKey", "abcd") shouldBe 4
+            }
+        }
     }
 })
 

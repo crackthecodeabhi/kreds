@@ -19,27 +19,47 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
+import io.github.crackthecodeabhi.kreds.KredsException
+import io.github.crackthecodeabhi.kreds.args.EmptyArgument
 import io.github.crackthecodeabhi.kreds.args.SyncOption
+import io.github.crackthecodeabhi.kreds.args.ServerInfoSection
 import io.github.crackthecodeabhi.kreds.commands.ServerCommand.*
+import io.github.crackthecodeabhi.kreds.protocol.BulkStringCommandProcessor
+import io.github.crackthecodeabhi.kreds.protocol.BulkStringHandler
 import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
+import io.github.crackthecodeabhi.kreds.protocol.CommandProcessor
 import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
+import io.netty.handler.codec.redis.RedisMessage
 
 internal enum class ServerCommand(override val subCommand: Command? = null) : Command {
-    FLUSHALL, FLUSHDB;
+    FLUSHALL, FLUSHDB, INFO;
 
     override val string: String = name
 }
 
 internal interface BaseServerCommands {
     fun _flushAll(syncOption: SyncOption? = null) =
-        syncOption?.let {
-            CommandExecution(FLUSHALL, SimpleStringCommandProcessor, it)
-        } ?: CommandExecution(FLUSHALL, SimpleStringCommandProcessor)
+        CommandExecution(FLUSHALL, SimpleStringCommandProcessor, syncOption ?: EmptyArgument)
 
     fun _flushDb(syncOption: SyncOption? = null) =
-        syncOption?.let {
-            CommandExecution(FLUSHDB, SimpleStringCommandProcessor, it)
-        } ?: CommandExecution(FLUSHDB, SimpleStringCommandProcessor)
+        CommandExecution(FLUSHDB, SimpleStringCommandProcessor, syncOption ?: EmptyArgument)
+
+    fun _serverVersion() = CommandExecution(INFO, ServerVersionProcessor(), ServerInfoSection.server)
+
+    fun _info(section: ServerInfoSection? = null) =
+        CommandExecution(INFO, BulkStringCommandProcessor, section ?: EmptyArgument)
+}
+
+internal class ServerVersionProcessor : CommandProcessor(BulkStringHandler) {
+    private val versionRegex = """redis_version[\s]*:[\s]*([0-9.]*)""".toRegex()
+    override fun <T> decode(message: RedisMessage): T {
+        val info: String = super.decode(message) ?: throw KredsException("Failed to retrieve Server Info section.")
+        val matchResult = versionRegex.find(info)
+        val (versionString) = matchResult?.destructured
+            ?: throw KredsException("Failed to find version info from Server Info section.")
+        @Suppress("UNCHECKED_CAST")
+        return versionString as T
+    }
 }
 
 public interface ServerCommands {
@@ -61,6 +81,23 @@ public interface ServerCommands {
      * @return String reply
      */
     public suspend fun flushDb(syncOption: SyncOption? = null): String
+
+    /**
+     * Parses version info from `INFO server` section and returns the redis version.
+     *
+     * @throws KredsException on failure to extract the version info.
+     * @return Server version string.
+     */
+    public suspend fun serverVersion(): String
+
+    /**
+     * ### ` INFO [section] `
+     *
+     * [Doc](https://redis.io/commands/info)
+     * @since 1.0.0
+     * @return a string reply as a collection of text lines.
+     */
+    public suspend fun info(section: ServerInfoSection? = null): String
 }
 
 internal interface ServerCommandExecutor : BaseServerCommands, ServerCommands, CommandExecutor {
@@ -69,4 +106,10 @@ internal interface ServerCommandExecutor : BaseServerCommands, ServerCommands, C
 
     override suspend fun flushDb(syncOption: SyncOption?): String =
         execute(_flushDb(syncOption))
+
+    override suspend fun serverVersion(): String =
+        execute(_serverVersion())
+
+    override suspend fun info(section: ServerInfoSection?): String =
+        execute(_info(section))
 }

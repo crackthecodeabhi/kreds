@@ -132,12 +132,6 @@ public enum class ClientPauseOption : Argument {
     override fun toString(): String = name
 }
 
-public enum class ClientReplyOption : Argument {
-    ON, OFF, SKIP;
-
-    override fun toString(): String = name
-}
-
 public enum class BeforeAfterOption : Argument {
     BEFORE, AFTER;
 
@@ -164,6 +158,15 @@ public enum class ClusterResetOption : Argument {
 
 public enum class SyncOption : Argument {
     SYNC, ASYNC;
+
+    override fun toString(): String = name
+}
+
+public enum class ServerInfoSection : Argument {
+    server, clients, memory, persistence, stats,
+    replication, cpu, commandstats, cluster,
+    modules, keyspace, errorstats,
+    all, default, everything;
 
     override fun toString(): String = name
 }
