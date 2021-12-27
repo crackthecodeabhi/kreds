@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2021 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.connection
 
 import io.netty.bootstrap.ServerBootstrap
@@ -10,59 +29,56 @@ import io.netty.handler.codec.redis.ArrayRedisMessage
 import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import io.github.crackthecodeabhi.kreds.toByteBuf
 import io.github.crackthecodeabhi.kreds.toDefaultCharset
 import java.util.concurrent.atomic.AtomicInteger
 import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.FunSpec
 
-internal class TestConnectionImpl(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig): KonnectionImpl(endpoint, eventLoopGroup,config){
+internal class TestConnectionImpl(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :
+    KonnectionImpl(endpoint, eventLoopGroup, config) {
     override val mutex: Mutex = Mutex()
 }
 
-class KonnectionTest {
-
-    companion object {
-
-        private val eventLoopGroup = NioEventLoopGroup(4)
-
-        @AfterAll
-        @JvmStatic
-        fun close(){
-            eventLoopGroup.shutdownGracefully().get()
-        }
-    }
-
-    private fun createPing(message: String): ArrayRedisMessage {
-        return ArrayRedisMessage(listOf(FullBulkStringRedisMessage("PING".toByteBuf()),
+private fun createPing(message: String): ArrayRedisMessage {
+    return ArrayRedisMessage(
+        listOf(
+            FullBulkStringRedisMessage("PING".toByteBuf()),
             FullBulkStringRedisMessage(message.toByteBuf())
-        ))
+        )
+    )
+}
+
+private lateinit var eventLoopGroup: EventLoopGroup
+
+class KonnectionTest : FunSpec({
+    beforeSpec {
+        eventLoopGroup = NioEventLoopGroup(4)
+    }
+    afterSpec {
+        eventLoopGroup.shutdownGracefully().suspendableAwait()
     }
 
-    @Test
-    fun testConnectionExclusivity(){
+    test("Connection Exclusivity") {
         val concurrencyCount = 100
         val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:6379"), eventLoopGroup, defaultClientConfig)
         val correctReplyCount = AtomicInteger(0)
-        runBlocking {
-            coroutineScope {
-                withContext(Dispatchers.Default){
-                    repeat(concurrencyCount){
-                        launch {
-                            val count = it.toString(10)
-                            conn.lockByCoroutineJob {
-                                conn.connect()
-                                conn.writeAndFlush(createPing(count))
-                                when(val reply = conn.read()){
-                                    !is FullBulkStringRedisMessage -> throw KredsConnectionException("Received invalid response for ping.")
-                                    else -> {
-                                        val actual = reply.content().toDefaultCharset()
-                                        reply.content().release()
-                                        if(actual != count) throw KredsConnectionException("Konnection state corrupted! Expected $count, received $actual")
-                                        else correctReplyCount.incrementAndGet()
-                                    }
+        coroutineScope {
+            withContext(Dispatchers.Default) {
+                repeat(concurrencyCount) {
+                    launch {
+                        val count = it.toString(10)
+                        conn.lockByCoroutineJob {
+                            conn.connect()
+                            conn.writeAndFlush(createPing(count))
+                            when (val reply = conn.read()) {
+                                !is FullBulkStringRedisMessage -> throw KredsConnectionException("Received invalid response for ping.")
+                                else -> {
+                                    val actual = reply.content().toDefaultCharset()
+                                    reply.content().release()
+                                    if (actual != count) throw KredsConnectionException("Konnection state corrupted! Expected $count, received $actual")
+                                    else correctReplyCount.incrementAndGet()
                                 }
                             }
                         }
@@ -74,60 +90,55 @@ class KonnectionTest {
         println("Correct Reply count = ${correctReplyCount.get()}")
     }
 
-    @Test
-    fun testConnectionFail(){
+    test("Connection Fail") {
         val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:6373"), eventLoopGroup, defaultClientConfig)
-        val ex = assertThrows<KredsConnectionException> {
-            runBlocking {
-                conn.lockByCoroutineJob {
-                    conn.connect()
-                }
+        val ex = shouldThrow<KredsConnectionException> {
+            conn.lockByCoroutineJob {
+                conn.connect()
             }
         }
         println("cause = ${ex.cause}")
     }
 
-    @Test
-    fun testConnectionTimeout(){
+    test("Connection Timeout") {
         val conn = TestConnectionImpl(Endpoint.from("www.google.com:81"), eventLoopGroup, defaultClientConfig)
-        val ex = assertThrows<KredsConnectionException> {
-            runBlocking {
-                conn.lockByCoroutineJob {
-                    conn.connect()
-                }
+        val ex = shouldThrow<KredsConnectionException> {
+            conn.lockByCoroutineJob {
+                conn.connect()
             }
         }
         println("cause = ${ex.cause}")
     }
 
-    @Test
-    fun testReadTimeout(){
+    test("Read Timeout") {
         val bs = ServerBootstrap()
         val serverEventLoopGroup = NioEventLoopGroup()
         val workerGroup = NioEventLoopGroup()
-        val scf = bs.group(serverEventLoopGroup,workerGroup)
+        val channel = bs.group(serverEventLoopGroup, workerGroup)
             .channel(NioServerSocketChannel::class.java)
-            .childHandler(object : ChannelInitializer<SocketChannel>(){
+            .childHandler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(ch: SocketChannel) {
-                    ch.pipeline().addFirst(object: SimpleChannelInboundHandler<ByteBuf>(){
+                    ch.pipeline().addFirst(object : SimpleChannelInboundHandler<ByteBuf>() {
                         override fun channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf) {
                             println("Received: ${msg.toDefaultCharset()}")
                             // no response, let it timeout
                         }
                     })
                 }
-            }).bind(8081).sync()
+            }).bind(8081).sync().suspendableAwait()
 
-        val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:8081"), eventLoopGroup, defaultClientConfig)
-        val cause = assertThrows<KredsConnectionException> {
-            runBlocking {
-                conn.connect()
-                conn.writeAndFlush(createPing("Client: Hello there!"))
-                conn.read()
-            }
+        val conn =
+            TestConnectionImpl(
+                Endpoint.from("127.0.0.1:8081"), eventLoopGroup,
+                KredsClientConfig.Builder(readTimeoutSeconds = 1).build(defaultClientConfig)
+            )
+        val cause = shouldThrow<KredsConnectionException> {
+            conn.connect()
+            conn.writeAndFlush(createPing("Client: Hello there!"))
+            conn.read()
         }
         println("cause = ${cause.cause}")
-        scf.channel().close().sync()
-        serverEventLoopGroup.shutdownGracefully().get()
+        channel.close().sync().suspendableAwait()
+        serverEventLoopGroup.shutdownGracefully().suspendableAwait()
     }
-}
+})
