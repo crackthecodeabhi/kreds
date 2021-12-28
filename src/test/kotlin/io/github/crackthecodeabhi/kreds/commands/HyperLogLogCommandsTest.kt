@@ -19,24 +19,14 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.SyncOption
-import io.github.crackthecodeabhi.kreds.connection.KredsClient
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 
-private lateinit var client: KredsClient
-private lateinit var c: HyperLogLogCommands
-
 class HyperLogLogCommandsTest : BehaviorSpec({
-
-    beforeSpec {
-        client = getTestClient()
-        client.flushAll(SyncOption.SYNC)
-        c = client
-    }
-    afterSpec {
-        client.close()
-    }
+    lateinit var c: HyperLogLogCommands
+    val clientSetup = ClientSetup().then { c = it.client }
+    beforeSpec(clientSetup)
+    afterSpec(ClientTearDown(clientSetup))
 
     Given("pfadd") {
         When("new key") {

@@ -19,13 +19,52 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.connection.Endpoint
-import io.github.crackthecodeabhi.kreds.connection.KredsClient
-import io.github.crackthecodeabhi.kreds.connection.KredsClientConfig
-import io.github.crackthecodeabhi.kreds.connection.KredsClientGroup
+import io.github.crackthecodeabhi.kreds.args.SyncOption
+import io.github.crackthecodeabhi.kreds.connection.*
+import io.kotest.core.spec.AfterSpec
+import io.kotest.core.spec.BeforeSpec
+import io.kotest.core.spec.Spec
+import net.swiftzer.semver.SemVer
+
+val REDIS_6_2_0 = SemVer.parse("6.2.0")
+val REDIS_7_0_0 = SemVer.parse("7.0.0")
 
 fun getTestClient(endpoint: Endpoint? = null, config: KredsClientConfig? = null): KredsClient {
     return config?.let {
         KredsClientGroup.newClient(endpoint ?: Endpoint.from("127.0.0.1:6379"), it)
     } ?: KredsClientGroup.newClient(endpoint ?: Endpoint.from("127.0.0.1:6379"))
+}
+
+typealias AndThen<T> = suspend (spec: T) -> Unit
+
+interface Then<T> {
+    fun then(andThen: AndThen<T>): T
+}
+
+class ClientSetup : BeforeSpec, Then<ClientSetup> {
+    lateinit var client: KredsClient
+    lateinit var serverVersion: SemVer
+    lateinit var andThen: AndThen<ClientSetup>
+    override suspend fun invoke(p1: Spec) {
+        client = getTestClient(config = KredsClientConfig.Builder(readTimeoutSeconds = 1).build(defaultClientConfig))
+        client.flushAll(SyncOption.SYNC)
+        serverVersion = SemVer.parse(client.serverVersion())
+        andThen(this)
+    }
+
+    override fun then(andThen: AndThen<ClientSetup>) = apply {
+        this.andThen = andThen
+    }
+}
+
+class ClientTearDown(private val setup: ClientSetup) : AfterSpec, Then<ClientTearDown> {
+    lateinit var andThen: AndThen<ClientTearDown>
+    override suspend fun invoke(p1: Spec) {
+        setup.client.close()
+        andThen(this)
+    }
+
+    override fun then(andThen: AndThen<ClientTearDown>): ClientTearDown = apply {
+        this.andThen = andThen
+    }
 }

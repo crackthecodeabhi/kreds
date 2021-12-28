@@ -19,35 +19,24 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.SyncOption
-import io.github.crackthecodeabhi.kreds.connection.*
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldHaveMinLength
 
-private lateinit var client: KredsClient
-private lateinit var c: ConnectionCommands
-private lateinit var serverVersion: String
-
 class ConnectionCommandsTest : FunSpec({
-    beforeSpec {
-        client = getTestClient(config = KredsClientConfig.Builder(readTimeoutSeconds = 1).build(defaultClientConfig))
-        client.flushAll(SyncOption.SYNC)
-        serverVersion = client.serverVersion()
-        c = client
-    }
-    afterSpec {
-        client.close()
+    lateinit var c: ConnectionCommands
+    val clientSetup = ClientSetup().then { c = it.client }
+    beforeSpec(clientSetup)
+    afterSpec(ClientTearDown(clientSetup))
+
+    test("7.0.0+ Commands").config(enabledIf = {
+        clientSetup.serverVersion >= REDIS_7_0_0
+    }) {
+        c.clientNoEvict(true) shouldBe "OK"
     }
 
-    test("7.0.0+ Commands") {
-        if (serverVersion == "7.0.0") {
-            c.clientNoEvict(true) shouldBe "OK"
-        }
-    }
-
-    test("Connection commands") {
+    test("Connection commands").config(enabledIf = { clientSetup.serverVersion >= REDIS_6_2_0 }) {
         c.clientId() shouldBeGreaterThan 0
         c.clientInfo() shouldHaveMinLength 1
         c.clientSetname("CONN_TEST_NAME") shouldBe "OK"

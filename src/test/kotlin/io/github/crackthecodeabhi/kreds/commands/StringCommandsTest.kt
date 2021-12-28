@@ -20,7 +20,6 @@
 package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.args.SetOption
-import io.github.crackthecodeabhi.kreds.args.SyncOption
 import io.github.crackthecodeabhi.kreds.connection.KredsClient
 import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
 import io.kotest.assertions.throwables.shouldThrow
@@ -29,18 +28,15 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 
-private lateinit var client: KredsClient
-private lateinit var c: StringCommands
-
 class StringCommandsTest : BehaviorSpec({
-    beforeSpec {
-        client = getTestClient()
-        client.flushAll(SyncOption.SYNC)
-        c = client
+    lateinit var c: StringCommands
+    lateinit var client: KredsClient
+    val clientSetup = ClientSetup().then {
+        client = it.client
+        c = it.client
     }
-    afterSpec {
-        client.close()
-    }
+    beforeSpec(clientSetup)
+    afterSpec(ClientTearDown(clientSetup))
 
     Given("set") {
         When("new key") {
@@ -92,14 +88,10 @@ class StringCommandsTest : BehaviorSpec({
 })
 
 class StringCommandTestFunc : FunSpec({
-    beforeSpec {
-        client = getTestClient()
-        client.flushAll(SyncOption.SYNC)
-        c = client
-    }
-    afterSpec {
-        client.close()
-    }
+    lateinit var c: StringCommands
+    val clientSetup = ClientSetup().then { c = it.client }
+    beforeSpec(clientSetup)
+    afterSpec(ClientTearDown(clientSetup))
 
     test("increment/decrement") {
         c.set("number", "100")
