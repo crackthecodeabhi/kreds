@@ -1,5 +1,26 @@
+/*
+ *  Copyright (C) 2021 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.connection
 
+import io.github.crackthecodeabhi.kreds.ExclusiveObject
+import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
 import io.netty.channel.socket.SocketChannel
@@ -8,11 +29,9 @@ import io.netty.handler.codec.redis.*
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.TimeoutException
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import mu.KotlinLogging
 import java.net.SocketException
 import kotlinx.coroutines.channels.Channel as KChannel
-import io.github.crackthecodeabhi.kreds.ExclusiveObject
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
-import mu.KotlinLogging
 
 /**
  * The state of this Konnection is protected with the abstract [kotlinx.coroutines.sync.Mutex] defined by [ExclusiveObject]
@@ -31,12 +50,17 @@ import mu.KotlinLogging
  *
  */
 private val logger = KotlinLogging.logger {}
-internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoopGroup: EventLoopGroup, val config: KredsClientConfig) : Konnection {
+
+internal abstract class KonnectionImpl(
+    private val endpoint: Endpoint,
+    eventLoopGroup: EventLoopGroup,
+    val config: KredsClientConfig
+) : Konnection {
 
     private val bootstrap: Bootstrap = Bootstrap().group(eventLoopGroup)
         .remoteAddress(endpoint.toSocketAddress())
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,config.connectTimeOutMillis)
-        .option(ChannelOption.SO_KEEPALIVE,config.soKeepAlive)
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.connectTimeOutMillis)
+        .option(ChannelOption.SO_KEEPALIVE, config.soKeepAlive)
         .channel(NioSocketChannel::class.java)
 
     private var channel: SocketChannel? = null
@@ -54,7 +78,7 @@ internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoop
                 pipeline.addLast(RedisBulkStringAggregator()) // inbound 2
                 pipeline.addLast(RedisArrayAggregator()) // inbound 3
 
-                if(config.readTimeoutSeconds != KredsClientConfig.NO_READ_TIMEOUT)
+                if (config.readTimeoutSeconds != KredsClientConfig.NO_READ_TIMEOUT)
                     pipeline.addLast(ReadTimeoutHandler(config.readTimeoutSeconds)) // duplex 4
 
                 pipeline.addLast(ResponseHandler(readChannel)) // inbound 5
@@ -68,9 +92,12 @@ internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoop
      * Returns the connected SocketChannel and ReadChannel as [Pair<SocketChannel,Channel<RedisMessage>>]
      * @throws SocketException
      */
-    private suspend fun createNewConnection(): Pair<SocketChannel,KChannel<RedisMessage>> = lockByCoroutineJob {
+    private suspend fun createNewConnection(): Pair<SocketChannel, KChannel<RedisMessage>> = lockByCoroutineJob {
         val newReadChannel = KChannel<RedisMessage>(KChannel.UNLIMITED)
-        return Pair(bootstrap.handler(createChannelInitializer(newReadChannel)).connect().suspendableAwait() as SocketChannel, newReadChannel)
+        return Pair(
+            bootstrap.handler(createChannelInitializer(newReadChannel)).connect().suspendableAwait() as SocketChannel,
+            newReadChannel
+        )
     }
 
     /**
@@ -89,17 +116,17 @@ internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoop
     }
 
     override suspend fun isConnected() = lockByCoroutineJob {
-        if(channel == null || readChannel == null) false
+        if (channel == null || readChannel == null) false
         else channel!!.isActive
     }
 
-    private suspend fun writeInternal(message: RedisMessage, flush: Boolean) : Unit = lockByCoroutineJob {
-        if(!isConnected()) throw KredsNotYetConnectedException()
+    private suspend fun writeInternal(message: RedisMessage, flush: Boolean): Unit = lockByCoroutineJob {
+        if (!isConnected()) throw KredsNotYetConnectedException()
         try {
             if (flush) channel!!.writeAndFlush(message).suspendableAwait()
-            else channel!!.write(message).suspendableAwait()
+            else channel!!.write(message)
         } catch (ex: Throwable) {
-            when(ex){
+            when (ex) {
                 is TimeoutException -> throw KredsTimeoutException("Write timed out.", ex)
                 is SocketException -> throw KredsConnectionException(ex)
                 else -> throw ex
@@ -108,26 +135,26 @@ internal abstract class KonnectionImpl(private val endpoint: Endpoint, eventLoop
     }
 
     override suspend fun flush(): Unit = lockByCoroutineJob {
-        if(!isConnected()) throw KredsNotYetConnectedException()
+        if (!isConnected()) throw KredsNotYetConnectedException()
         else channel!!.flush()
     }
 
-    override suspend fun write(message: RedisMessage): Unit = writeInternal(message,false)
+    override suspend fun write(message: RedisMessage): Unit = writeInternal(message, false)
 
-    override suspend fun writeAndFlush(message: RedisMessage): Unit = writeInternal(message,true)
+    override suspend fun writeAndFlush(message: RedisMessage): Unit = writeInternal(message, true)
 
     private suspend fun readInternal(tryRead: Boolean): RedisMessage? = lockByCoroutineJob {
-        if(!isConnected()) throw KredsNotYetConnectedException()
+        if (!isConnected()) throw KredsNotYetConnectedException()
         try {
-            if(tryRead) {
+            if (tryRead) {
                 val result = readChannel!!.tryReceive()
-                if(result.isClosed) throw ClosedReceiveChannelException("Channel closed fro receive.")
+                if (result.isClosed) throw ClosedReceiveChannelException("Channel closed fro receive.")
                 else result.getOrNull()
             } else {
                 readChannel!!.receive()
             }
         } catch (ex: Throwable) {
-            when(ex) {
+            when (ex) {
                 is ClosedReceiveChannelException -> throw KredsConnectionException("Connection closed.")
                 is TimeoutException -> throw KredsTimeoutException("Read timed out.", ex)
                 is SocketException -> throw KredsConnectionException(ex)
