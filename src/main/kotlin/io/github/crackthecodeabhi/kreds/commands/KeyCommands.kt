@@ -1,77 +1,101 @@
+/*
+ *  Copyright (C) 2021 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.args.*
-import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.commands.KeyCommand.*
+import io.github.crackthecodeabhi.kreds.protocol.*
 
-internal enum class KeyCommand(override val subCommand: Command? = null): Command{
-    DEL,COPY,DUMP,EXISTS,EXPIRE,EXPIREAT,EXPIRETIME,
-    KEYS,MOVE,PERSIST,PEXPIRE,PEXPIREAT,PEXPIRETIME,
-    PTTL,RANDOMKEY,RENAME,RENAMENX,TOUCH,TTL,TYPE,UNLINK,
+internal enum class KeyCommand(override val subCommand: Command? = null) : Command {
+    DEL, COPY, DUMP, EXISTS, EXPIRE, EXPIREAT, EXPIRETIME,
+    KEYS, MOVE, PERSIST, PEXPIRE, PEXPIREAT, PEXPIRETIME,
+    PTTL, RANDOMKEY, RENAME, RENAMENX, TOUCH, TTL, TYPE, UNLINK,
     SCAN;
 
     override val string = name
 }
 
-internal interface BaseKeyCommands{
-    fun _del(vararg keys: String) = CommandExecution(DEL, IntegerCommandProcessor,*keys.toArguments())
+internal interface BaseKeyCommands {
+    fun _del(vararg keys: String) = CommandExecution(DEL, IntegerCommandProcessor, *keys.toArguments())
     fun _copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): CommandExecution {
         val args =
             createArguments(
                 source,
                 destination,
-                destinationDb?.let { KeyValueArgument("DB",it) },
+                destinationDb?.let { KeyValueArgument("DB", it) },
                 replace?.let { KeyOnlyArgument("replace") })
-        return CommandExecution(COPY, IntegerCommandProcessor,*args)
+        return CommandExecution(COPY, IntegerCommandProcessor, *args)
     }
-    fun _dump(key: String) = CommandExecution(DUMP, BulkStringCommandProcessor,key.toArgument())
-    fun _exists(vararg keys: String)= CommandExecution(EXISTS, IntegerCommandProcessor,*keys.toArguments())
+
+    fun _dump(key: String) = CommandExecution(DUMP, BulkStringCommandProcessor, key.toArgument())
+    fun _exists(vararg keys: String) = CommandExecution(EXISTS, IntegerCommandProcessor, *keys.toArguments())
     fun _expire(key: String, seconds: ULong, expireOption: ExpireOption?) =
-        CommandExecution(EXPIRE, IntegerCommandProcessor,*createArguments(key, seconds, expireOption))
+        CommandExecution(EXPIRE, IntegerCommandProcessor, *createArguments(key, seconds, expireOption))
 
     fun _expireAt(key: String, timestamp: ULong, expireOption: ExpireOption?) =
-        CommandExecution(EXPIREAT, IntegerCommandProcessor, *createArguments(key,timestamp,expireOption))
+        CommandExecution(EXPIREAT, IntegerCommandProcessor, *createArguments(key, timestamp, expireOption))
 
-    fun _expireTime(key: String)= CommandExecution(EXPIRETIME, IntegerCommandProcessor,key.toArgument())
+    fun _expireTime(key: String) = CommandExecution(EXPIRETIME, IntegerCommandProcessor, key.toArgument())
 
-    fun _keys(pattern: String) = CommandExecution(KEYS, ArrayCommandProcessor,pattern.toArgument())
+    fun _keys(pattern: String) = CommandExecution(KEYS, ArrayCommandProcessor, pattern.toArgument())
 
-    fun _move(key: String, db: String)= CommandExecution(MOVE, IntegerCommandProcessor,key.toArgument(),db.toArgument())
+    fun _move(key: String, db: String) =
+        CommandExecution(MOVE, IntegerCommandProcessor, key.toArgument(), db.toArgument())
 
-    fun _persist(key: String)= CommandExecution(PERSIST, IntegerCommandProcessor,key.toArgument())
+    fun _persist(key: String) = CommandExecution(PERSIST, IntegerCommandProcessor, key.toArgument())
 
     fun _pexpire(key: String, milliseconds: ULong, expireOption: PExpireOption?) =
-        CommandExecution(PEXPIRE, IntegerCommandProcessor, *createArguments(key,milliseconds,expireOption))
+        CommandExecution(PEXPIRE, IntegerCommandProcessor, *createArguments(key, milliseconds, expireOption))
 
-    fun _pexpireat(key: String, millisecondsTimestamp: ULong, expireOption: PExpireOption?)=
-        CommandExecution(PEXPIREAT, IntegerCommandProcessor,*createArguments(key,millisecondsTimestamp,expireOption))
+    fun _pexpireat(key: String, millisecondsTimestamp: ULong, expireOption: PExpireOption?) =
+        CommandExecution(PEXPIREAT, IntegerCommandProcessor, *createArguments(key, millisecondsTimestamp, expireOption))
 
-    fun _pexpiretime(key: String)= CommandExecution(PEXPIRETIME, IntegerCommandProcessor,key.toArgument())
+    fun _pexpiretime(key: String) = CommandExecution(PEXPIRETIME, IntegerCommandProcessor, key.toArgument())
 
-    fun _pttl(key: String)= CommandExecution(PTTL, IntegerCommandProcessor,key.toArgument())
+    fun _pttl(key: String) = CommandExecution(PTTL, IntegerCommandProcessor, key.toArgument())
 
-    fun _randomKey()= CommandExecution(RANDOMKEY, BulkStringCommandProcessor)
+    fun _randomKey() = CommandExecution(RANDOMKEY, BulkStringCommandProcessor)
 
-    fun _rename(key: String, newKey: String) = CommandExecution(RENAME, SimpleStringCommandProcessor,*createArguments(key,newKey))
+    fun _rename(key: String, newKey: String) =
+        CommandExecution(RENAME, SimpleStringCommandProcessor, *createArguments(key, newKey))
 
-    fun _renamenx(key: String, newKey: String) = CommandExecution(RENAMENX, IntegerCommandProcessor,*createArguments(key,newKey))
+    fun _renamenx(key: String, newKey: String) =
+        CommandExecution(RENAMENX, IntegerCommandProcessor, *createArguments(key, newKey))
 
-    fun _touch(vararg keys: String) = CommandExecution(TOUCH, IntegerCommandProcessor,*createArguments(keys))
+    fun _touch(vararg keys: String) = CommandExecution(TOUCH, IntegerCommandProcessor, *createArguments(keys))
 
-    fun _ttl(key: String)= CommandExecution(TTL, IntegerCommandProcessor,key.toArgument())
+    fun _ttl(key: String) = CommandExecution(TTL, IntegerCommandProcessor, key.toArgument())
 
-    fun _type(key: String) = CommandExecution(TYPE, SimpleStringCommandProcessor,key.toArgument())
+    fun _type(key: String) = CommandExecution(TYPE, SimpleStringCommandProcessor, key.toArgument())
 
-    fun _unlink(vararg keys: String)= CommandExecution(UNLINK, IntegerCommandProcessor,*createArguments(keys))
+    fun _unlink(vararg keys: String) = CommandExecution(UNLINK, IntegerCommandProcessor, *createArguments(keys))
 
     fun _scan(cursor: Long, matchPattern: String?, count: Long?, type: String?) =
-        CommandExecution(SCAN,ScanResultProcessor,*createArguments(
+        CommandExecution(SCAN, ScanResultProcessor, *createArguments(
             cursor,
-            matchPattern?.let { KeyValueArgument("MATCH",it) },
-            count?.let { KeyValueArgument("COUNT",it.toString(10)) },
-            type?.let { KeyValueArgument("TYPE",it) }
+            matchPattern?.let { KeyValueArgument("MATCH", it) },
+            count?.let { KeyValueArgument("COUNT", it.toString(10)) },
+            type?.let { KeyValueArgument("TYPE", it) }
         ))
 }
+
 public interface KeyCommands {
     /**
      * ### `DEL key [key ...]`
@@ -95,7 +119,12 @@ public interface KeyCommands {
      * @return 1 if source was copied, else 0
      * @since 6.2.0
      */
-    public suspend fun copy(source: String, destination: String, destinationDb: String? = null, replace: Boolean? = null): Long
+    public suspend fun copy(
+        source: String,
+        destination: String,
+        destinationDb: String? = null,
+        replace: Boolean? = null
+    ): Long
 
     /**
      * ### `DUMP key`
@@ -123,7 +152,7 @@ public interface KeyCommands {
      * A key with an associated timeout is often said to be volatile in Redis terminology.
      *
      * [Doc](https://redis.io/commands/expire)
-     * @since 1.0.0
+     * @since 1.0.0, >= 7.0: Added options: NX, XX, GT and LT.
      * @return 1 if the timeout was set else 0,e.g. key doesn't exist, or operation skipped due to the provided arguments.
      */
     public suspend fun expire(key: String, seconds: ULong, expireOption: ExpireOption? = null): Long
@@ -188,7 +217,7 @@ public interface KeyCommands {
      * @since 2.2.0
      * @return 1 if the timeout was removed, 0 if key does not exist or does not have an associated timeout.
      */
-    public suspend fun persist(key: String):Long
+    public suspend fun persist(key: String): Long
 
     /**
      * ###  `PEXPIRE key milliseconds [NX|XX|GT|LT]`
@@ -200,7 +229,7 @@ public interface KeyCommands {
      * @return 1 if the timeout was set.
      * 0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
      */
-    public suspend fun pexpire(key: String, milliseconds: ULong,expireOption: PExpireOption? = null): Long
+    public suspend fun pexpire(key: String, milliseconds: ULong, expireOption: PExpireOption? = null): Long
 
     /**
      * ### `PEXPIREAT key milliseconds-timestamp [NX|XX|GT|LT] `
@@ -212,7 +241,11 @@ public interface KeyCommands {
      * @since 2.6.0
      * @return 1 if the timeout was set. 0 if the timeout was not set. e.g. key doesn't exist, or operation skipped due to the provided arguments.
      */
-    public suspend fun pexpireat(key:String, millisecondsTimestamp: ULong, expireOption: PExpireOption? = null /* = org.kreds.ExpireOption? */): Long
+    public suspend fun pexpireat(
+        key: String,
+        millisecondsTimestamp: ULong,
+        expireOption: PExpireOption? = null /* = org.kreds.ExpireOption? */
+    ): Long
 
     /**
      * ###  PEXPIRETIME key
@@ -327,15 +360,20 @@ public interface KeyCommands {
      * @since 2.8.0
      * @return [ScanResult]
      */
-    public suspend fun scan(cursor: Long, matchPattern: String? = null, count: Long? = null, type: String? = null): ScanResult
+    public suspend fun scan(
+        cursor: Long,
+        matchPattern: String? = null,
+        count: Long? = null,
+        type: String? = null
+    ): ScanResult
 }
 
-internal interface KeyCommandExecutor: CommandExecutor,KeyCommands,BaseKeyCommands {
+internal interface KeyCommandExecutor : CommandExecutor, KeyCommands, BaseKeyCommands {
 
     override suspend fun del(vararg keys: String): Long = execute(_del(*keys))
 
     override suspend fun copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): Long =
-        execute(_copy(source,destination,destinationDb,replace))
+        execute(_copy(source, destination, destinationDb, replace))
 
     override suspend fun dump(key: String): String? = execute(_dump(key))
 
@@ -352,7 +390,7 @@ internal interface KeyCommandExecutor: CommandExecutor,KeyCommands,BaseKeyComman
     override suspend fun keys(pattern: String): List<String> =
         execute(_keys(pattern))
 
-    override suspend fun move(key: String, db: String): Long = execute(_move(key,db))
+    override suspend fun move(key: String, db: String): Long = execute(_move(key, db))
 
     override suspend fun persist(key: String): Long = execute(_persist(key))
 
@@ -381,5 +419,5 @@ internal interface KeyCommandExecutor: CommandExecutor,KeyCommands,BaseKeyComman
     override suspend fun unlink(vararg keys: String): Long = execute(_unlink(*keys))
 
     override suspend fun scan(cursor: Long, matchPattern: String?, count: Long?, type: String?): ScanResult =
-        execute(_scan(cursor,matchPattern, count, type))
+        execute(_scan(cursor, matchPattern, count, type))
 }

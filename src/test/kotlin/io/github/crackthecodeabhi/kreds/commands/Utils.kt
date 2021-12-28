@@ -24,9 +24,12 @@ import io.github.crackthecodeabhi.kreds.connection.*
 import io.kotest.core.spec.AfterSpec
 import io.kotest.core.spec.BeforeSpec
 import io.kotest.core.spec.Spec
+import io.kotest.core.test.Enabled
+import io.kotest.core.test.TestCase
 import io.kotest.matchers.shouldBe
 import net.swiftzer.semver.SemVer
 
+val REDIS_6_0_0 = SemVer.parse("6.0.0")
 val REDIS_6_2_0 = SemVer.parse("6.2.0")
 val REDIS_7_0_0 = SemVer.parse("7.0.0")
 
@@ -55,6 +58,11 @@ class ClientSetup : BeforeSpec, Then<ClientSetup> {
 
     override fun then(andThen: AndThen<ClientSetup>) = apply {
         this.andThen = andThen
+    }
+
+    fun enableIf(version: SemVer): (TestCase) -> Enabled = {
+        if (serverVersion < version) Enabled.disabled("Target $serverVersion < required $version")
+        else Enabled.enabled
     }
 }
 

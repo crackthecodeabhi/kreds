@@ -28,14 +28,14 @@ class HyperLogLogCommandsTest : FunSpec({
     beforeSpec(clientSetup)
     afterSpec(ClientTearDown(clientSetup))
 
-    test("pfadd") {
+    test("pfadd").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
         c.pfadd("newkey", "element1", "element2") shouldBe 1
         c.pfadd("newkey1", "element1", "element2") shouldBe 1
     }
-    test("pfcount") {
+    test("pfcount").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
         c.pfcount("newkey", "newkey1") shouldBe 2
     }
-    test("pfmerge") {
+    test("pfmerge").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
         c.pfmerge("newkey", "newkey1").shouldBeOk()
     }
 })

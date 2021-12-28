@@ -30,15 +30,16 @@ class ConnectionCommandsTest : FunSpec({
     beforeSpec(clientSetup)
     afterSpec(ClientTearDown(clientSetup))
 
-    test("7.0.0+ Commands").config(enabledIf = {
-        clientSetup.serverVersion >= REDIS_7_0_0
-    }) {
+    test("Connection commands > API 7").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_7_0_0)) {
         c.clientNoEvict(true) shouldBe "OK"
     }
 
-    test("Connection commands").config(enabledIf = { clientSetup.serverVersion >= REDIS_6_2_0 }) {
-        c.clientId() shouldBeGreaterThan 0
+    test("Connection commands > API 6.2").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_2_0)) {
         c.clientInfo() shouldHaveMinLength 1
+    }
+
+    test("Connection commands > API 6").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
+        c.clientId() shouldBeGreaterThan 0
         c.clientSetname("CONN_TEST_NAME") shouldBe "OK"
         c.clientGetName() shouldBe "CONN_TEST_NAME"
         c.echo("ECHO_TEST") shouldBe "ECHO_TEST"
