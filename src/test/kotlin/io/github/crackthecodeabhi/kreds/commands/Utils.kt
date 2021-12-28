@@ -44,12 +44,12 @@ interface Then<T> {
 class ClientSetup : BeforeSpec, Then<ClientSetup> {
     lateinit var client: KredsClient
     lateinit var serverVersion: SemVer
-    lateinit var andThen: AndThen<ClientSetup>
+    var andThen: AndThen<ClientSetup>? = null
     override suspend fun invoke(p1: Spec) {
         client = getTestClient(config = KredsClientConfig.Builder(readTimeoutSeconds = 1).build(defaultClientConfig))
         client.flushAll(SyncOption.SYNC)
         serverVersion = SemVer.parse(client.serverVersion())
-        andThen(this)
+        andThen?.invoke(this)
     }
 
     override fun then(andThen: AndThen<ClientSetup>) = apply {
@@ -58,10 +58,10 @@ class ClientSetup : BeforeSpec, Then<ClientSetup> {
 }
 
 class ClientTearDown(private val setup: ClientSetup) : AfterSpec, Then<ClientTearDown> {
-    lateinit var andThen: AndThen<ClientTearDown>
+    var andThen: AndThen<ClientTearDown>? = null
     override suspend fun invoke(p1: Spec) {
         setup.client.close()
-        andThen(this)
+        andThen?.invoke(this)
     }
 
     override fun then(andThen: AndThen<ClientTearDown>): ClientTearDown = apply {
