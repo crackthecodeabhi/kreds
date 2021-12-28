@@ -19,11 +19,14 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
+import io.github.crackthecodeabhi.kreds.args.createArguments
+import io.github.crackthecodeabhi.kreds.args.toArgument
 import io.github.crackthecodeabhi.kreds.commands.HyperLogLogCommand.*
-import io.github.crackthecodeabhi.kreds.args.*
-import io.github.crackthecodeabhi.kreds.protocol.*
-import io.github.crackthecodeabhi.kreds.pipeline.Response
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
+import io.github.crackthecodeabhi.kreds.pipeline.Response
+import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
+import io.github.crackthecodeabhi.kreds.protocol.IntegerCommandProcessor
+import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
 
 internal enum class HyperLogLogCommand(override val subCommand: Command? = null) : Command {
     PFADD, PFCOUNT, PFMERGE;
@@ -37,13 +40,15 @@ internal interface BaseHyperLogLogCommands {
         CommandExecution(PFADD, IntegerCommandProcessor, key.toArgument(), *createArguments(*elements))
 
     fun _pfcount(key: String, vararg keys: String) =
-        CommandExecution(PFCOUNT, IntegerCommandProcessor, *createArguments(key, keys))
+        CommandExecution(PFCOUNT, IntegerCommandProcessor, key.toArgument(), *createArguments(*keys))
 
     fun _pfmerge(destKey: String, sourceKey: String, vararg sourceKeys: String) =
         CommandExecution(
-            PFMERGE, SimpleStringCommandProcessor, *createArguments(
-                destKey, sourceKey, sourceKeys
-            )
+            PFMERGE,
+            SimpleStringCommandProcessor,
+            destKey.toArgument(),
+            sourceKey.toArgument(),
+            *createArguments(*sourceKeys)
         )
 }
 

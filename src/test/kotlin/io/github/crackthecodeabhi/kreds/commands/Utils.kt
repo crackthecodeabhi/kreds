@@ -24,6 +24,7 @@ import io.github.crackthecodeabhi.kreds.connection.*
 import io.kotest.core.spec.AfterSpec
 import io.kotest.core.spec.BeforeSpec
 import io.kotest.core.spec.Spec
+import io.kotest.matchers.shouldBe
 import net.swiftzer.semver.SemVer
 
 val REDIS_6_2_0 = SemVer.parse("6.2.0")
@@ -68,3 +69,5 @@ class ClientTearDown(private val setup: ClientSetup) : AfterSpec, Then<ClientTea
         this.andThen = andThen
     }
 }
+
+fun String.shouldBeOk() = this shouldBe "OK"

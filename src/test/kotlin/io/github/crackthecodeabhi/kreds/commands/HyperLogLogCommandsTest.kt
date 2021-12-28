@@ -19,20 +19,23 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class HyperLogLogCommandsTest : BehaviorSpec({
+class HyperLogLogCommandsTest : FunSpec({
     lateinit var c: HyperLogLogCommands
     val clientSetup = ClientSetup().then { c = it.client }
     beforeSpec(clientSetup)
     afterSpec(ClientTearDown(clientSetup))
 
-    Given("pfadd") {
-        When("new key") {
-            Then("returns 1") {
-                c.pfadd("newkey", "element1", "element2") shouldBe 1
-            }
-        }
+    test("pfadd") {
+        c.pfadd("newkey", "element1", "element2") shouldBe 1
+        c.pfadd("newkey1", "element1", "element2") shouldBe 1
+    }
+    test("pfcount") {
+        c.pfcount("newkey", "newkey1") shouldBe 2
+    }
+    test("pfmerge") {
+        c.pfmerge("newkey", "newkey1").shouldBeOk()
     }
 })
