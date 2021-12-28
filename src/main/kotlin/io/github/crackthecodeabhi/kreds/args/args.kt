@@ -34,8 +34,9 @@ internal data class KeyOnlyArgument(val key: String) : Argument {
     override fun toString() = key.uppercase()
 }
 
-internal data class StringArgument(val value: String) : Argument {
-    override fun toString() = value
+@JvmInline
+internal value class StringArgument(val value: String) : Argument {
+    override fun toString(): String = value
 }
 
 internal fun <T> T.toArgument(): Argument =
