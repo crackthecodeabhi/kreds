@@ -1,0 +1,36 @@
+site_name: Kreds - A redis client for Kotlin/JVM
+
+site_url: https://github.com/crackthecodeabhi/kreds
+site_author: Abhijith Shivaswamy
+site_description: >-
+  Kreds is a non-blocking, coroutine based Kotlin Redis client library.
+
+repo_name: crackthecodeabhi/kreds
+repo_url: https://github.com/crackthecodeabhi/kreds
+
+copyright: Copyright &copy; 2020 Abhijith Shivaswamy
+
+theme:
+  name: material
+  features:
+    - navigation.expand
+    - navigation.instant
+    - navigation.tabs
+
+  nav:
+    - Getting Started:
+        - Introduction: index.md
+        - F.A.Q: faq.md
+        - External:
+            - API Docs: apidocs.md
+            - Github Project Page: "https://github.com/crackthecodeabhi/kreds"
+            - Change Log: "https://github.com/crackthecodeabhi/kreds/blob/master/CHANGES.md"
+            - Report a Problem: "https://github.com/crackthecodeabhi/kreds/issues"
+            - Discussion Forum: "https://gitter.im/kreds-redis/community"
+
+  extra:
+    social:
+      - icon: fontawesome/brands/github
+        link: https://github.com/crackthecodeabhi
+      - icon: fontawesome/brands/gitter
+        link: https://gitter.im/kreds-redis/community
