@@ -1,17 +1,17 @@
-# Welcome to MkDocs
+# Welcome to Kreds user guide
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
 
-## Commands
+## How to use
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+```kotlin
+launch {
+    KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379")).use { client ->
+        client.set("foo","100") 
+        println("incremented value of foo ${client.incr("foo")}") // prints 101
+        client.expire("foo",3u) // set expiration to 3 seconds
+        delay(3000)
+        assert(client.get("foo") == null)
+    }
+    KredsClientGroup.shutdown() // shutdown the client group.
+}
+```
