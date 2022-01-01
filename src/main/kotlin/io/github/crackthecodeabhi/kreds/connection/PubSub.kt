@@ -19,8 +19,7 @@
 
 package io.github.crackthecodeabhi.kreds.connection
 
-import io.github.crackthecodeabhi.kreds.ExclusiveObject
-import io.github.crackthecodeabhi.kreds.KredsException
+import io.github.crackthecodeabhi.kreds.*
 import io.github.crackthecodeabhi.kreds.args.EmptyArgument
 import io.github.crackthecodeabhi.kreds.args.createArguments
 import io.github.crackthecodeabhi.kreds.args.toArgument
@@ -28,11 +27,12 @@ import io.github.crackthecodeabhi.kreds.commands.Command
 import io.github.crackthecodeabhi.kreds.commands.CommandExecution
 import io.github.crackthecodeabhi.kreds.commands.ConnectionCommand
 import io.github.crackthecodeabhi.kreds.connection.PubSubCommand.*
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 import io.github.crackthecodeabhi.kreds.protocol.*
 import io.netty.channel.EventLoopGroup
 import io.netty.handler.codec.redis.ArrayRedisMessage
+import io.netty.handler.codec.redis.FullBulkStringRedisMessage
 import io.netty.handler.codec.redis.RedisMessage
+import io.netty.handler.codec.redis.SimpleStringRedisMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.sync.Mutex
@@ -300,12 +300,14 @@ internal class DefaultKredsSubscriberClient(
                 while (true) {
                     if (this@DefaultKredsSubscriberClient.isConnected()) {
                         val msg = this@DefaultKredsSubscriberClient.read()
-                        if (msg !is ArrayRedisMessage) {
-                            readChannel.trySend(msg)
-                        } else {
+                        if (msg is ArrayRedisMessage) {
                             val reply: List<Any?> = ArrayCommandProcessor.decode(msg)
-                            processPubSubReply(reply)
-                        }
+                            if (isValidPubSubReply(reply))
+                                processPubSubReply(reply)
+                            else
+                                handlePubSubSpecialCase(reply)
+                        } else
+                            readChannel.trySend(msg)
                     }
                 }
             } catch (ex: CancellationException) {
@@ -325,12 +327,29 @@ internal class DefaultKredsSubscriberClient(
             scope.launch { action() }
         }
 
-        private fun processPubSubReply(reply: List<Any?>) {
-            // Each subscription message has 3 elements, except pmessage, which has 4
-            if (reply.isEmpty() || (reply.size !in 3..4))
+        private fun handlePubSubSpecialCase(reply: List<Any?>) {
+            val first = reply.firstOrNull()
+            if (first is String && first.lowercase() == "pong") {
+                if (reply.size == 2)
+                    readChannel.trySend(FullBulkStringRedisMessage((reply.second() as String).toByteBuf()))
+                else
+                    readChannel.trySend(SimpleStringRedisMessage("PONG"))
+            } else
                 dispatchPubSubEvent {
                     kredsSubscriber.onException(KredsPubSubException("Received invalid subscription message."))
                 }
+        }
+
+        /**
+         * Each subscription message has 3 elements, except pmessage, which has 4
+         */
+        private fun isValidPubSubReply(reply: List<Any?>): Boolean =
+            with(reply) { isNotEmpty() && (size in 3..4) }
+
+        /**
+         * Only valid reply is passed, the validity function [isValidPubSubReply] is used to validate.
+         */
+        private fun processPubSubReply(reply: List<Any?>) {
             val kind = reply[0] as String
             val channelOrPattern = reply[1] as String
             val messageOrChannel: () -> String = { reply[2] as String }

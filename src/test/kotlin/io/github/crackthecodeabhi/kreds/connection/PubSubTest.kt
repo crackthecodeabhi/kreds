@@ -21,11 +21,14 @@ package io.github.crackthecodeabhi.kreds.connection
 
 import io.github.crackthecodeabhi.kreds.commands.ClientSetup
 import io.github.crackthecodeabhi.kreds.commands.ClientTearDown
+import io.github.crackthecodeabhi.kreds.commands.shouldBeOk
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
+
+//TODO: if Subscriber.quit is called while in subscription
 
 class PubSubTest : FunSpec({
     val setup = ClientSetup()
@@ -59,15 +62,13 @@ class PubSubTest : FunSpec({
                 })
 
             subscriber.subscribe(testChannel)
+            subscriber.ping("OK").shouldBeOk()
             repeat(1000) {
                 publisher.publish(testChannel, "1")
             }
             delay(100)
             counter.get() shouldBe 1000
             println("Counter = ${counter.get()}")
-            /*repeat(100) {
-                    subscriber.ping("OK").shouldBeOk()
-                }*/
             subscriber.unsubscribe(testChannel)
             subscriber.close()
         }
