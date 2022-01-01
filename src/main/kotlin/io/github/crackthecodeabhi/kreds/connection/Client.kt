@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -19,35 +19,37 @@
 
 package io.github.crackthecodeabhi.kreds.connection
 
+import io.github.crackthecodeabhi.kreds.args.Argument
+import io.github.crackthecodeabhi.kreds.commands.*
+import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
+import io.github.crackthecodeabhi.kreds.pipeline.Pipeline
+import io.github.crackthecodeabhi.kreds.pipeline.PipelineImpl
+import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
+import io.github.crackthecodeabhi.kreds.protocol.ICommandProcessor
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.handler.codec.redis.RedisMessage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
-import io.github.crackthecodeabhi.kreds.args.*
-import io.github.crackthecodeabhi.kreds.commands.*
-import io.github.crackthecodeabhi.kreds.protocol.*
-import io.github.crackthecodeabhi.kreds.pipeline.*
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 
 
 //TODO: INCRBY can be negative also! check that in api, should accept long, not ulong
 
-public object KredsClientGroup {
-    private val eventLoopGroup = NioEventLoopGroup()
-    public fun newClient(endpoint: Endpoint, config: KredsClientConfig = defaultClientConfig): KredsClient =
-        DefaultKredsClient(endpoint, eventLoopGroup, config)
+private val eventLoopGroup = NioEventLoopGroup()
 
-    public fun newSubscriberClient(
-        endpoint: Endpoint,
-        handler: KredsSubscriber,
-        config: KredsClientConfig = defaultSubscriberClientConfig
-    ): KredsSubscriberClient =
-        DefaultKredsSubscriberClient(endpoint, eventLoopGroup, handler, config)
+public fun CoroutineScope.newSubscriberClient(
+    endpoint: Endpoint,
+    handler: KredsSubscriber,
+    config: KredsClientConfig = defaultSubscriberClientConfig
+): KredsSubscriberClient =
+    DefaultKredsSubscriberClient(endpoint, eventLoopGroup, coroutineContext, handler, config)
 
-    public suspend fun shutdown() {
-        eventLoopGroup.shutdownGracefully().suspendableAwait()
-    }
+public fun newClient(endpoint: Endpoint, config: KredsClientConfig = defaultClientConfig): KredsClient =
+    DefaultKredsClient(endpoint, eventLoopGroup, config)
+
+public suspend fun shutdown() {
+    eventLoopGroup.shutdownGracefully().suspendableAwait()
 }
 
 public interface KredsClient : AutoCloseable, KeyCommands, StringCommands, ConnectionCommands, PublisherCommands,

@@ -1,15 +1,43 @@
+/*
+ *  Copyright (C) 2022 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.connection
 
+import io.github.crackthecodeabhi.kreds.ExclusiveObject
 import io.github.crackthecodeabhi.kreds.KredsException
-import io.netty.channel.EventLoopGroup
-import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
+import io.github.crackthecodeabhi.kreds.args.EmptyArgument
+import io.github.crackthecodeabhi.kreds.args.createArguments
+import io.github.crackthecodeabhi.kreds.args.toArgument
 import io.github.crackthecodeabhi.kreds.commands.Command
+import io.github.crackthecodeabhi.kreds.commands.CommandExecution
 import io.github.crackthecodeabhi.kreds.commands.ConnectionCommand
 import io.github.crackthecodeabhi.kreds.connection.PubSubCommand.*
-import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 import io.github.crackthecodeabhi.kreds.protocol.*
+import io.netty.channel.EventLoopGroup
+import io.netty.handler.codec.redis.ArrayRedisMessage
+import io.netty.handler.codec.redis.RedisMessage
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.sync.Mutex
+import mu.KotlinLogging
+import kotlin.coroutines.CoroutineContext
 
 public class KredsPubSubException : KredsException {
     internal companion object {
@@ -23,22 +51,18 @@ public class KredsPubSubException : KredsException {
 }
 
 internal enum class PubSubCommand(override val subCommand: Command? = null, commandString: String? = null) : Command {
-    PSUBSCRIBE,PUBLISH, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE,
+    PSUBSCRIBE, PUBLISH, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE,
 
-    CHANNELS,NUMPAT,NUMSUB,HELP,
+    CHANNELS, NUMPAT, NUMSUB, HELP,
 
-    PUBSUB_CHANNELS(CHANNELS,"PUBSUB"),
-    PUBSUB_NUMPAT(NUMPAT,"PUBSUB"),
-    PUBSUB_NUMSUB(NUMSUB,"PUBSUB"),
-    PUBSUB_HELP(HELP,"PUBSUB");
+    PUBSUB_CHANNELS(CHANNELS, "PUBSUB"),
+    PUBSUB_NUMPAT(NUMPAT, "PUBSUB"),
+    PUBSUB_NUMSUB(NUMSUB, "PUBSUB"),
+    PUBSUB_HELP(HELP, "PUBSUB");
 
     override val string = commandString ?: name
 }
 
-/**
- * New coroutines will be launched in the provided [scope] for each event,
- * clients have full control over context, dispatcher of the coroutines created to fire the events.
- */
 public interface KredsSubscriber {
     public fun onMessage(channel: String, message: String)
     public fun onPMessage(pattern: String, channel: String, message: String)
@@ -47,14 +71,13 @@ public interface KredsSubscriber {
     public fun onPUnsubscribe(pattern: String, subscribedChannels: Long)
     public fun onPSubscribe(pattern: String, subscribedChannels: Long)
     public fun onException(ex: Throwable)
-    public val scope: CoroutineScope
 }
 
 /**
  * Clients override the required methods to process those events else they are discarded by default.
  * @see KredsSubscriber
  */
-public abstract class AbstractKredsSubscriber(override val scope: CoroutineScope) : KredsSubscriber {
+public abstract class AbstractKredsSubscriber : KredsSubscriber {
 
     override fun onMessage(channel: String, message: String) {}
 
@@ -228,112 +251,209 @@ public interface KredsSubscriberClient : AutoCloseable, SubscriberCommands {
 /**
  * [Doc](https://redis.io/topics/pubsub)
  */
+private val logger = KotlinLogging.logger {}
+
 internal class DefaultKredsSubscriberClient(
     endpoint: Endpoint,
     eventLoopGroup: EventLoopGroup,
-    private val kredsSubscriber: KredsSubscriber,
+    context: CoroutineContext,
+    kredsSubscriber: KredsSubscriber,
     config: KredsClientConfig
 ) : KredsSubscriberClient, AbstractKredsClient(endpoint, eventLoopGroup, config) {
 
+    private val scope = CoroutineScope(context + SupervisorJob(context.job))
+
     override val mutex: Mutex = Mutex()
 
-    private var subCoroutineJob: Job? = null
+    private val reader = Reader(kredsSubscriber)
 
-    private suspend fun startSubscriptionCoroutine(): Job = CoroutineScope(currentCoroutineContext()).launch {
-        while (isActive) {
-            val msg = tryRead() ?: continue
-            val reply: List<Any?> = ArrayCommandProcessor.decode(msg)
-            processPubSubReply(reply)
+    private val writer = Writer(mutex)
+
+    inner class Reader(private val kredsSubscriber: KredsSubscriber) : ExclusiveObject {
+        override val mutex = Mutex()
+        private var job: Job? = null
+        val readChannel = Channel<RedisMessage>(Channel.UNLIMITED)
+
+        suspend fun <R> preemptRead(writeOp: suspend () -> R) {
+            try {
+                stop()
+                writeOp()
+            } finally {
+                start()
+            }
+        }
+
+        suspend fun close() = lockByCoroutineJob {
+            stop()
+        }
+
+        private suspend fun stop(): Boolean = lockByCoroutineJob {
+            if (job != null) {
+                job!!.cancel()
+                job = null
+                true
+            } else false
+        }
+
+        private suspend fun read() {
+            try {
+                while (true) {
+                    if (this@DefaultKredsSubscriberClient.isConnected()) {
+                        val msg = this@DefaultKredsSubscriberClient.read()
+                        if (msg !is ArrayRedisMessage) {
+                            readChannel.trySend(msg)
+                        } else {
+                            val reply: List<Any?> = ArrayCommandProcessor.decode(msg)
+                            processPubSubReply(reply)
+                        }
+                    }
+                }
+            } catch (ex: CancellationException) {
+                logger.trace { "Reader was cancelled." }
+                throw ex
+            }
+        }
+
+        private suspend fun start(): Boolean = lockByCoroutineJob {
+            if (job == null) {
+                job = scope.launch { read() }
+                true
+            } else false
+        }
+
+        private inline fun dispatchPubSubEvent(crossinline action: () -> Unit) {
+            scope.launch { action() }
+        }
+
+        private fun processPubSubReply(reply: List<Any?>) {
+            // Each subscription message has 3 elements, except pmessage, which has 4
+            if (reply.isEmpty() || (reply.size !in 3..4))
+                dispatchPubSubEvent {
+                    kredsSubscriber.onException(KredsPubSubException("Received invalid subscription message."))
+                }
+            val kind = reply[0] as String
+            val channelOrPattern = reply[1] as String
+            val messageOrChannel: () -> String = { reply[2] as String }
+            val subscribedChannels: () -> Long = { reply[2] as Long }
+            val pmessage: () -> String = { reply[3] as String }
+            when (kind) {
+                "subscribe" -> dispatchPubSubEvent {
+                    kredsSubscriber.onSubscribe(
+                        channelOrPattern,
+                        subscribedChannels()
+                    )
+                }
+
+                "unsubscribe" -> dispatchPubSubEvent {
+                    kredsSubscriber.onUnsubscribe(
+                        channelOrPattern,
+                        subscribedChannels()
+                    )
+                }
+
+                "psubscribe" -> dispatchPubSubEvent {
+                    kredsSubscriber.onPSubscribe(
+                        channelOrPattern,
+                        subscribedChannels()
+                    )
+                }
+
+                "punsubscribe" -> dispatchPubSubEvent {
+                    kredsSubscriber.onPUnsubscribe(
+                        channelOrPattern,
+                        subscribedChannels()
+                    )
+                }
+
+                "message" -> dispatchPubSubEvent { kredsSubscriber.onMessage(channelOrPattern, messageOrChannel()) }
+
+                "pmessage" -> dispatchPubSubEvent {
+                    kredsSubscriber.onPMessage(
+                        channelOrPattern,
+                        messageOrChannel(),
+                        pmessage()
+                    )
+                }
+
+                else -> dispatchPubSubEvent { kredsSubscriber.onException(KredsPubSubException("Unknown pubsub message kind $kind")) }
+            }
         }
     }
 
-    override suspend fun subscribe(vararg channels: String) = lockByCoroutineJob {
-        connectWriteAndFlush(
-            ArrayCommandProcessor.encode(
-                SUBSCRIBE,
-                *createArguments(*channels)
-            )
-        ) // do not wait for reply.
-        subCoroutineJob = subCoroutineJob ?: startSubscriptionCoroutine()
-    }
-
-    override suspend fun unsubscribe(vararg channels: String) = lockByCoroutineJob {
-        connectWriteAndFlush(ArrayCommandProcessor.encode(UNSUBSCRIBE, *createArguments(*channels)))
-    }
-
-    override suspend fun pSubscribe(vararg patterns: String) = lockByCoroutineJob {
-        connectWriteAndFlush(
-            ArrayCommandProcessor.encode(
-                PSUBSCRIBE,
-                *createArguments(*patterns)
-            )
-        ) //do not wait for reply.
-        subCoroutineJob = subCoroutineJob ?: startSubscriptionCoroutine()
-    }
-
-    override suspend fun pUnsubscribe(vararg patterns: String) = lockByCoroutineJob {
-        connectWriteAndFlush(ArrayCommandProcessor.encode(PUNSUBSCRIBE, *createArguments(*patterns)))
-    }
-
-    override suspend fun ping(message: String?): String =
-        execute(ConnectionCommand.PING, SimpleStringCommandProcessor, *createArguments(message))
-
-    override suspend fun reset(): String =
-        execute(ConnectionCommand.RESET, SimpleStringCommandProcessor)
-
-    override suspend fun quit(): String =
-        execute(ConnectionCommand.QUIT, SimpleStringCommandProcessor)
-
-    private inline fun dispatchPubSubEvent(crossinline action: () -> Unit) {
-        kredsSubscriber.scope.launch { action() }
-    }
-
-    private suspend fun processPubSubReply(reply: List<Any?>) {
-        // Each subscription message has 3 elements, except pmessage, which has 4
-        if (reply.isEmpty() || (reply.size !in 3..4))
-            dispatchPubSubEvent {
-                kredsSubscriber.onException(KredsPubSubException("Received invalid subscription message."))
+    inner class Writer(override val mutex: Mutex) : ExclusiveObject {
+        suspend fun write(execution: CommandExecution) = lockByCoroutineJob {
+            with(execution) {
+                connectWriteAndFlush(processor.encode(command, *args))
             }
-        val kind = reply[0] as String
-        val channelOrPattern = reply[1] as String
-        val messageOrChannel: () -> String = { reply[2] as String }
-        val subscribedChannels: () -> Long = { reply[2] as Long }
-        val pmessage: () -> String = { reply[3] as String }
-        when (kind) {
-            "subscribe" -> dispatchPubSubEvent { kredsSubscriber.onSubscribe(channelOrPattern, subscribedChannels()) }
+        }
+    }
 
-            "unsubscribe" -> {
-                dispatchPubSubEvent { kredsSubscriber.onUnsubscribe(channelOrPattern, subscribedChannels()) }
-                subCoroutineJob?.cancel()
-            }
+    override suspend fun subscribe(vararg channels: String) {
+        reader.preemptRead {
+            writer.write(CommandExecution(SUBSCRIBE, ArrayCommandProcessor, *createArguments(*channels)))
+        }
+    }
 
-            "psubscribe" -> dispatchPubSubEvent { kredsSubscriber.onPSubscribe(channelOrPattern, subscribedChannels()) }
+    override suspend fun unsubscribe(vararg channels: String) {
+        reader.preemptRead {
+            writer.write(CommandExecution(UNSUBSCRIBE, ArrayCommandProcessor, *createArguments(*channels)))
+        }
+    }
 
-            "punsubscribe" -> {
-                dispatchPubSubEvent { kredsSubscriber.onPUnsubscribe(channelOrPattern, subscribedChannels()) }
-                subCoroutineJob?.cancel()
-            }
+    override suspend fun pSubscribe(vararg patterns: String) {
+        reader.preemptRead {
+            writer.write(CommandExecution(PSUBSCRIBE, ArrayCommandProcessor, *createArguments(*patterns)))
+        }
+    }
 
-            "message" -> dispatchPubSubEvent { kredsSubscriber.onMessage(channelOrPattern, messageOrChannel()) }
+    override suspend fun pUnsubscribe(vararg patterns: String) {
+        reader.preemptRead {
+            writer.write(CommandExecution(PUNSUBSCRIBE, ArrayCommandProcessor, *createArguments(*patterns)))
+        }
+    }
 
-            "pmessage" -> dispatchPubSubEvent {
-                kredsSubscriber.onPMessage(
-                    channelOrPattern,
-                    messageOrChannel(),
-                    pmessage()
+    override suspend fun ping(message: String?): String {
+        reader.preemptRead {
+            writer.write(
+                CommandExecution(
+                    ConnectionCommand.PING,
+                    SimpleStringCommandProcessor,
+                    message?.toArgument() ?: EmptyArgument
                 )
-            }
-
-            else -> dispatchPubSubEvent { kredsSubscriber.onException(KredsPubSubException("Unknown pubsub message kind $kind")) }
+            )
         }
+        return CommandProcessor(SimpleStringHandler, BulkStringHandler).decode(reader.readChannel.receive())
+    }
+
+    override suspend fun reset(): String {
+        reader.preemptRead {
+            writer.write(
+                CommandExecution(
+                    ConnectionCommand.RESET,
+                    SimpleStringCommandProcessor
+                )
+            )
+        }
+        return SimpleStringCommandProcessor.decode(reader.readChannel.receive())
+    }
+
+    override suspend fun quit(): String {
+        reader.preemptRead {
+            writer.write(
+                CommandExecution(
+                    ConnectionCommand.QUIT,
+                    SimpleStringCommandProcessor
+                )
+            )
+        }
+        return SimpleStringCommandProcessor.decode(reader.readChannel.receive())
     }
 
     override fun close() {
         runBlocking {
-            lockByCoroutineJob {
-                subCoroutineJob?.cancel()
-                disconnect()
-            }
+            reader.close()
+            disconnect()
+            if (scope.isActive) scope.cancel()
         }
     }
 }

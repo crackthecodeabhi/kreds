@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -35,8 +35,8 @@ val REDIS_7_0_0 = SemVer.parse("7.0.0")
 
 fun getTestClient(endpoint: Endpoint? = null, config: KredsClientConfig? = null): KredsClient {
     return config?.let {
-        KredsClientGroup.newClient(endpoint ?: Endpoint.from("127.0.0.1:6379"), it)
-    } ?: KredsClientGroup.newClient(endpoint ?: Endpoint.from("127.0.0.1:6379"))
+        newClient(endpoint ?: Endpoint.from("127.0.0.1:6379"), it)
+    } ?: newClient(endpoint ?: Endpoint.from("127.0.0.1:6379"))
 }
 
 typealias AndThen<T> = suspend (spec: T) -> Unit

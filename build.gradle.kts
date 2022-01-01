@@ -69,7 +69,7 @@ dependencies {
     implementation("io.netty:netty-codec-redis:4.1.72.Final")
     implementation("io.netty:netty-handler:4.1.72.Final")
     implementation(kotlin("stdlib"))
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC3")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
     testImplementation("io.kotest:kotest-runner-junit5:5.0.2")
     testImplementation("io.kotest:kotest-assertions-core:5.0.2")

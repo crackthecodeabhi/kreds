@@ -1,9 +1,28 @@
+/*
+ *  Copyright (C) 2022 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.connection
 
-import io.netty.handler.codec.redis.RedisMessage
 import io.github.crackthecodeabhi.kreds.CoroutineSafe
 import io.github.crackthecodeabhi.kreds.ExclusiveObject
 import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
+import io.netty.handler.codec.redis.RedisMessage
 
 /**
  * Interface which models a connection to a redis server.
@@ -16,7 +35,7 @@ import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
  * while holding the [kotlinx.coroutines.sync.Mutex] defined in [ExclusiveObject]
  */
 @CoroutineSafe
-internal interface Konnection: ExclusiveObject {
+internal interface Konnection : ExclusiveObject {
     /**
      * Connects to the Redis server.
      * @throws KredsConnectionException
@@ -64,13 +83,6 @@ internal interface Konnection: ExclusiveObject {
      */
     suspend fun read(): RedisMessage
 
-    /**
-     * Reads a [RedisMessage] from the connection if available else returns null.
-     * @throws KredsNotYetConnectedException
-     * @throws KredsTimeoutException
-     * @throws KredsConnectionException
-     */
-    suspend fun tryRead(): RedisMessage?
 }
 
 
@@ -81,7 +93,7 @@ internal interface Konnection: ExclusiveObject {
  * @throws KredsNotYetConnectedException
  */
 internal suspend inline fun Konnection.connectWriteAndFlush(message: RedisMessage) = lockByCoroutineJob {
-    if(isConnected()) writeAndFlush(message)
+    if (isConnected()) writeAndFlush(message)
     else {
         connect()
         writeAndFlush(message)

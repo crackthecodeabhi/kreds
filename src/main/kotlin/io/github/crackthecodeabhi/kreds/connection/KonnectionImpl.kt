@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -143,16 +143,10 @@ internal abstract class KonnectionImpl(
 
     override suspend fun writeAndFlush(message: RedisMessage): Unit = writeInternal(message, true)
 
-    private suspend fun readInternal(tryRead: Boolean): RedisMessage? = lockByCoroutineJob {
+    override suspend fun read(): RedisMessage = lockByCoroutineJob {
         if (!isConnected()) throw KredsNotYetConnectedException()
         try {
-            if (tryRead) {
-                val result = readChannel!!.tryReceive()
-                if (result.isClosed) throw ClosedReceiveChannelException("Channel closed fro receive.")
-                else result.getOrNull()
-            } else {
-                readChannel!!.receive()
-            }
+            readChannel!!.receive()
         } catch (ex: Throwable) {
             when (ex) {
                 is ClosedReceiveChannelException -> throw KredsConnectionException("Connection closed.")
@@ -162,10 +156,6 @@ internal abstract class KonnectionImpl(
             }
         }
     }
-
-    override suspend fun tryRead(): RedisMessage? = readInternal(true)
-
-    override suspend fun read(): RedisMessage = readInternal(false)!!
 
     override suspend fun connect(): Unit = lockByCoroutineJob {
         if (!isConnected()) {
