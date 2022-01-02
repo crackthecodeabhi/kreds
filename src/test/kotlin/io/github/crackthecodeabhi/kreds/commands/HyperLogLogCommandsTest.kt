@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -19,12 +19,15 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
+import io.github.crackthecodeabhi.kreds.connection.KredsClient
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlin.reflect.cast
 
 class HyperLogLogCommandsTest : FunSpec({
     lateinit var c: HyperLogLogCommands
-    val clientSetup = ClientSetup().then { c = it.client }
+    lateinit var client: KredsClient
+    val clientSetup = ClientSetup().then { c = it.client; client = it.client }
     beforeSpec(clientSetup)
     afterSpec(ClientTearDown(clientSetup))
 
@@ -37,5 +40,23 @@ class HyperLogLogCommandsTest : FunSpec({
     }
     test("pfmerge").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
         c.pfmerge("newkey", "newkey1").shouldBeOk()
+    }
+
+    test("pipelines hyperloglog commands") {
+        val pipe = client.pipelined()
+        val responseList = mutableListOf<ResponseType<*>>()
+        responseList += pipe.pfadd("pipekey", "element1", "element2").to<Long>()
+        responseList += pipe.pfadd("pipekey1", "element1", "element2").to<Long>()
+        responseList += pipe.pfcount("pipekey", "pipekey1").to<Long>()
+        responseList += pipe.pfmerge("pipekey", "pipekey1").to<String>()
+        pipe.execute()
+        val resultList =
+            responseList.map {
+                if (it.second == null) it.first.get() else it.second!!.cast(it.first.get())
+            }
+        resultList.getAs<Long>(0) shouldBe 1
+        resultList.getAs<Long>(1) shouldBe 1
+        resultList.getAs<Long>(2) shouldBe 2
+        resultList.getAs<String>(3).shouldBeOk()
     }
 })
