@@ -274,7 +274,7 @@ internal class DefaultKredsSubscriberClient(
         private var job: Job? = null
         val readChannel = Channel<RedisMessage>(Channel.UNLIMITED)
 
-        suspend fun <R> preemptRead(writeOp: suspend () -> R) {
+        suspend fun <R> preemptRead(writeOp: suspend () -> R) = lockByCoroutineJob {
             try {
                 stop()
                 writeOp()
@@ -287,10 +287,17 @@ internal class DefaultKredsSubscriberClient(
             stop()
         }
 
-        private suspend fun stop(): Boolean = lockByCoroutineJob {
-            if (job != null) {
+        private fun stop(): Boolean {
+            return if (job != null) {
                 job!!.cancel()
                 job = null
+                true
+            } else false
+        }
+
+        private fun start(): Boolean {
+            return if (job == null) {
+                job = scope.launch { read() }
                 true
             } else false
         }
@@ -314,13 +321,6 @@ internal class DefaultKredsSubscriberClient(
                 logger.trace { "Reader was cancelled." }
                 throw ex
             }
-        }
-
-        private suspend fun start(): Boolean = lockByCoroutineJob {
-            if (job == null) {
-                job = scope.launch { read() }
-                true
-            } else false
         }
 
         private inline fun dispatchPubSubEvent(crossinline action: () -> Unit) {
@@ -350,47 +350,44 @@ internal class DefaultKredsSubscriberClient(
          * Only valid reply is passed, the validity function [isValidPubSubReply] is used to validate.
          */
         private fun processPubSubReply(reply: List<Any?>) {
-            val kind = reply[0] as String
-            val channelOrPattern = reply[1] as String
-            val messageOrChannel: () -> String = { reply[2] as String }
-            val subscribedChannels: () -> Long = { reply[2] as Long }
-            val pmessage: () -> String = { reply[3] as String }
+            val kind: String = reply.getAs(0)
+            val channelOrPattern: String = reply.getAs(1)
             when (kind) {
                 "subscribe" -> dispatchPubSubEvent {
                     kredsSubscriber.onSubscribe(
                         channelOrPattern,
-                        subscribedChannels()
+                        reply.getAs(2)
                     )
                 }
 
                 "unsubscribe" -> dispatchPubSubEvent {
                     kredsSubscriber.onUnsubscribe(
                         channelOrPattern,
-                        subscribedChannels()
+                        reply.getAs(2)
                     )
                 }
 
                 "psubscribe" -> dispatchPubSubEvent {
                     kredsSubscriber.onPSubscribe(
                         channelOrPattern,
-                        subscribedChannels()
+                        reply.getAs(2)
                     )
                 }
 
                 "punsubscribe" -> dispatchPubSubEvent {
                     kredsSubscriber.onPUnsubscribe(
                         channelOrPattern,
-                        subscribedChannels()
+                        reply.getAs(2)
                     )
                 }
 
-                "message" -> dispatchPubSubEvent { kredsSubscriber.onMessage(channelOrPattern, messageOrChannel()) }
+                "message" -> dispatchPubSubEvent { kredsSubscriber.onMessage(channelOrPattern, reply.getAs(2)) }
 
                 "pmessage" -> dispatchPubSubEvent {
                     kredsSubscriber.onPMessage(
                         channelOrPattern,
-                        messageOrChannel(),
-                        pmessage()
+                        reply.getAs(2),
+                        reply.getAs(3)
                     )
                 }
 
