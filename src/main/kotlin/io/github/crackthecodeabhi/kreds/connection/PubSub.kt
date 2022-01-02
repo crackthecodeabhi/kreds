@@ -346,48 +346,63 @@ internal class DefaultKredsSubscriberClient(
         private fun isValidPubSubReply(reply: List<Any?>): Boolean =
             with(reply) { isNotEmpty() && (size in 3..4) }
 
+        private inline fun <reified R> kind(reply: List<Any?>): R = reply.getAs(0)
+
+        private inline fun <reified R> channelOrPattern(reply: List<Any?>): R = reply.getAs(1)
+
+        private inline fun <reified R> messageOrChannel(reply: List<Any?>): R = reply.getAs(2)
+
+        private inline fun <reified R> subscribedChannels(reply: List<Any?>): R = messageOrChannel(reply)
+
+        private inline fun <reified R> pmessage(reply: List<Any?>): R = reply.getAs(3)
+
         /**
          * Only valid reply is passed, the validity function [isValidPubSubReply] is used to validate.
          */
         private fun processPubSubReply(reply: List<Any?>) {
-            val kind: String = reply.getAs(0)
-            val channelOrPattern: String = reply.getAs(1)
+            val kind: String = kind(reply)
+            val channelOrPattern: String = channelOrPattern(reply)
             when (kind) {
                 "subscribe" -> dispatchPubSubEvent {
                     kredsSubscriber.onSubscribe(
                         channelOrPattern,
-                        reply.getAs(2)
+                        subscribedChannels(reply)
                     )
                 }
 
                 "unsubscribe" -> dispatchPubSubEvent {
                     kredsSubscriber.onUnsubscribe(
                         channelOrPattern,
-                        reply.getAs(2)
+                        subscribedChannels(reply)
                     )
                 }
 
                 "psubscribe" -> dispatchPubSubEvent {
                     kredsSubscriber.onPSubscribe(
                         channelOrPattern,
-                        reply.getAs(2)
+                        subscribedChannels(reply)
                     )
                 }
 
                 "punsubscribe" -> dispatchPubSubEvent {
                     kredsSubscriber.onPUnsubscribe(
                         channelOrPattern,
-                        reply.getAs(2)
+                        subscribedChannels(reply)
                     )
                 }
 
-                "message" -> dispatchPubSubEvent { kredsSubscriber.onMessage(channelOrPattern, reply.getAs(2)) }
+                "message" -> dispatchPubSubEvent {
+                    kredsSubscriber.onMessage(
+                        channelOrPattern,
+                        messageOrChannel(reply)
+                    )
+                }
 
                 "pmessage" -> dispatchPubSubEvent {
                     kredsSubscriber.onPMessage(
                         channelOrPattern,
-                        reply.getAs(2),
-                        reply.getAs(3)
+                        messageOrChannel(reply),
+                        pmessage(reply)
                     )
                 }
 
