@@ -46,13 +46,13 @@ public data class FieldValue<out A, out B>(val field: A, val value: B)
 
 internal fun <T> List<T>.second(): T {
     if (isEmpty() || size < 2)
-        throw NoSuchElementException("List doesn't have 2nd is empty.")
+        throw NoSuchElementException("List has no second element.")
     return this[1]
 }
 
 internal fun <T> List<T>.third(): T {
     if (isEmpty() || size < 3)
-        throw NoSuchElementException("List doesn't have 2nd is empty.")
+        throw NoSuchElementException("List has no third element.")
     return this[2]
 }
 
@@ -61,8 +61,7 @@ internal fun <T> List<T>.third(): T {
  * @throws NoSuchElementException
  * @throws ClassCastException
  */
-internal fun <T, R> List<T>.getAs(index: Int): R {
+internal inline fun <T, reified R> List<T>.getAs(index: Int): R {
     if (isEmpty() || size < (index + 1)) throw NoSuchElementException("List has no element at index: $index")
-    @Suppress("UNCHECKED_CAST")
     return this[index] as R
 }
