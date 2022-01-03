@@ -1,9 +1,29 @@
+/*
+ *  Copyright (C) 2022 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 import io.github.crackthecodeabhi.kreds.pipeline.Response
+import java.math.BigDecimal
 
-public interface PipelineHashCommands{
+public interface PipelineHashCommands {
     /**
      * @see [HashCommands.hdel]
      */
@@ -32,7 +52,7 @@ public interface PipelineHashCommands{
     /**
      * @see [HashCommands.hincrByFloat]
      */
-    public suspend fun hincrByFloat(key: String,field: String, increment: Long): Response<String>
+    public suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): Response<String>
 
     /**
      * @see [HashCommands.hkeys]
@@ -64,32 +84,41 @@ public interface PipelineHashCommands{
     /**
      * @see [HashCommands.hset]
      */
-    public suspend fun hset(key: String, fieldValuePair: Pair<String,String>, vararg fieldValuePairs: Pair<String,String>): Response<Long>
+    public suspend fun hset(
+        key: String,
+        fieldValuePair: Pair<String, String>,
+        vararg fieldValuePairs: Pair<String, String>
+    ): Response<Long>
 
     /**
      * @see [HashCommands.hsetnx]
      */
-    public suspend fun hsetnx(key: String,field: String, value: String): Response<Long>
+    public suspend fun hsetnx(key: String, field: String, value: String): Response<Long>
 
     /**
      * @see [HashCommands.hstrlen]
      */
     public suspend fun hstrlen(key: String, field: String): Response<Long>
 
-     /**
+    /**
      * @see [HashCommands.hvals]
      */
-     public suspend fun hvals(key: String): Response<List<String>>
+    public suspend fun hvals(key: String): Response<List<String>>
 
     /**
      * @see  [HashCommands.hscan]
      */
-    public suspend fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): Response<HScanResult>
+    public suspend fun hscan(
+        key: String,
+        cursor: Long,
+        matchPattern: String? = null,
+        count: Long? = null
+    ): Response<HScanResult>
 }
 
-internal interface PipelineHashCommandExecutor: QueuedCommand, PipelineHashCommands, BaseHashCommands {
+internal interface PipelineHashCommandExecutor : QueuedCommand, PipelineHashCommands, BaseHashCommands {
     override suspend fun hdel(key: String, field: String, vararg moreFields: String): Response<Long> =
-        add(_hdel(key,field, *moreFields))
+        add(_hdel(key, field, *moreFields))
 
     override suspend fun hexists(key: String, field: String): Response<Long> =
         add(_hexists(key, field))
@@ -103,7 +132,7 @@ internal interface PipelineHashCommandExecutor: QueuedCommand, PipelineHashComma
     override suspend fun hincrBy(key: String, field: String, increment: Long): Response<Long> =
         add(_hincrBy(key, field, increment))
 
-    override suspend fun hincrByFloat(key: String, field: String, increment: Long): Response<String> =
+    override suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): Response<String> =
         add(_hincrByFloat(key, field, increment))
 
     override suspend fun hkeys(key: String): Response<List<String>> =
@@ -123,8 +152,8 @@ internal interface PipelineHashCommandExecutor: QueuedCommand, PipelineHashComma
 
     override suspend fun hset(
         key: String,
-        fieldValuePair: Pair<String,String>,
-        vararg fieldValuePairs: Pair<String,String>
+        fieldValuePair: Pair<String, String>,
+        vararg fieldValuePairs: Pair<String, String>
     ): Response<Long> =
         add(_hset(key, fieldValuePair, *fieldValuePairs))
 

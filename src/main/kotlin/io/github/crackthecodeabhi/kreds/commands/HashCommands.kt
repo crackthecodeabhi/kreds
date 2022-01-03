@@ -1,69 +1,95 @@
+/*
+ *  Copyright (C) 2022 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.commands.HashCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
+import java.math.BigDecimal
 
-internal enum class HashCommand(override val subCommand: Command? = null): Command {
+internal enum class HashCommand(override val subCommand: Command? = null) : Command {
     HDEL, HEXISTS, HGET, HGETALL, HINCRBY, HINCRBYFLOAT, HKEYS, HLEN, HMGET, HMSET, HRANDFIELD, HSCAN,
     HSET, HSETNX, HSTRLEN, HVALS;
 
     override val string: String = name
 }
 
-internal interface BaseHashCommands{
+internal interface BaseHashCommands {
     fun _hdel(key: String, field: String, vararg moreFields: String) =
-        CommandExecution(HDEL, IntegerCommandProcessor,*createArguments(key,field,*moreFields))
+        CommandExecution(HDEL, IntegerCommandProcessor, *createArguments(key, field, *moreFields))
 
-    fun _hexists(key: String, field: String) = CommandExecution(HEXISTS, IntegerCommandProcessor,key.toArgument(),field.toArgument())
+    fun _hexists(key: String, field: String) =
+        CommandExecution(HEXISTS, IntegerCommandProcessor, key.toArgument(), field.toArgument())
 
     fun _hget(key: String, field: String) =
-        CommandExecution(HGET, BulkStringCommandProcessor,key.toArgument(),field.toArgument())
+        CommandExecution(HGET, BulkStringCommandProcessor, key.toArgument(), field.toArgument())
 
-    fun _hgetAll(key: String)=
-        CommandExecution(HGETALL, BulkStringCommandProcessor,key.toArgument())
+    fun _hgetAll(key: String) =
+        CommandExecution(HGETALL, ArrayCommandProcessor, key.toArgument())
 
-    fun _hincrBy(key: String, field: String, increment: Long)=
-        CommandExecution(HINCRBY, IntegerCommandProcessor,*createArguments(key,field,increment))
+    fun _hincrBy(key: String, field: String, increment: Long) =
+        CommandExecution(HINCRBY, IntegerCommandProcessor, *createArguments(key, field, increment))
 
-     fun _hincrByFloat(key: String,field: String, increment: Long) =
-         CommandExecution(HINCRBYFLOAT, BulkStringCommandProcessor,*createArguments(key,field,increment))
+    fun _hincrByFloat(key: String, field: String, increment: BigDecimal) =
+        CommandExecution(HINCRBYFLOAT, BulkStringCommandProcessor, *createArguments(key, field, increment))
 
 
-     fun _hkeys(key: String) = CommandExecution(HKEYS, ArrayCommandProcessor,key.toArgument())
+    fun _hkeys(key: String) = CommandExecution(HKEYS, ArrayCommandProcessor, key.toArgument())
 
-     fun _hlen(key: String) = CommandExecution(HLEN, IntegerCommandProcessor,key.toArgument())
+    fun _hlen(key: String) = CommandExecution(HLEN, IntegerCommandProcessor, key.toArgument())
 
-     fun _hmget(key: String, field: String, vararg fields: String) =
-         CommandExecution(HMGET, ArrayCommandProcessor,*createArguments(key,field,*fields))
+    fun _hmget(key: String, field: String, vararg fields: String) =
+        CommandExecution(HMGET, ArrayCommandProcessor, *createArguments(key, field, *fields))
 
-     fun _hrandfield(key: String)= CommandExecution(HRANDFIELD, BulkStringCommandProcessor,key.toArgument())
+    fun _hrandfield(key: String) = CommandExecution(HRANDFIELD, BulkStringCommandProcessor, key.toArgument())
 
-     fun _hrandfield(key: String, count: Int, withValues: Boolean? = null) =
-         CommandExecution(HRANDFIELD, ArrayCommandProcessor,*createArguments(
-             key, count,
-             withValues?.let { KeyOnlyArgument("WITHVALUES") }
-         ))
+    fun _hrandfield(key: String, count: Int, withValues: Boolean? = null) =
+        CommandExecution(HRANDFIELD, ArrayCommandProcessor, *createArguments(
+            key, count,
+            withValues?.let { KeyOnlyArgument("WITHVALUES") }
+        ))
 
-     fun _hset(key: String,fieldValuePair: Pair<String,String>,vararg fieldValuePairs: Pair<String,String>) =
-         CommandExecution(HSET, IntegerCommandProcessor,*createArguments(
-             key,fieldValuePair,*fieldValuePairs
-         ))
+    fun _hset(key: String, fieldValuePair: Pair<String, String>, vararg fieldValuePairs: Pair<String, String>) =
+        CommandExecution(
+            HSET, IntegerCommandProcessor, *createArguments(
+                key, fieldValuePair, *fieldValuePairs
+            )
+        )
 
-     fun _hsetnx(key: String,field: String, value: String) =
-         CommandExecution(HSETNX, IntegerCommandProcessor,*createArguments(key,field,value))
+    fun _hsetnx(key: String, field: String, value: String) =
+        CommandExecution(HSETNX, IntegerCommandProcessor, *createArguments(key, field, value))
 
-     fun _hstrlen(key: String, field: String) =
-         CommandExecution(HSTRLEN, IntegerCommandProcessor,key.toArgument(),field.toArgument())
+    fun _hstrlen(key: String, field: String) =
+        CommandExecution(HSTRLEN, IntegerCommandProcessor, key.toArgument(), field.toArgument())
 
-     fun _hvals(key: String)= CommandExecution(HVALS, ArrayCommandProcessor,key.toArgument())
+    fun _hvals(key: String) = CommandExecution(HVALS, ArrayCommandProcessor, key.toArgument())
 
-     fun _hscan(key: String, cursor: Long, matchPattern: String?, count: Long?) =
-         CommandExecution(HSCAN,HScanResultProcessor,*createArguments(
-             cursor,
-             matchPattern?.let { KeyValueArgument("MATCH",it) },
-             count?.let { KeyValueArgument("COUNT",it.toString(10)) },
-         ))
+    fun _hscan(key: String, cursor: Long, matchPattern: String?, count: Long?): CommandExecution {
+        val args = if (matchPattern != null && count != null) {
+            createArguments(key, cursor, "MATCH", matchPattern, "COUNT", count)
+        } else if (matchPattern != null) {
+            createArguments(key, cursor, "MATCH", matchPattern)
+        } else
+            createArguments(key, cursor)
+        return CommandExecution(HSCAN, HScanResultProcessor, *args)
+    }
 }
 
 //TODO: HSCAN
@@ -141,7 +167,7 @@ public interface HashCommands {
      * @since 2.6.0
      * @return the value of field after the increment.
      */
-    public suspend fun hincrByFloat(key: String,field: String, increment: Long): String
+    public suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): String
 
     /**
      * ###  HKEYS key
@@ -219,7 +245,11 @@ public interface HashCommands {
      * @return The number of fields that were added.
      *
      */
-    public suspend fun hset(key: String,fieldValuePair: Pair<String,String>,vararg fieldValuePairs: Pair<String,String>): Long
+    public suspend fun hset(
+        key: String,
+        fieldValuePair: Pair<String, String>,
+        vararg fieldValuePairs: Pair<String, String>
+    ): Long
 
     /**
      * ###  HSETNX key field value
@@ -231,7 +261,7 @@ public interface HashCommands {
      * @return 1 if field is a new field in the hash and value was set.
      * 0 if field already exists in the hash and no operation was performed.
      */
-    public suspend fun hsetnx(key: String,field: String, value: String): Long
+    public suspend fun hsetnx(key: String, field: String, value: String): Long
 
     /**
      * ###  HSTRLEN key field
@@ -265,7 +295,7 @@ public interface HashCommands {
     public suspend fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): HScanResult
 }
 
-internal interface HashCommandsExecutor: HashCommands,BaseHashCommands, CommandExecutor{
+internal interface HashCommandsExecutor : HashCommands, BaseHashCommands, CommandExecutor {
     override suspend fun hdel(key: String, field: String, vararg moreFields: String): Long =
         execute(_hdel(key, field, *moreFields))
 
@@ -281,7 +311,7 @@ internal interface HashCommandsExecutor: HashCommands,BaseHashCommands, CommandE
     override suspend fun hincrBy(key: String, field: String, increment: Long): Long =
         execute(_hincrBy(key, field, increment))
 
-    override suspend fun hincrByFloat(key: String, field: String, increment: Long): String =
+    override suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): String =
         execute(_hincrByFloat(key, field, increment))
 
     override suspend fun hkeys(key: String): List<String> =
@@ -301,8 +331,8 @@ internal interface HashCommandsExecutor: HashCommands,BaseHashCommands, CommandE
 
     override suspend fun hset(
         key: String,
-        fieldValuePair: Pair<String,String>,
-        vararg fieldValuePairs: Pair<String,String>
+        fieldValuePair: Pair<String, String>,
+        vararg fieldValuePairs: Pair<String, String>
     ): Long = execute(_hset(key, fieldValuePair, *fieldValuePairs))
 
     override suspend fun hsetnx(key: String, field: String, value: String): Long =
