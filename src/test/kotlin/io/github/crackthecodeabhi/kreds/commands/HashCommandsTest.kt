@@ -24,6 +24,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.math.BigDecimal
@@ -80,14 +81,16 @@ class HashCommandsTest : FunSpec({
         }
         client.hset("hscan", "field1" to "value1") // to test match pattern
         var count = 0
+        var scanCount = 1
         var hSR = client.hscan("hscan", 0, "hscan-field*", 200)
         do {
-            hSR.elements shouldHaveSize 400 // including field and values
             count += hSR.elements.size
             hSR = client.hscan("hscan", hSR.cursor, "hscan-field*", 200)
+            ++scanCount
         } while (hSR.cursor != 0L)
 
         count shouldBe 2000
+        scanCount shouldBeGreaterThan 1 // assert multiple scan iterations
 
         //HSCAN - end
     }
