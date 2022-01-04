@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 
 
-public class Response<T> internal constructor(private val responseFlow: Flow<List<Any?>>, private val index: Int) {
+public class Response<out T> internal constructor(private val responseFlow: Flow<List<Any?>>, private val index: Int) {
 
     @Suppress("UNCHECKED_CAST")
     @Throws(KredsException::class, KredsRedisDataException::class)

@@ -22,7 +22,6 @@ package io.github.crackthecodeabhi.kreds.commands
 import io.github.crackthecodeabhi.kreds.connection.KredsClient
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import kotlin.reflect.cast
 
 class HyperLogLogCommandsTest : FunSpec({
     lateinit var c: HyperLogLogCommands
@@ -30,33 +29,27 @@ class HyperLogLogCommandsTest : FunSpec({
     val clientSetup = ClientSetup().then { c = it.client; client = it.client }
     beforeSpec(clientSetup)
     afterSpec(ClientTearDown(clientSetup))
+    beforeTest(ClearDB(clientSetup))
 
-    test("pfadd").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
+    test("HyperLogLog Commands >= API 6").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
         c.pfadd("newkey", "element1", "element2") shouldBe 1
         c.pfadd("newkey1", "element1", "element2") shouldBe 1
-    }
-    test("pfcount").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
         c.pfcount("newkey", "newkey1") shouldBe 2
-    }
-    test("pfmerge").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
         c.pfmerge("newkey", "newkey1").shouldBeOk()
     }
 
-    test("pipelines hyperloglog commands") {
+    test("Pipelined Hyperloglog commands >= API 6") {
         val pipe = client.pipelined()
-        val responseList = mutableListOf<ResponseType<*>>()
-        responseList += pipe.pfadd("pipekey", "element1", "element2").to<Long>()
-        responseList += pipe.pfadd("pipekey1", "element1", "element2").to<Long>()
-        responseList += pipe.pfcount("pipekey", "pipekey1").to<Long>()
-        responseList += pipe.pfmerge("pipekey", "pipekey1").to<String>()
+        val responseList = mutableListOf<ResponseType<Any>>()
+        responseList += pipe.pfadd("pipekey", "element1", "element2").toResponseType()
+        responseList += pipe.pfadd("pipekey1", "element1", "element2").toResponseType()
+        responseList += pipe.pfcount("pipekey", "pipekey1").toResponseType()
+        responseList += pipe.pfmerge("pipekey", "pipekey1").toResponseType()
         pipe.execute()
-        val resultList =
-            responseList.map {
-                if (it.second == null) it.first.get() else it.second!!.cast(it.first.get())
-            }
-        resultList.getAs<Long>(0) shouldBe 1
-        resultList.getAs<Long>(1) shouldBe 1
-        resultList.getAs<Long>(2) shouldBe 2
-        resultList.getAs<String>(3).shouldBeOk()
+        var i = 0
+        responseList[i++].get() shouldBe 1
+        responseList[i++].get() shouldBe 1
+        responseList[i++].get() shouldBe 2
+        (responseList[i].get() as String).shouldBeOk()
     }
 })

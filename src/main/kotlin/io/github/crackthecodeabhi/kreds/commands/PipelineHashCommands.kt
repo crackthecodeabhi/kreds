@@ -105,15 +105,6 @@ public interface PipelineHashCommands {
      */
     public suspend fun hvals(key: String): Response<List<String>>
 
-    /**
-     * @see  [HashCommands.hscan]
-     */
-    public suspend fun hscan(
-        key: String,
-        cursor: Long,
-        matchPattern: String? = null,
-        count: Long? = null
-    ): Response<HScanResult>
 }
 
 internal interface PipelineHashCommandExecutor : QueuedCommand, PipelineHashCommands, BaseHashCommands {
@@ -166,6 +157,4 @@ internal interface PipelineHashCommandExecutor : QueuedCommand, PipelineHashComm
     override suspend fun hvals(key: String): Response<List<String>> =
         add(_hvals(key))
 
-    override suspend fun hscan(key: String, cursor: Long, matchPattern: String?, count: Long?): Response<HScanResult> =
-        add(_hscan(key, cursor, matchPattern, count))
 }

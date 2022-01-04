@@ -24,12 +24,14 @@ import io.github.crackthecodeabhi.kreds.connection.*
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 import io.kotest.core.spec.AfterSpec
 import io.kotest.core.spec.BeforeSpec
+import io.kotest.core.spec.BeforeTest
 import io.kotest.core.spec.Spec
 import io.kotest.core.test.Enabled
 import io.kotest.core.test.TestCase
 import io.kotest.matchers.shouldBe
 import net.swiftzer.semver.SemVer
 import kotlin.reflect.KClass
+import kotlin.reflect.cast
 
 val REDIS_6_0_0 = SemVer.parse("6.0.0")
 val REDIS_6_2_0 = SemVer.parse("6.2.0")
@@ -80,12 +82,24 @@ class ClientTearDown(private val setup: ClientSetup) : AfterSpec, Then<ClientTea
     }
 }
 
+class ClearDB(private val setup: ClientSetup) : BeforeTest {
+    override suspend fun invoke(p1: TestCase) {
+        setup.client.flushDb(SyncOption.SYNC)
+    }
+}
+
 fun String.shouldBeOk() = this shouldBe "OK"
 
 inline fun <reified R> List<*>.getAs(index: Int): R = this[index] as R
 
-typealias ResponseType<R> = Pair<Response<*>, KClass<R>?>
+typealias ResponseType<R> = Pair<Response<R?>, KClass<R>?>
 
-inline fun <reified R : Any> Response<*>.to(): ResponseType<R> {
+inline fun <reified R : Any> Response<R?>.toResponseType(): ResponseType<R> {
     return Pair(this, R::class)
+}
+
+suspend inline fun <T : Any> ResponseType<T>.get(): T? {
+    return if (second == null) null
+    else if (first.get() == null) null
+    else second!!.cast(first.get())
 }

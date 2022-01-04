@@ -21,7 +21,7 @@ package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.connection.KredsClient
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -34,6 +34,7 @@ class HashCommandsTest : FunSpec({
     val clientSetup = ClientSetup().then { client = it.client }
     beforeSpec(clientSetup)
     afterSpec(ClientTearDown(clientSetup))
+    beforeTest(ClearDB(clientSetup))
 
     test("Hash commands >= API 6.2").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_2_0)) {
         client.hrandfield("non-existing-random") shouldBe null
@@ -50,16 +51,16 @@ class HashCommandsTest : FunSpec({
 
     test("Hash commands >= API 6").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
         client.hexists("hkey", "key") shouldBe 0
-        client.hset("hkey", "key" to "value", "key1" to "value1")
+        client.hset("hkey", "key" to "value", "key1" to "value1") shouldBe 2
         client.hexists("hkey", "key") shouldBe 1
         client.hlen("hkey") shouldBe 2
         client.hget("hkey", "key") shouldBe "value"
         client.hget("hkey", "non-existing") shouldBe null
         client.hstrlen("hkey", "key") shouldBe "value".length
-        client.hgetAll("hkey") shouldContainAll listOf("key", "value", "key1", "value1")
-        client.hkeys("hkey") shouldContainAll listOf("key", "key1")
+        client.hgetAll("hkey") shouldContainExactlyInAnyOrder listOf("key", "value", "key1", "value1")
+        client.hkeys("hkey") shouldContainExactlyInAnyOrder listOf("key", "key1")
         client.hkeys("non-existing") shouldHaveSize 0
-        client.hvals("hkey") shouldContainAll listOf("value", "value1")
+        client.hvals("hkey") shouldContainExactlyInAnyOrder listOf("value", "value1")
         client.hvals("non-existing") shouldHaveSize 0
         client.hmget("hkey", "key", "key1", "non-existing") shouldContainInOrder listOf("value", "value1", null)
 
@@ -94,5 +95,68 @@ class HashCommandsTest : FunSpec({
         scanCount shouldBeGreaterThan 1 // assert multiple scan iterations
 
         //HSCAN - end
+    }
+
+    test("Hash Pipeline commands >= API 6").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
+        val responseList = mutableListOf<ResponseType<Any>>()
+        val pipe = client.pipelined()
+        responseList += pipe.hexists("hkey", "key").toResponseType()
+        responseList += pipe.hset("hkey", "key" to "value", "key1" to "value1").toResponseType()
+        responseList += pipe.hexists("hkey", "key").toResponseType()
+        responseList += pipe.hlen("hkey").toResponseType()
+        responseList += pipe.hget("hkey", "key").toResponseType()
+        responseList += pipe.hget("hkey", "non-existing").toResponseType()
+        responseList += pipe.hstrlen("hkey", "key").toResponseType()
+        responseList += pipe.hgetAll("hkey").toResponseType()
+        responseList += pipe.hkeys("hkey").toResponseType()
+        responseList += pipe.hkeys("non-existing").toResponseType()
+        responseList += pipe.hvals("hkey").toResponseType()
+        responseList += pipe.hvals("non-existing").toResponseType()
+        responseList += pipe.hmget("hkey", "key", "key1", "non-existing").toResponseType()
+
+        responseList += pipe.hsetnx("hkey", "number-key", "100").toResponseType()
+        responseList += pipe.hsetnx("hkey", "number-key", "150").toResponseType()
+
+        responseList += pipe.hincrBy("hkey", "number-key", 10).toResponseType()
+        responseList += pipe.hincrBy("hkey", "number-key", -60).toResponseType()
+
+        responseList += pipe.hincrByFloat("hkey", "number-key", BigDecimal.valueOf(0.005)).toResponseType()
+        responseList += pipe.hincrByFloat("hkey", "number-key", BigDecimal.valueOf(-0.005)).toResponseType()
+
+        responseList += pipe.hdel("hkey", "key", "key1").toResponseType()
+        responseList += pipe.exists("key", "key1").toResponseType()
+
+        pipe.execute()
+
+        @Suppress("UNCHECKED_CAST")
+        run {
+            var i = 0
+            responseList[i++].get() shouldBe 0
+            responseList[i++].get() shouldBe 2
+            responseList[i++].get() shouldBe 1
+            responseList[i++].get() shouldBe 2
+            responseList[i++].get() shouldBe "value"
+            responseList[i++].get() shouldBe null
+            responseList[i++].get() shouldBe "value".length
+            responseList[i++].get() as List<String> shouldContainExactlyInAnyOrder listOf(
+                "key",
+                "value",
+                "key1",
+                "value1"
+            )
+            responseList[i++].get() as List<String> shouldContainExactlyInAnyOrder listOf("key", "key1")
+            responseList[i++].get() as List<*> shouldHaveSize 0
+            responseList[i++].get() as List<String> shouldContainExactlyInAnyOrder listOf("value", "value1")
+            responseList[i++].get() as List<*> shouldHaveSize 0
+            responseList[i++].get() as List<String?> shouldContainInOrder listOf("value", "value1", null)
+            responseList[i++].get() shouldBe 1
+            responseList[i++].get() shouldBe 0
+            responseList[i++].get() shouldBe 110
+            responseList[i++].get() shouldBe 50
+            responseList[i++].get() shouldBe "50.005"
+            responseList[i++].get() shouldBe "50"
+            responseList[i++].get() shouldBe 2
+            responseList[i].get() shouldBe 0
+        }
     }
 })
