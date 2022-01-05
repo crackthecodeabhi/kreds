@@ -82,11 +82,13 @@ internal interface BaseHashCommands {
     fun _hvals(key: String) = CommandExecution(HVALS, ArrayCommandProcessor, key.toArgument())
 
     fun _hscan(key: String, cursor: Long, matchPattern: String?, count: Long?): CommandExecution {
-        val args = if (matchPattern != null && count != null) {
+        val args = if (matchPattern != null && count != null)
             createArguments(key, cursor, "MATCH", matchPattern, "COUNT", count)
-        } else if (matchPattern != null) {
+        else if (matchPattern != null)
             createArguments(key, cursor, "MATCH", matchPattern)
-        } else
+        else if (count != null)
+            createArguments(key, cursor, "COUNT", count)
+        else
             createArguments(key, cursor)
         return CommandExecution(HSCAN, HScanResultProcessor, *args)
     }
