@@ -1,17 +1,34 @@
+/*
+ *  Copyright (C) 2022 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.netty.handler.codec.redis.RedisMessage
 import io.github.crackthecodeabhi.kreds.args.*
-
 import io.github.crackthecodeabhi.kreds.commands.ListCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.second
-import java.lang.ClassCastException
+import io.netty.handler.codec.redis.RedisMessage
 
 internal enum class ListCommand(override val subCommand: Command? = null) : Command {
     BLMOVE, BLMPOP, BLPOP, BRPOP, BRPOPLPUSH, LINDEX, LINSERT, LLEN,
     LMOVE, LMPOP, LPOP, LPOS, LPUSH, LPUSHX, LRANGE, LREM, LSET, LTRIM,
-    RPOP, RPOPLPUSH, RPUSH, RPUSHX;
+    RPOP, RPUSH, RPUSHX;
 
     override val string = name
 }
@@ -19,27 +36,36 @@ internal enum class ListCommand(override val subCommand: Command? = null) : Comm
 internal interface BaseListCommands {
 
     fun _lindex(key: String, index: Long) =
-        CommandExecution(LINDEX, BulkStringCommandProcessor,key.toArgument(),index.toArgument())
+        CommandExecution(LINDEX, BulkStringCommandProcessor, key.toArgument(), index.toArgument())
 
     fun _linsert(key: String, beforeAfterOption: BeforeAfterOption, pivot: String, element: String) =
-        CommandExecution(LINSERT, IntegerCommandProcessor,*createArguments(
-            key,
-            beforeAfterOption,
-            pivot,
-            element
-        ))
+        CommandExecution(
+            LINSERT, IntegerCommandProcessor, *createArguments(
+                key,
+                beforeAfterOption,
+                pivot,
+                element
+            )
+        )
 
-    fun _llen(key: String)= CommandExecution(LLEN, IntegerCommandProcessor,key.toArgument())
+    fun _llen(key: String) = CommandExecution(LLEN, IntegerCommandProcessor, key.toArgument())
 
     fun _lmove(
         source: String,
         destination: String,
         leftRightOption1: LeftRightOption,
         leftRightOption2: LeftRightOption
-    ) = CommandExecution(LMOVE, BulkStringCommandProcessor,source.toArgument(),destination.toArgument(),leftRightOption1,leftRightOption2)
+    ) = CommandExecution(
+        LMOVE,
+        BulkStringCommandProcessor,
+        source.toArgument(),
+        destination.toArgument(),
+        leftRightOption1,
+        leftRightOption2
+    )
 
     fun _lmpop(numkeys: Long, key: String, vararg keys: String, leftRight: LeftRightOption, count: Long?) =
-        CommandExecution(LMPOP,LMPopResultProcessor,*createArguments(
+        CommandExecution(LMPOP, LMPopResultProcessor, *createArguments(
             numkeys,
             key,
             *keys,
@@ -48,10 +74,39 @@ internal interface BaseListCommands {
         ))
 
     fun _lpop(key: String) =
-        CommandExecution(LPOP, BulkStringCommandProcessor,key.toArgument())
+        CommandExecution(LPOP, BulkStringCommandProcessor, key.toArgument())
 
     fun _lpop(key: String, count: Long) =
-        CommandExecution(LPOP,CommandProcessor(BulkStringHandler,ArrayHandler),key.toArgument(),count.toArgument())
+        CommandExecution(LPOP, CommandProcessor(BulkStringHandler, ArrayHandler), key.toArgument(), count.toArgument())
+
+    fun _lpush(key: String, element: String, elements: Array<out String>) =
+        CommandExecution(LPUSH, IntegerCommandProcessor, element.toArgument(), *createArguments(elements))
+
+    fun _lpushx(key: String, element: String, vararg elements: String) =
+        CommandExecution(LPUSHX, IntegerCommandProcessor, element.toArgument(), *createArguments(elements))
+
+    fun _lrange(key: String, start: Int, stop: Int) =
+        CommandExecution(LRANGE, ArrayCommandProcessor, key.toArgument(), start.toArgument(), stop.toArgument())
+
+    fun _lrem(key: String, count: Int, element: String) =
+        CommandExecution(LREM, IntegerCommandProcessor, key.toArgument(), count.toArgument(), element.toArgument())
+
+    fun _lset(key: String, index: Int, element: String) =
+        CommandExecution(LSET, SimpleStringCommandProcessor, key.toArgument(), index.toArgument(), element.toArgument())
+
+    fun _ltrim(key: String, start: Int, stop: Int) =
+        CommandExecution(LTRIM, SimpleStringCommandProcessor, key.toArgument(), start.toArgument(), stop.toArgument())
+
+    fun _rpop(key: String) = CommandExecution(RPOP, BulkStringCommandProcessor, key.toArgument())
+
+    fun _rpop(key: String, count: Int) =
+        CommandExecution(RPOP, ArrayCommandProcessor, key.toArgument(), count.toArgument())
+
+    fun _rpush(key: String, element: String, vararg elements: String) =
+        CommandExecution(RPUSH, IntegerCommandProcessor, *createArguments(element, *elements))
+
+    fun _rpushx(key: String, element: String, vararg elements: String) =
+        CommandExecution(RPUSHX, IntegerCommandProcessor, *createArguments(element, *elements))
 }
 
 public data class LMPOPResult(val key: String, val elements: List<String>)
@@ -78,7 +133,7 @@ public interface ListCommands {
     /**
      * ###  LINDEX key index
      *
-     * Returns the element at index index in the list stored at key. The index is zero-based.
+     * Returns the element at index [index] in the list stored at key. The index is zero-based.
      *
      * [Doc](https://redis.io/commands/lindex)
      * @since 1.0.0
@@ -160,6 +215,143 @@ public interface ListCommands {
      */
     public suspend fun lpop(key: String, count: Long): List<String>?
 
+    /**
+     * ### ` LPUSH key element [element ...] `
+     *
+     * Insert all the specified values at the head of the list stored at key.
+     * If key does not exist, it is created as empty list before performing the push operations.
+     * When key holds a value that is not a list, an error is returned.
+     *
+     * [Doc](https://redis.io/commands/lpush)
+     * @since 1.0.0
+     *
+     * 2.4.0: Accepts multiple [elements]
+     *
+     * @return the length of the list after the push operations.
+     */
+    public suspend fun lpush(key: String, element: String, vararg elements: String): Long
+
+    /**
+     * ### ` LPUSHX key element [element ...] `
+     *
+     * Inserts specified values at the head of the list stored at key,
+     * only if key already exists and holds a list.
+     * In contrary to `LPUSH`, no operation will be performed when key does not yet exist.
+     *
+     * [Doc](https://redis.io/commands/lpushx)
+     * @since 2.2.0
+     *
+     * 4.0.0: Accepts multiple [elements]
+     *
+     * @return the length of the list after the push operation.
+     */
+    public suspend fun lpushx(key: String, element: String, vararg elements: String): Long
+
+    /**
+     * ###  LRANGE key start stop
+     *
+     * Returns the specified elements of the list stored at key.
+     * The offsets start and stop are zero-based indexes,
+     * with 0 being the first element of the list (the head of the list),
+     * 1 being the next element and so on.
+     *
+     * [Doc](https://redis.io/commands/lrange)
+     *
+     * @since 1.0.0
+     * @return list of elements in the specified range.
+     */
+    public suspend fun lrange(key: String, start: Int, stop: Int): List<String>
+
+    /**
+     * ###  LREM key count element
+     *
+     * Removes the first count occurrences of elements equal to element from the list stored at key.
+     * The count argument influences the operation in the following ways:
+     * * count > 0: Remove elements equal to element moving from head to tail.
+     * * count < 0: Remove elements equal to element moving from tail to head.
+     * * count = 0: Remove all elements equal to element.
+     *
+     * [Doc](https://redis.io/commands/lrem)
+     * @since 1.0.0
+     * @return the number of removed elements.
+     */
+    public suspend fun lrem(key: String, count: Int, element: String): Long
+
+    /**
+     * ###  LSET key index element
+     * Sets the list element at index to element.
+     * For more information on the index argument, see [lindex].
+     *
+     * [Doc](https://redis.io/commands/lset)
+     * @since 1.0.0
+     * @return string reply
+     */
+    public suspend fun lset(key: String, index: Int, element: String): String
+
+    /**
+     * ###  LTRIM key start stop
+     *
+     * Trim an existing list so that it will contain only the specified range of elements specified.
+     *
+     * [Doc](https://redis.io/commands/ltrim)
+     * @since 1.0.0
+     * @return string reply
+     */
+    public suspend fun ltrim(key: String, start: Int, stop: Int): String
+
+    /**
+     * ###  RPOP key
+     *
+     * Removes and returns the last elements of the list stored at key.
+     *
+     * [Doc](https://redis.io/commands/rpop)
+     * @since 1.0.0
+     * @return the value of the last element, or null when key does not exist.
+     */
+    public suspend fun rpop(key: String): String?
+
+    /**
+     * ###  RPOP key
+     *
+     * Removes and returns the last elements of the list stored at key.
+     * The reply will consist of up to count elements, depending on the list's length.
+     * [Doc](https://redis.io/commands/rpop)
+     * @since 6.2.0: Added the `[count] argument.
+     * @return list of popped elements, or null when key does not exist.
+     */
+    public suspend fun rpop(key: String, count: Int): List<String>?
+
+    /**
+     * ### ` RPUSH key element [element ...] `
+     *
+     * Insert all the specified values at the tail of the list stored at key.
+     * If key does not exist, it is created as empty list before performing the push operation.
+     * When key holds a value that is not a list, an error is returned.
+     *
+     * [Doc](https://redis.io/commands/rpush)
+     * @since 1.0.0
+     *
+     *  2.4.0: Accepts multiple [elements] arguments.
+     *
+     * @return the length of the list after the push operation
+     */
+    public suspend fun rpush(key: String, element: String, vararg elements: String): Long
+
+    /**
+     * ### ` RPUSHX key element [element ...] `
+     *
+     * Inserts specified values at the tail of the list stored at key,
+     * only if key already exists and holds a list.
+     * In contrary to RPUSH, no operation will be performed when key does not yet exist.
+     *
+     * [Doc](https://redis.io/commands/rpushx)
+     * @since 2.2.0
+     *
+     * 4.0.0: Accepts multiple [elements] arguments.
+     * @return the length of the list after the push operation.
+     */
+    public suspend fun rpushx(key: String, element: String, vararg elements: String): Long
+
 }
 
 internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseListCommands {
@@ -195,4 +387,34 @@ internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseList
     override suspend fun lpop(key: String): String? = execute(_lpop(key))
 
     override suspend fun lpop(key: String, count: Long): List<String>? = execute(_lpop(key, count))
+
+    override suspend fun lpush(key: String, element: String, vararg elements: String): Long =
+        execute(_lpush(key, element, elements))
+
+    override suspend fun lpushx(key: String, element: String, vararg elements: String): Long =
+        execute(_lpushx(key, element, *elements))
+
+    override suspend fun lrange(key: String, start: Int, stop: Int): List<String> =
+        execute(_lrange(key, start, stop))
+
+    override suspend fun lrem(key: String, count: Int, element: String): Long =
+        execute(_lrem(key, count, element))
+
+    override suspend fun lset(key: String, index: Int, element: String): String =
+        execute(_lset(key, index, element))
+
+    override suspend fun ltrim(key: String, start: Int, stop: Int): String =
+        execute(_ltrim(key, start, stop))
+
+    override suspend fun rpop(key: String): String? =
+        execute(_rpop(key))
+
+    override suspend fun rpop(key: String, count: Int): List<String>? =
+        execute(_rpop(key, count))
+
+    override suspend fun rpush(key: String, element: String, vararg elements: String): Long =
+        execute(_rpush(key, element, *elements))
+
+    override suspend fun rpushx(key: String, element: String, vararg elements: String): Long =
+        execute(_rpushx(key, element, *elements))
 }
