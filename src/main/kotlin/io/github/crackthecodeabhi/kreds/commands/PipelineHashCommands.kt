@@ -52,7 +52,7 @@ public interface PipelineHashCommands {
     /**
      * @see [HashCommands.hincrByFloat]
      */
-    public suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): Response<String>
+    public suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): Response<String?>
 
     /**
      * @see [HashCommands.hkeys]
@@ -118,28 +118,28 @@ internal interface PipelineHashCommandExecutor : QueuedCommand, PipelineHashComm
         add(_hget(key, field))
 
     override suspend fun hgetAll(key: String): Response<List<String>> =
-        add(_hgetAll(key))
+        add(_hgetAll(key), false).asReturnType()
 
     override suspend fun hincrBy(key: String, field: String, increment: Long): Response<Long> =
         add(_hincrBy(key, field, increment))
 
-    override suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): Response<String> =
+    override suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): Response<String?> =
         add(_hincrByFloat(key, field, increment))
 
     override suspend fun hkeys(key: String): Response<List<String>> =
-        add(_hkeys(key))
+        add(_hkeys(key), false).asReturnType()
 
     override suspend fun hlen(key: String): Response<Long> =
         add(_hlen(key))
 
     override suspend fun hmget(key: String, field: String, vararg fields: String): Response<List<String?>> =
-        add(_hmget(key, field, *fields))
+        add(_hmget(key, field, *fields), false).asReturnType()
 
     override suspend fun hrandfield(key: String): Response<String?> =
         add(_hrandfield(key))
 
     override suspend fun hrandfield(key: String, count: Int, withValues: Boolean?): Response<List<String>> =
-        add(_hrandfield(key, count, withValues))
+        add(_hrandfield(key, count, withValues), false).asReturnType()
 
     override suspend fun hset(
         key: String,
@@ -155,6 +155,6 @@ internal interface PipelineHashCommandExecutor : QueuedCommand, PipelineHashComm
         add(_hstrlen(key, field))
 
     override suspend fun hvals(key: String): Response<List<String>> =
-        add(_hvals(key))
+        add(_hvals(key), false).asReturnType()
 
 }

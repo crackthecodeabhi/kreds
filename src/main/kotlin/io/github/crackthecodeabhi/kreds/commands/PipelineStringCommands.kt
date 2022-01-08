@@ -1,11 +1,31 @@
+/*
+ *  Copyright (C) 2022 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.*
-import java.math.BigDecimal
+import io.github.crackthecodeabhi.kreds.args.GetExOption
+import io.github.crackthecodeabhi.kreds.args.SetOption
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 import io.github.crackthecodeabhi.kreds.pipeline.Response
+import java.math.BigDecimal
 
-public interface PipelineStringCommands{
+public interface PipelineStringCommands {
     /**
      * @see [StringCommands.get]
      */
@@ -44,7 +64,7 @@ public interface PipelineStringCommands{
     /**
      * @see [StringCommands.getSet]
      */
-    public suspend fun getSet(key: String,value: String): Response<String?>
+    public suspend fun getSet(key: String, value: String): Response<String?>
 
     /**
      * @see [StringCommands.incr]
@@ -59,7 +79,7 @@ public interface PipelineStringCommands{
     /**
      * @see [StringCommands.incrByFloat]
      */
-    public suspend fun incrByFloat(key: String,increment: BigDecimal): Response<String?>
+    public suspend fun incrByFloat(key: String, increment: BigDecimal): Response<String?>
 
     /**
      * @see [StringCommands.mget]
@@ -69,7 +89,7 @@ public interface PipelineStringCommands{
     /**
      * @see [StringCommands.mset]
      */
-    public suspend fun mset(vararg keyValues: Pair<String,String>): Response<String>
+    public suspend fun mset(vararg keyValues: Pair<String, String>): Response<String>
 
     /**
      * @see [StringCommands.getEx]
@@ -78,20 +98,22 @@ public interface PipelineStringCommands{
 }
 
 
-internal interface PipelineStringCommandsExecutor: PipelineStringCommands,BaseStringCommands, QueuedCommand {
+internal interface PipelineStringCommandsExecutor : PipelineStringCommands, BaseStringCommands, QueuedCommand {
     override suspend fun get(key: String): Response<String?> = add(_get(key))
 
-    override suspend fun set(key: String, value: String, setOption: SetOption?): Response<String?> = add(_set(key,value,setOption))
+    override suspend fun set(key: String, value: String, setOption: SetOption?): Response<String?> =
+        add(_set(key, value, setOption))
 
     override suspend fun append(key: String, value: String): Response<Long> = add(_append(key, value))
 
     override suspend fun decr(key: String): Response<Long> = add(_decr(key))
 
-    override suspend fun decrBy(key: String, decrement: Long): Response<Long> = add(_decrBy(key,decrement))
+    override suspend fun decrBy(key: String, decrement: Long): Response<Long> = add(_decrBy(key, decrement))
 
     override suspend fun getDel(key: String): Response<String?> = add(_getDel(key))
 
-    override suspend fun getRange(key: String, start: Int, end: Int): Response<String?> = add(_getRange(key, start, end))
+    override suspend fun getRange(key: String, start: Int, end: Int): Response<String?> =
+        add(_getRange(key, start, end))
 
     override suspend fun getSet(key: String, value: String): Response<String?> = add(_getSet(key, value))
 
@@ -99,11 +121,13 @@ internal interface PipelineStringCommandsExecutor: PipelineStringCommands,BaseSt
 
     override suspend fun incrBy(key: String, increment: Long): Response<Long> = add(_incrBy(key, increment))
 
-    override suspend fun incrByFloat(key: String, increment: BigDecimal): Response<String?> = add(_incrByFloat(key, increment))
+    override suspend fun incrByFloat(key: String, increment: BigDecimal): Response<String?> =
+        add(_incrByFloat(key, increment))
 
-    override suspend fun mget(vararg keys: String): Response<List<String?>> = add(_mget(*keys))
+    override suspend fun mget(vararg keys: String): Response<List<String?>> = add(_mget(*keys), false).asReturnType()
 
-    override suspend fun mset(vararg keyValues: Pair<String,String>): Response<String> = add(_mset(*keyValues))
+    override suspend fun mset(vararg keyValues: Pair<String, String>): Response<String> = add(_mset(*keyValues))
 
-    override suspend fun getEx(key: String, getExOption: GetExOption?): Response<String?> = add(_getEx(key, getExOption))
+    override suspend fun getEx(key: String, getExOption: GetExOption?): Response<String?> =
+        add(_getEx(key, getExOption))
 }

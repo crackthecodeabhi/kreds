@@ -19,6 +19,8 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
+import io.github.crackthecodeabhi.kreds.FieldValue
+import io.github.crackthecodeabhi.kreds.StringFieldValue
 import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.commands.HashCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
@@ -81,7 +83,12 @@ internal interface BaseHashCommands {
 
     fun _hvals(key: String) = CommandExecution(HVALS, ArrayCommandProcessor, key.toArgument())
 
-    fun _hscan(key: String, cursor: Long, matchPattern: String?, count: Long?): CommandExecution {
+    fun _hscan(
+        key: String,
+        cursor: Long,
+        matchPattern: String?,
+        count: Long?
+    ): CommandExecution<IScanResult<FieldValue<String, String>>> {
         val args = if (matchPattern != null && count != null)
             createArguments(key, cursor, "MATCH", matchPattern, "COUNT", count)
         else if (matchPattern != null)
@@ -293,8 +300,14 @@ public interface HashCommands {
      * [Doc](https://redis.io/commands/hscan)
      * @since 2.8.0
      * @return [HScanResult]
+     * @see [IScanResult]
      */
-    public suspend fun hscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): HScanResult
+    public suspend fun hscan(
+        key: String,
+        cursor: Long,
+        matchPattern: String? = null,
+        count: Long? = null
+    ): IScanResult<StringFieldValue>
 }
 
 internal interface HashCommandsExecutor : HashCommands, BaseHashCommands, CommandExecutor {
@@ -308,28 +321,28 @@ internal interface HashCommandsExecutor : HashCommands, BaseHashCommands, Comman
         execute(_hget(key, field))
 
     override suspend fun hgetAll(key: String): List<String> =
-        execute(_hgetAll(key))
+        execute(_hgetAll(key)).responseTo("hgetAll")
 
     override suspend fun hincrBy(key: String, field: String, increment: Long): Long =
         execute(_hincrBy(key, field, increment))
 
     override suspend fun hincrByFloat(key: String, field: String, increment: BigDecimal): String =
-        execute(_hincrByFloat(key, field, increment))
+        execute(_hincrByFloat(key, field, increment)).responseTo("hincrByFloat")
 
     override suspend fun hkeys(key: String): List<String> =
-        execute(_hkeys(key))
+        execute(_hkeys(key)).responseTo("hkeys")
 
     override suspend fun hlen(key: String): Long =
         execute(_hlen(key))
 
     override suspend fun hmget(key: String, field: String, vararg fields: String): List<String?> =
-        execute(_hmget(key, field, *fields))
+        execute(_hmget(key, field, *fields)).responseTo("hmget")
 
     override suspend fun hrandfield(key: String): String? =
         execute(_hrandfield(key))
 
     override suspend fun hrandfield(key: String, count: Int, withValues: Boolean?): List<String> =
-        execute((_hrandfield(key, count, withValues)))
+        execute((_hrandfield(key, count, withValues))).responseTo("hrandfield")
 
     override suspend fun hset(
         key: String,
@@ -344,8 +357,13 @@ internal interface HashCommandsExecutor : HashCommands, BaseHashCommands, Comman
         execute(_hstrlen(key, field))
 
     override suspend fun hvals(key: String): List<String> =
-        execute(_hvals(key))
+        execute(_hvals(key)).responseTo("hvals")
 
-    override suspend fun hscan(key: String, cursor: Long, matchPattern: String?, count: Long?): HScanResult =
+    override suspend fun hscan(
+        key: String,
+        cursor: Long,
+        matchPattern: String?,
+        count: Long?
+    ): IScanResult<StringFieldValue> =
         execute(_hscan(key, cursor, matchPattern, count))
 }

@@ -43,6 +43,7 @@ internal fun String.toByteBuf(): ByteBuf = Unpooled.copiedBuffer(this, Charset.d
 internal fun ByteBuf.toDefaultCharset(): String = this.toString(Charset.defaultCharset())
 
 public data class FieldValue<out A, out B>(val field: A, val value: B)
+public typealias StringFieldValue = FieldValue<String, String>
 
 internal fun <T> List<T>.second(): T {
     if (isEmpty() || size < 2)

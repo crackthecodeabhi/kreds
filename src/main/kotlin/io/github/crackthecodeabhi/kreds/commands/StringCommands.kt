@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2022 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.args.*
@@ -5,56 +24,64 @@ import io.github.crackthecodeabhi.kreds.commands.StringCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 import java.math.BigDecimal
 
-internal interface BaseStringCommands{
-    fun _append(key: String, value: String)= CommandExecution(APPEND,IntegerCommandProcessor, key.toArgument(),value.toArgument())
+internal interface BaseStringCommands {
+    fun _append(key: String, value: String) =
+        CommandExecution(APPEND, IntegerCommandProcessor, key.toArgument(), value.toArgument())
 
-    fun _get(key: String) = CommandExecution(GET, BulkStringCommandProcessor,key.toArgument())
+    fun _get(key: String) = CommandExecution(GET, BulkStringCommandProcessor, key.toArgument())
 
-    fun _decr(key: String) = CommandExecution(DECR, IntegerCommandProcessor,key.toArgument())
+    fun _decr(key: String) = CommandExecution(DECR, IntegerCommandProcessor, key.toArgument())
 
-    fun _decrBy(key: String, decrement: Long) = CommandExecution(DECRBY, IntegerCommandProcessor,key.toArgument(),decrement.toArgument())
+    fun _decrBy(key: String, decrement: Long) =
+        CommandExecution(DECRBY, IntegerCommandProcessor, key.toArgument(), decrement.toArgument())
 
-    fun _getDel(key: String) = CommandExecution(GETDEL, BulkStringCommandProcessor,key.toArgument())
+    fun _getDel(key: String) = CommandExecution(GETDEL, BulkStringCommandProcessor, key.toArgument())
 
-    fun _getRange(key: String, start: Int, end: Int) = CommandExecution(GETRANGE, BulkStringCommandProcessor,*createArguments(key,start,end))
+    fun _getRange(key: String, start: Int, end: Int) =
+        CommandExecution(GETRANGE, BulkStringCommandProcessor, *createArguments(key, start, end))
 
-    fun _getSet(key: String, value: String) = CommandExecution(GETSET, BulkStringCommandProcessor,key.toArgument(),value.toArgument())
+    fun _getSet(key: String, value: String) =
+        CommandExecution(GETSET, BulkStringCommandProcessor, key.toArgument(), value.toArgument())
 
-    fun _incr(key: String) = CommandExecution(INCR, IntegerCommandProcessor,key.toArgument())
+    fun _incr(key: String) = CommandExecution(INCR, IntegerCommandProcessor, key.toArgument())
 
-    fun _incrBy(key: String, increment: Long) = CommandExecution(INCRBY, IntegerCommandProcessor,key.toArgument(),increment.toArgument())
+    fun _incrBy(key: String, increment: Long) =
+        CommandExecution(INCRBY, IntegerCommandProcessor, key.toArgument(), increment.toArgument())
 
-    fun _incrByFloat(key: String, increment: BigDecimal) = CommandExecution(INCRBYFLOAT, BulkStringCommandProcessor,key.toArgument(),increment.toArgument())
+    fun _incrByFloat(key: String, increment: BigDecimal) =
+        CommandExecution(INCRBYFLOAT, BulkStringCommandProcessor, key.toArgument(), increment.toArgument())
 
-    fun _mget(vararg keys: String) = CommandExecution(MGET, ArrayCommandProcessor,*createArguments(keys))
+    fun _mget(vararg keys: String) = CommandExecution(MGET, ArrayCommandProcessor, *createArguments(keys))
 
-    fun _mset(vararg keyValues: Pair<String,String>) = CommandExecution(MSET, SimpleStringCommandProcessor,*createArguments(keyValues))
+    fun _mset(vararg keyValues: Pair<String, String>) =
+        CommandExecution(MSET, SimpleStringCommandProcessor, *createArguments(keyValues))
 
     fun _set(key: String, value: String, setOption: SetOption?) =
-        CommandExecution(SET,CommandProcessor(SimpleStringHandler,BulkStringHandler),*createArguments(
+        CommandExecution(SET, SimpleAndBulkStringCommandProcessor, *createArguments(
             key, value,
             setOption?.exSeconds?.let { KeyValueArgument("EX", it.toString(10)) },
-            setOption?.pxMilliseconds?.let { KeyValueArgument("PX",it.toString(10)) },
-            setOption?.exatTimestamp?.let { KeyValueArgument("EXAT",it.toString(10)) },
-            setOption?.pxatMillisecondTimestamp?.let { KeyValueArgument("PXAT",it.toString(10)) },
+            setOption?.pxMilliseconds?.let { KeyValueArgument("PX", it.toString(10)) },
+            setOption?.exatTimestamp?.let { KeyValueArgument("EXAT", it.toString(10)) },
+            setOption?.pxatMillisecondTimestamp?.let { KeyValueArgument("PXAT", it.toString(10)) },
             setOption?.keepTTL?.let { KeyOnlyArgument("KEEPTTL") },
             setOption?.nx?.let { KeyOnlyArgument("NX") },
             setOption?.xx?.let { KeyOnlyArgument("XX") },
             setOption?.get?.let { KeyOnlyArgument("GET") }
         ))
 
-    fun _getEx(key: String, getExOption: GetExOption? = null) =CommandExecution(GETEX, BulkStringCommandProcessor,*createArguments(
-        key,
-        getExOption?.exSeconds?.let { KeyValueArgument("EX",it.toString(10)) },
-        getExOption?.pxMilliseconds?.let { KeyValueArgument("PX",it.toString(10)) },
-        getExOption?.exatTimestamp?.let { KeyValueArgument("EXAT",it.toString(10)) },
-        getExOption?.pxatMillisecondTimestamp?.let { KeyValueArgument("PXAT",it.toString(10)) },
-        getExOption?.persist?.let { KeyOnlyArgument("PERSIST") }
-    ))
+    fun _getEx(key: String, getExOption: GetExOption? = null) =
+        CommandExecution(GETEX, BulkStringCommandProcessor, *createArguments(
+            key,
+            getExOption?.exSeconds?.let { KeyValueArgument("EX", it.toString(10)) },
+            getExOption?.pxMilliseconds?.let { KeyValueArgument("PX", it.toString(10)) },
+            getExOption?.exatTimestamp?.let { KeyValueArgument("EXAT", it.toString(10)) },
+            getExOption?.pxatMillisecondTimestamp?.let { KeyValueArgument("PXAT", it.toString(10)) },
+            getExOption?.persist?.let { KeyOnlyArgument("PERSIST") }
+        ))
 }
 
 
-public interface StringCommands{
+public interface StringCommands {
     /**
      * ###  APPEND key value
      *
@@ -142,7 +169,7 @@ public interface StringCommands{
      * @since 1.0.0
      * @return the old value stored at key, or null when key did not exist.
      */
-    public suspend fun getSet(key: String,value: String): String?
+    public suspend fun getSet(key: String, value: String): String?
 
     /**
      * ###  INCR key
@@ -175,7 +202,7 @@ public interface StringCommands{
      * @since 2.6.0
      * @return the value of key after the increment.
      */
-    public suspend fun incrByFloat(key: String,increment: BigDecimal): String?
+    public suspend fun incrByFloat(key: String, increment: BigDecimal): String?
 
     /**
      * ### ` MGET key [key ...]`
@@ -199,7 +226,7 @@ public interface StringCommands{
      * @since 1.0.1
      * @return OK
      */
-    public suspend fun mset(vararg keyValues: Pair<String,String>): String
+    public suspend fun mset(vararg keyValues: Pair<String, String>): String
 
 
     /**
@@ -230,37 +257,40 @@ public interface StringCommands{
     public suspend fun set(key: String, value: String, setOption: SetOption? = null): String?
 }
 
-internal enum class StringCommand(override val subCommand: Command? = null): Command{
-    APPEND,DECR,DECRBY,GET,GETDEL,GETRANGE,GETSET,INCR,INCRBY,INCRBYFLOAT,MGET,MSET,SET,GETEX;
+internal enum class StringCommand(override val subCommand: Command? = null) : Command {
+    APPEND, DECR, DECRBY, GET, GETDEL, GETRANGE, GETSET, INCR, INCRBY, INCRBYFLOAT, MGET, MSET, SET, GETEX;
+
     override val string = name
 }
 
-internal interface StringCommandsExecutor: CommandExecutor, StringCommands, BaseStringCommands{
-    override suspend fun append(key: String, value: String): Long = execute(_append(key,value))
+internal interface StringCommandsExecutor : CommandExecutor, StringCommands, BaseStringCommands {
+    override suspend fun append(key: String, value: String): Long = execute(_append(key, value))
 
     override suspend fun decr(key: String): Long = execute(_decr(key))
 
-    override suspend fun decrBy(key: String, decrement: Long): Long = execute(_decrBy(key,decrement))
+    override suspend fun decrBy(key: String, decrement: Long): Long = execute(_decrBy(key, decrement))
 
     override suspend fun get(key: String): String? = execute(_get(key))
 
     override suspend fun getDel(key: String): String? = execute(_getDel(key))
 
-    override suspend fun getRange(key: String, start: Int, end: Int): String? = execute(_getRange(key,start,end))
+    override suspend fun getRange(key: String, start: Int, end: Int): String? = execute(_getRange(key, start, end))
 
-    override suspend fun getSet(key: String, value: String): String? = execute(_getSet(key,value))
+    override suspend fun getSet(key: String, value: String): String? = execute(_getSet(key, value))
 
     override suspend fun incr(key: String): Long = execute(_incr(key))
 
-    override suspend fun incrBy(key: String, increment: Long): Long = execute(_incrBy(key,increment))
+    override suspend fun incrBy(key: String, increment: Long): Long = execute(_incrBy(key, increment))
 
-    override suspend fun incrByFloat(key: String, increment: BigDecimal): String? = execute(_incrByFloat(key,increment))
+    override suspend fun incrByFloat(key: String, increment: BigDecimal): String? =
+        execute(_incrByFloat(key, increment))
 
-    override suspend fun mget(vararg keys: String): List<String?> = execute(_mget(*keys))
+    override suspend fun mget(vararg keys: String): List<String?> = execute(_mget(*keys)).responseTo("mget")
 
-    override suspend fun mset(vararg keyValues: Pair<String,String>): String = execute(_mset(*keyValues))
+    override suspend fun mset(vararg keyValues: Pair<String, String>): String = execute(_mset(*keyValues))
 
-    override suspend fun set(key: String, value: String, setOption: SetOption?): String? = execute(_set(key,value,setOption))
+    override suspend fun set(key: String, value: String, setOption: SetOption?): String? =
+        execute(_set(key, value, setOption))
 
-    override suspend fun getEx(key: String, getExOption: GetExOption?): String? = execute(_getEx(key,getExOption))
+    override suspend fun getEx(key: String, getExOption: GetExOption?): String? = execute(_getEx(key, getExOption))
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -34,7 +34,7 @@ internal enum class KeyCommand(override val subCommand: Command? = null) : Comma
 
 internal interface BaseKeyCommands {
     fun _del(vararg keys: String) = CommandExecution(DEL, IntegerCommandProcessor, *keys.toArguments())
-    fun _copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): CommandExecution {
+    fun _copy(source: String, destination: String, destinationDb: String?, replace: Boolean?): CommandExecution<Long> {
         val args =
             createArguments(
                 source,
@@ -365,7 +365,7 @@ public interface KeyCommands {
         matchPattern: String? = null,
         count: Long? = null,
         type: String? = null
-    ): ScanResult
+    ): IScanResult<String>
 }
 
 internal interface KeyCommandExecutor : CommandExecutor, KeyCommands, BaseKeyCommands {
@@ -388,7 +388,7 @@ internal interface KeyCommandExecutor : CommandExecutor, KeyCommands, BaseKeyCom
     override suspend fun expireTime(key: String): Long = execute(_expireTime(key))
 
     override suspend fun keys(pattern: String): List<String> =
-        execute(_keys(pattern))
+        execute(_keys(pattern)).responseTo("keys")
 
     override suspend fun move(key: String, db: String): Long = execute(_move(key, db))
 
@@ -418,6 +418,6 @@ internal interface KeyCommandExecutor : CommandExecutor, KeyCommands, BaseKeyCom
 
     override suspend fun unlink(vararg keys: String): Long = execute(_unlink(*keys))
 
-    override suspend fun scan(cursor: Long, matchPattern: String?, count: Long?, type: String?): ScanResult =
+    override suspend fun scan(cursor: Long, matchPattern: String?, count: Long?, type: String?): IScanResult<String> =
         execute(_scan(cursor, matchPattern, count, type))
 }

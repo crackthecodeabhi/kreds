@@ -62,7 +62,7 @@ class PubSubTest : FunSpec({
                 })
 
             subscriber.subscribe(testChannel)
-            subscriber.ping("OK").shouldBeOk()
+            subscriber.ping("OK")!!.shouldBeOk()
             repeat(1000) {
                 publisher.publish(testChannel, "1")
             }

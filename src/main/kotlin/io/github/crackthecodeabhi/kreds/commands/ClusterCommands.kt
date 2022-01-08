@@ -1,25 +1,38 @@
+/*
+ *  Copyright (C) 2022 Abhijith Shivaswamy
+ *   See the notice.md file distributed with this work for additional
+ *   information regarding copyright ownership.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.Argument
+import io.github.crackthecodeabhi.kreds.args.ClusterResetOption
 import io.github.crackthecodeabhi.kreds.args.FailOverOption
 import io.github.crackthecodeabhi.kreds.args.createArguments
 import io.github.crackthecodeabhi.kreds.args.toArgument
-import io.github.crackthecodeabhi.kreds.args.ClusterResetOption
 import io.github.crackthecodeabhi.kreds.commands.ClusterCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
-import io.github.crackthecodeabhi.kreds.protocol.ArrayCommandProcessor
-import io.github.crackthecodeabhi.kreds.protocol.BulkStringCommandProcessor
-import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
-import io.github.crackthecodeabhi.kreds.protocol.IntegerCommandProcessor
-import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
 
-internal enum class ClusterCommand(override val subCommand: Command? = null, commandString: String? = null): Command{
-    ASKING,READONLY,READWRITE,
-    ADDSLOTS,ADDSLOTSRANGE,BUMPEPOCH,COUNT_FAILURE_REPORTS(commandString = "COUNT-FAILURE-REPORTS"),
-    COUNTKEYSINSLOT,DELSLOTS,DELSLOTSRANGE,FAILOVER,FLUSHSLOTS,FORGET,
-    GETKEYSINSLOT,INFO,KEYSLOT,LINKS,MEET,MYID,NODES,REPLICAS,REPLICATE,
-    RESET,SAVECONFIG,SET_CONFIG_EPOCH(commandString = "SET-CONFIG-EPOCH"),
-    SETSLOT,SLAVES,SLOTS,
+internal enum class ClusterCommand(override val subCommand: Command? = null, commandString: String? = null) : Command {
+    ASKING, READONLY, READWRITE,
+    ADDSLOTS, ADDSLOTSRANGE, BUMPEPOCH, COUNT_FAILURE_REPORTS(commandString = "COUNT-FAILURE-REPORTS"),
+    COUNTKEYSINSLOT, DELSLOTS, DELSLOTSRANGE, FAILOVER, FLUSHSLOTS, FORGET,
+    GETKEYSINSLOT, INFO, KEYSLOT, LINKS, MEET, MYID, NODES, REPLICAS, REPLICATE,
+    RESET, SAVECONFIG, SET_CONFIG_EPOCH(commandString = "SET-CONFIG-EPOCH"),
+    SETSLOT, SLAVES, SLOTS,
 
     CLUSTER_ADD_SLOTS(ADDSLOTS),
     CLUSTER_ADD_SLOTS_RANGE(ADDSLOTSRANGE),
@@ -54,43 +67,46 @@ internal enum class ClusterCommand(override val subCommand: Command? = null, com
 internal interface BaseClusterCommands {
     fun _asking() = CommandExecution(ASKING, SimpleStringCommandProcessor)
     fun _clusterAddSlots(slot: String, vararg slots: String) =
-        CommandExecution(CLUSTER_ADD_SLOTS, SimpleStringCommandProcessor,
-            *createArguments(slot,*slots))
-    fun _clusterAddSlotsRange(slotSpec: Pair<Int,Int>, vararg slotSpecs: Pair<Int,Int>) =
-        CommandExecution(CLUSTER_ADD_SLOTS_RANGE, SimpleStringCommandProcessor,*createArguments(slotSpec,*slotSpecs))
+        CommandExecution(
+            CLUSTER_ADD_SLOTS, SimpleStringCommandProcessor,
+            *createArguments(slot, *slots)
+        )
 
-    fun _clusterBumpEpoch()=
+    fun _clusterAddSlotsRange(slotSpec: Pair<Int, Int>, vararg slotSpecs: Pair<Int, Int>) =
+        CommandExecution(CLUSTER_ADD_SLOTS_RANGE, SimpleStringCommandProcessor, *createArguments(slotSpec, *slotSpecs))
+
+    fun _clusterBumpEpoch() =
         CommandExecution(CLUSTER_BUMPEPOCH, SimpleStringCommandProcessor)
 
     fun _clusterCountFailureReports(nodeId: String) =
-        CommandExecution(CLUSTER_COUNT_FAILURE_REPORTS, IntegerCommandProcessor,nodeId.toArgument())
+        CommandExecution(CLUSTER_COUNT_FAILURE_REPORTS, IntegerCommandProcessor, nodeId.toArgument())
 
     fun _clusterCountKeysInSlot(slot: Int) =
-        CommandExecution(CLUSTER_COUNT_KEYS_IN_SLOT, IntegerCommandProcessor,slot.toArgument())
+        CommandExecution(CLUSTER_COUNT_KEYS_IN_SLOT, IntegerCommandProcessor, slot.toArgument())
 
     fun _clusterDelSlots(slot: Int, vararg slots: Int) =
-        CommandExecution(CLUSTER_DEL_SLOTS, SimpleStringCommandProcessor,*createArguments(slot,slots))
+        CommandExecution(CLUSTER_DEL_SLOTS, SimpleStringCommandProcessor, *createArguments(slot, slots))
 
-    fun _clusterDelSlotsRange(slotSpec: Pair<Int,Int>, vararg slotSpecs: Pair<Int,Int>) =
-        CommandExecution(CLUSTER_DEL_SLOTS_RANGE, SimpleStringCommandProcessor,*createArguments(slotSpec,slotSpecs))
+    fun _clusterDelSlotsRange(slotSpec: Pair<Int, Int>, vararg slotSpecs: Pair<Int, Int>) =
+        CommandExecution(CLUSTER_DEL_SLOTS_RANGE, SimpleStringCommandProcessor, *createArguments(slotSpec, slotSpecs))
 
     fun _clusterFailOver(option: FailOverOption? = null) =
-        CommandExecution(CLUSTER_FAILOVER, SimpleStringCommandProcessor,*createArguments(option))
+        CommandExecution(CLUSTER_FAILOVER, SimpleStringCommandProcessor, *createArguments(option))
 
     fun _clusterFlushSlots() =
         CommandExecution(CLUSTER_FLUSHSLOTS, SimpleStringCommandProcessor)
 
     fun _clusterForget(nodeId: String) =
-        CommandExecution(CLUSTER_FORGET, SimpleStringCommandProcessor,nodeId.toArgument())
+        CommandExecution(CLUSTER_FORGET, SimpleStringCommandProcessor, nodeId.toArgument())
 
     fun _clusterGetKeysInSlot(slot: Int, count: Int) =
-        CommandExecution(CLUSTER_GET_KEYS_IN_SLOT, ArrayCommandProcessor,slot.toArgument(),count.toArgument())
+        CommandExecution(CLUSTER_GET_KEYS_IN_SLOT, ArrayCommandProcessor, slot.toArgument(), count.toArgument())
 
     fun _clusterInfo() =
         CommandExecution(CLUSTER_INFO, BulkStringCommandProcessor)
 
     fun _clusterKeySlot(key: String) =
-        CommandExecution(CLUSTER_KEY_SLOT,IntegerCommandProcessor,key.toArgument())
+        CommandExecution(CLUSTER_KEY_SLOT, IntegerCommandProcessor, key.toArgument())
 
     fun _clusterMeet(ip: String, port: String) =
         CommandExecution(CLUSTER_MEET, SimpleStringCommandProcessor, ip.toArgument(), port.toArgument())
@@ -108,8 +124,8 @@ internal interface BaseClusterCommands {
         CommandExecution(CLUSTER_REPLICATE, SimpleStringCommandProcessor, nodeId.toArgument())
 
     fun _clusterReset(option: ClusterResetOption?) =
-        if(option != null)
-            CommandExecution(CLUSTER_RESET, SimpleStringCommandProcessor,option.toArgument())
+        if (option != null)
+            CommandExecution(CLUSTER_RESET, SimpleStringCommandProcessor, option.toArgument())
         else
             CommandExecution(CLUSTER_RESET, SimpleStringCommandProcessor)
 
@@ -119,7 +135,7 @@ internal interface BaseClusterCommands {
     fun _clusterSetConfigEpoch(configEpoch: String) =
         CommandExecution(CLUSTER_SET_CONFIG_EPOCH, SimpleStringCommandProcessor)
 
-    fun _clusterSlaves(nodeId: String)=
+    fun _clusterSlaves(nodeId: String) =
         CommandExecution(CLUSTER_SLAVES, BulkStringCommandProcessor)
 
     fun _readOnly() = CommandExecution(READONLY, SimpleStringCommandProcessor)
@@ -157,7 +173,7 @@ public interface ClusterCommands {
      * @since 7.0.0
      * @return OK
      */
-    public suspend fun clusterAddSlotsRange(slotSpec: Pair<Int,Int>, vararg slotSpecs: Pair<Int,Int>): String
+    public suspend fun clusterAddSlotsRange(slotSpec: Pair<Int, Int>, vararg slotSpecs: Pair<Int, Int>): String
 
     /**
      * ### CLUSTER BUMPEPOCH
@@ -206,7 +222,7 @@ public interface ClusterCommands {
      * @since 7.0.0
      * @return OK
      */
-    public suspend fun clusterDelSlotsRange(slotSpec: Pair<Int,Int>, vararg slotSpecs: Pair<Int,Int>): String
+    public suspend fun clusterDelSlotsRange(slotSpec: Pair<Int, Int>, vararg slotSpecs: Pair<Int, Int>): String
 
     /**
      * ### ` CLUSTER FAILOVER [FORCE|TAKEOVER] `
@@ -253,7 +269,7 @@ public interface ClusterCommands {
      * @since 3.0.0
      * @return A map between named fields and values in the form of <field>:<value> lines separated by newlines composed by the two bytes CRLF.
      */
-    public suspend fun clusterInfo(): String
+    public suspend fun clusterInfo(): String?
 
     /**
      * ###  CLUSTER KEYSLOT key
@@ -282,7 +298,7 @@ public interface ClusterCommands {
      * @since 3.0.0
      * @return The node id.
      */
-    public suspend fun clusterMyId(): String
+    public suspend fun clusterMyId(): String?
 
     /**
      * ### CLUSTER NODES
@@ -291,7 +307,7 @@ public interface ClusterCommands {
      * @since 3.0.0
      * @return The serialized cluster configuration.
      */
-    public suspend fun clusterNodes(): String
+    public suspend fun clusterNodes(): String?
 
     /**
      * ###  CLUSTER REPLICAS node-id
@@ -300,7 +316,7 @@ public interface ClusterCommands {
      * @since 5.0.0
      * @return The serialized cluster configuration.
      */
-    public suspend fun clusterReplicas(nodeId: String): String
+    public suspend fun clusterReplicas(nodeId: String): String?
 
     /**
      * ###  CLUSTER REPLICATE node-id
@@ -345,7 +361,7 @@ public interface ClusterCommands {
      * @since 3.0.0
      * @return The serialized cluster configuration.
      */
-    public suspend fun clusterSlaves(nodeId: String): String
+    public suspend fun clusterSlaves(nodeId: String): String?
 
     /**
      * ### READONLY
@@ -366,12 +382,12 @@ public interface ClusterCommands {
     public suspend fun readWrite(): String
 }
 
-internal interface ClusterCommandExecutor: BaseClusterCommands, ClusterCommands, CommandExecutor {
+internal interface ClusterCommandExecutor : BaseClusterCommands, ClusterCommands, CommandExecutor {
 
     override suspend fun asking(): String = execute(_asking())
 
     override suspend fun clusterAddSlots(slot: String, vararg slots: String): String =
-        execute(_clusterAddSlots(slot,*slots))
+        execute(_clusterAddSlots(slot, *slots))
 
     override suspend fun clusterAddSlotsRange(slotSpec: Pair<Int, Int>, vararg slotSpecs: Pair<Int, Int>): String =
         execute(_clusterAddSlotsRange(slotSpec, *slotSpecs))
@@ -386,7 +402,7 @@ internal interface ClusterCommandExecutor: BaseClusterCommands, ClusterCommands,
         execute(_clusterCountKeysInSlot(slot))
 
     override suspend fun clusterDelSlots(slot: Int, vararg slots: Int): String =
-        execute(_clusterDelSlots(slot,*slots))
+        execute(_clusterDelSlots(slot, *slots))
 
     override suspend fun clusterDelSlotsRange(slotSpec: Pair<Int, Int>, vararg slotSpecs: Pair<Int, Int>): String =
         execute(_clusterDelSlotsRange(slotSpec, *slotSpecs))
@@ -401,9 +417,9 @@ internal interface ClusterCommandExecutor: BaseClusterCommands, ClusterCommands,
         execute(_clusterForget(nodeId))
 
     override suspend fun clusterGetKeysInSlot(slot: Int, count: Int): List<String> =
-        execute(_clusterGetKeysInSlot(slot, count))
+        execute(_clusterGetKeysInSlot(slot, count)).responseTo("cluster_get_keys_in_slot")
 
-    override suspend fun clusterInfo(): String =
+    override suspend fun clusterInfo(): String? =
         execute(_clusterInfo())
 
     override suspend fun clusterKeySlot(key: String): Long =
@@ -412,19 +428,19 @@ internal interface ClusterCommandExecutor: BaseClusterCommands, ClusterCommands,
     override suspend fun clusterMeet(ip: String, port: String): String =
         execute(_clusterMeet(ip, port))
 
-    override suspend fun clusterMyId(): String =
+    override suspend fun clusterMyId(): String? =
         execute(_clusterMyId())
 
-    override suspend fun clusterNodes(): String =
+    override suspend fun clusterNodes(): String? =
         execute(_clusterNodes())
 
-    override suspend fun clusterReplicas(nodeId: String): String =
+    override suspend fun clusterReplicas(nodeId: String): String? =
         execute(_clusterReplicas(nodeId))
 
     override suspend fun clusterReplicate(nodeId: String): String =
         execute(_clusterReplicate(nodeId))
 
-    override suspend fun clusterReset(option: ClusterResetOption?) : String =
+    override suspend fun clusterReset(option: ClusterResetOption?): String =
         execute(_clusterReset(option))
 
     override suspend fun clusterSaveConfig(): String =
@@ -433,7 +449,7 @@ internal interface ClusterCommandExecutor: BaseClusterCommands, ClusterCommands,
     override suspend fun clusterSetConfigEpoch(configEpoch: String): String =
         execute(_clusterSetConfigEpoch(configEpoch))
 
-    override suspend fun clusterSlaves(nodeId: String): String =
+    override suspend fun clusterSlaves(nodeId: String): String? =
         execute(_clusterSlaves(nodeId))
 
     override suspend fun readOnly(): String =

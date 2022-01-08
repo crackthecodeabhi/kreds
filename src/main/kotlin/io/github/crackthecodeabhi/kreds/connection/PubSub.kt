@@ -26,6 +26,7 @@ import io.github.crackthecodeabhi.kreds.args.toArgument
 import io.github.crackthecodeabhi.kreds.commands.Command
 import io.github.crackthecodeabhi.kreds.commands.CommandExecution
 import io.github.crackthecodeabhi.kreds.commands.ConnectionCommand
+import io.github.crackthecodeabhi.kreds.commands.responseTo
 import io.github.crackthecodeabhi.kreds.connection.PubSubCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 import io.netty.channel.EventLoopGroup
@@ -157,16 +158,16 @@ internal interface PublishCommandExecutor : PublisherCommands, CommandExecutor {
         execute(PUBLISH, IntegerCommandProcessor, channel.toArgument(), message.toArgument())
 
     override suspend fun pubsubChannels(pattern: String?): List<String> =
-        execute(PUBSUB_CHANNELS, ArrayCommandProcessor, *createArguments(pattern))
+        execute(PUBSUB_CHANNELS, ArrayCommandProcessor, *createArguments(pattern)).responseTo("pubsub channels")
 
     override suspend fun pubsubNumpat(): Long =
         execute(PUBSUB_NUMPAT, IntegerCommandProcessor)
 
     override suspend fun pubsubNumsub(vararg channels: String): List<Any> =
-        execute(PUBSUB_NUMSUB, ArrayCommandProcessor, *createArguments(*channels))
+        execute(PUBSUB_NUMSUB, ArrayCommandProcessor, *createArguments(*channels)).responseTo("pubsub numsub")
 
     override suspend fun pubsubHelp(): List<String> =
-        execute(PUBSUB_HELP, ArrayCommandProcessor)
+        execute(PUBSUB_HELP, ArrayCommandProcessor).responseTo("pubsub help")
 }
 
 public interface SubscriberCommands {
@@ -209,7 +210,7 @@ public interface SubscriberCommands {
      * @since 1.0.0
      * @return PONG or message
      */
-    public suspend fun ping(message: String? = null): String
+    public suspend fun ping(message: String? = null): String?
 
     /**
      * ### RESET
@@ -308,11 +309,17 @@ internal class DefaultKredsSubscriberClient(
                     if (this@DefaultKredsSubscriberClient.isConnected()) {
                         val msg = this@DefaultKredsSubscriberClient.read()
                         if (msg is ArrayRedisMessage) {
-                            val reply: List<Any?> = ArrayCommandProcessor.decode(msg)
-                            if (isValidPubSubReply(reply))
-                                processPubSubReply(reply)
-                            else
-                                handlePubSubSpecialCase(reply)
+                            val reply = ArrayCommandProcessor.decode(msg)
+                            if (reply != null) {
+                                if (isValidPubSubReply(reply))
+                                    processPubSubReply(reply)
+                                else
+                                    handlePubSubSpecialCase(reply)
+                            } else
+                                dispatchPubSubEvent {
+                                    kredsSubscriber.onException(KredsPubSubException("Received null reply from server."))
+                                }
+
                         } else
                             readChannel.trySend(msg)
                     }
@@ -343,7 +350,7 @@ internal class DefaultKredsSubscriberClient(
         /**
          * Each subscription message has 3 elements, except pmessage, which has 4
          */
-        private fun isValidPubSubReply(reply: List<Any?>): Boolean =
+        private fun isValidPubSubReply(reply: List<*>): Boolean =
             with(reply) { isNotEmpty() && (size in 3..4) }
 
         private inline fun <reified R> kind(reply: List<Any?>): R = reply.getAs(0)
@@ -412,7 +419,7 @@ internal class DefaultKredsSubscriberClient(
     }
 
     inner class Writer(override val mutex: Mutex) : ExclusiveObject {
-        suspend fun write(execution: CommandExecution) = lockByCoroutineJob {
+        suspend fun write(execution: CommandExecution<*>) = lockByCoroutineJob {
             with(execution) {
                 connectWriteAndFlush(processor.encode(command, *args))
             }
@@ -443,7 +450,7 @@ internal class DefaultKredsSubscriberClient(
         }
     }
 
-    override suspend fun ping(message: String?): String {
+    override suspend fun ping(message: String?): String? {
         reader.preemptRead {
             writer.write(
                 CommandExecution(
@@ -453,7 +460,7 @@ internal class DefaultKredsSubscriberClient(
                 )
             )
         }
-        return CommandProcessor(SimpleStringHandler, BulkStringHandler).decode(reader.readChannel.receive())
+        return SimpleAndBulkStringCommandProcessor.decode(reader.readChannel.receive())
     }
 
     override suspend fun reset(): String {

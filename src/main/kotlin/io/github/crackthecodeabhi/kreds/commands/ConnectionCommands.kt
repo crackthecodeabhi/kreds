@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -19,9 +19,12 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.*
-import io.github.crackthecodeabhi.kreds.commands.ConnectionCommand.*
+import io.github.crackthecodeabhi.kreds.args.ClientListType
+import io.github.crackthecodeabhi.kreds.args.ClientPauseOption
+import io.github.crackthecodeabhi.kreds.args.createArguments
+import io.github.crackthecodeabhi.kreds.args.toArgument
 import io.github.crackthecodeabhi.kreds.commands.ClientConnectionCommand.*
+import io.github.crackthecodeabhi.kreds.commands.ConnectionCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 
 internal enum class ClientConnectionCommand(
@@ -52,7 +55,7 @@ internal interface BaseConnectionCommands {
     fun _auth(username: String, password: String) =
         CommandExecution(AUTH, SimpleStringCommandProcessor, username.toArgument(), password.toArgument())
 
-    fun _clientList(clientListType: ClientListType? = null, vararg clientIds: String): CommandExecution {
+    fun _clientList(clientListType: ClientListType? = null, vararg clientIds: String): CommandExecution<String?> {
         val idArg = if (clientIds.isEmpty()) null else {
             "ID ${clientIds.joinToString(" ")}"
         }
@@ -91,7 +94,7 @@ internal interface BaseConnectionCommands {
     fun _clientUnpause() = CommandExecution(CLIENT_UNPAUSE, SimpleStringCommandProcessor)
     fun _echo(message: String) = CommandExecution(ECHO, BulkStringCommandProcessor, message.toArgument())
     fun _ping(message: String?) =
-        CommandExecution(PING, CommandProcessor(SimpleStringHandler, BulkStringHandler), *createArguments(message))
+        CommandExecution(PING, SimpleAndBulkStringCommandProcessor, *createArguments(message))
 
     fun _quit() = CommandExecution(QUIT, SimpleStringCommandProcessor)
     fun _reset() = CommandExecution(RESET, SimpleStringCommandProcessor)
@@ -165,7 +168,7 @@ public interface ConnectionCommands {
      * @since 6.2.0
      * @return a unique string
      */
-    public suspend fun clientInfo(): String
+    public suspend fun clientInfo(): String?
 
     /**
      * ### ` CLIENT LIST [TYPE normal|master|replica|pubsub] [ID client-id [client-id ...]]`
@@ -219,7 +222,7 @@ public interface ConnectionCommands {
      * @since 1.0.0
      * @return message
      */
-    public suspend fun echo(message: String): String
+    public suspend fun echo(message: String): String?
 
     /**
      * ###  `PING [message]`
@@ -228,7 +231,7 @@ public interface ConnectionCommands {
      * @since 1.0.0
      * @return string reply
      */
-    public suspend fun ping(message: String? = null): String
+    public suspend fun ping(message: String? = null): String?
 
     /**
      * ### QUIT
@@ -277,7 +280,7 @@ internal interface ConnectionCommandsExecutor : CommandExecutor, ConnectionComma
     override suspend fun clientId(): Long =
         execute(_clientId())
 
-    override suspend fun clientInfo(): String =
+    override suspend fun clientInfo(): String? =
         execute(_clientInfo())
 
     override suspend fun clientList(clientListType: ClientListType?, vararg clientIds: String): String? =
@@ -295,10 +298,10 @@ internal interface ConnectionCommandsExecutor : CommandExecutor, ConnectionComma
     override suspend fun clientUnpause(): String =
         execute(_clientUnpause())
 
-    override suspend fun echo(message: String): String =
+    override suspend fun echo(message: String): String? =
         execute(_echo(message))
 
-    override suspend fun ping(message: String?): String =
+    override suspend fun ping(message: String?): String? =
         execute(_ping(message))
 
     override suspend fun quit(): String =

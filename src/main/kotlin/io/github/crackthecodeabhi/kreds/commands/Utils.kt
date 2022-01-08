@@ -19,20 +19,19 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.Argument
-import io.github.crackthecodeabhi.kreds.protocol.ICommandProcessor
+import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
 
-internal interface Command {
-    /**
-     * Command string
-     */
-    val string: String
-
-    /**
-     * A sub command
-     */
-    val subCommand: Command?
+/**
+ * Throws if response from redis is null and [throwEx] is true with given [opName] else returns [this] casting to [R]
+ * @throws KredsRedisDataException if null and [throwEx] is true
+ */
+internal inline fun <T, reified R> T?.responseTo(opName: String? = null, throwEx: Boolean = true): R {
+    return this?.let { this as R } ?: run {
+        if (throwEx) throw KredsRedisDataException("received null from redis ${opName ?: ""}")
+        else this as R
+    }
 }
 
-internal class CommandExecution<T>(val command: Command, val processor: ICommandProcessor<T>, vararg val args: Argument)
-
+internal inline fun <T, reified R> T.asReturnType(): R {
+    return this as R
+}

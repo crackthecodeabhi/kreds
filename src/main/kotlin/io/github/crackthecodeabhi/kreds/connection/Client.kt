@@ -65,20 +65,20 @@ internal abstract class AbstractKredsClient(
 ) :
     KonnectionImpl(endpoint, eventLoopGroup, config), CommandExecutor {
 
-    override suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T =
+    override suspend fun <T> execute(command: Command, processor: ICommandProcessor<T>, vararg args: Argument): T =
         lockByCoroutineJob {
             connectWriteAndFlush(processor.encode(command, *args))
             processor.decode(read())
         }
 
-    override suspend fun <T> execute(commandExecution: CommandExecution): T = lockByCoroutineJob {
+    override suspend fun <T> execute(commandExecution: CommandExecution<T>): T = lockByCoroutineJob {
         with(commandExecution) {
             connectWriteAndFlush(processor.encode(command, *args))
             processor.decode(read())
         }
     }
 
-    override suspend fun executeCommands(commands: List<CommandExecution>): List<RedisMessage> = lockByCoroutineJob {
+    override suspend fun executeCommands(commands: List<CommandExecution<*>>): List<RedisMessage> = lockByCoroutineJob {
         connect()
         commands.forEach {
             with(it) {

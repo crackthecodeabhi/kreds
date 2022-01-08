@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -21,13 +21,12 @@ package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.KredsException
 import io.github.crackthecodeabhi.kreds.args.EmptyArgument
-import io.github.crackthecodeabhi.kreds.args.SyncOption
 import io.github.crackthecodeabhi.kreds.args.ServerInfoSection
+import io.github.crackthecodeabhi.kreds.args.SyncOption
 import io.github.crackthecodeabhi.kreds.commands.ServerCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.BulkStringCommandProcessor
-import io.github.crackthecodeabhi.kreds.protocol.BulkStringHandler
 import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
-import io.github.crackthecodeabhi.kreds.protocol.CommandProcessor
+import io.github.crackthecodeabhi.kreds.protocol.ICommandProcessor
 import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
 import io.netty.handler.codec.redis.RedisMessage
 
@@ -44,21 +43,21 @@ internal interface BaseServerCommands {
     fun _flushDb(syncOption: SyncOption? = null) =
         CommandExecution(FLUSHDB, SimpleStringCommandProcessor, syncOption ?: EmptyArgument)
 
-    fun _serverVersion() = CommandExecution(INFO, ServerVersionProcessor(), ServerInfoSection.server)
+    fun _serverVersion() = CommandExecution(INFO, ServerVersionProcessor, ServerInfoSection.server)
 
     fun _info(section: ServerInfoSection? = null) =
         CommandExecution(INFO, BulkStringCommandProcessor, section ?: EmptyArgument)
 }
 
-internal class ServerVersionProcessor : CommandProcessor(BulkStringHandler) {
+internal object ServerVersionProcessor : ICommandProcessor<String> {
     private val versionRegex = """redis_version[\s]*:[\s]*([0-9.]*)""".toRegex()
-    override fun <T> decode(message: RedisMessage): T {
-        val info: String = super.decode(message) ?: throw KredsException("Failed to retrieve Server Info section.")
+    override fun decode(message: RedisMessage): String {
+        val info: String = BulkStringCommandProcessor.decode(message)
+            ?: throw KredsException("Failed to retrieve Server Info section.")
         val matchResult = versionRegex.find(info)
         val (versionString) = matchResult?.destructured
             ?: throw KredsException("Failed to find version info from Server Info section.")
-        @Suppress("UNCHECKED_CAST")
-        return versionString as T
+        return versionString
     }
 }
 
@@ -97,7 +96,7 @@ public interface ServerCommands {
      * @since 1.0.0
      * @return a string reply as a collection of text lines.
      */
-    public suspend fun info(section: ServerInfoSection? = null): String
+    public suspend fun info(section: ServerInfoSection? = null): String?
 }
 
 internal interface ServerCommandExecutor : BaseServerCommands, ServerCommands, CommandExecutor {
@@ -110,6 +109,6 @@ internal interface ServerCommandExecutor : BaseServerCommands, ServerCommands, C
     override suspend fun serverVersion(): String =
         execute(_serverVersion())
 
-    override suspend fun info(section: ServerInfoSection?): String =
+    override suspend fun info(section: ServerInfoSection?): String? =
         execute(_info(section))
 }

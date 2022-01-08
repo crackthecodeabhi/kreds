@@ -116,7 +116,7 @@ internal interface BaseSetCommands {
     fun _sunionstore(destination: String, key: String, vararg keys: String) =
         CommandExecution(SUNIONSTORE, IntegerCommandProcessor, *createArguments(destination, key, *keys))
 
-    fun _sscan(key: String, cursor: Long, matchPattern: String?, count: Long?): CommandExecution {
+    fun _sscan(key: String, cursor: Long, matchPattern: String?, count: Long?): CommandExecution<IScanResult<String>> {
         val args = if (matchPattern != null && count != null)
             createArguments(key, cursor, "MATCH", matchPattern, "COUNT", count)
         else if (matchPattern != null)
@@ -355,7 +355,12 @@ public interface SetCommands {
      * @since 2.8.0
      * @return [SScanResult]
      */
-    public suspend fun sscan(key: String, cursor: Long, matchPattern: String? = null, count: Long? = null): SScanResult
+    public suspend fun sscan(
+        key: String,
+        cursor: Long,
+        matchPattern: String? = null,
+        count: Long? = null
+    ): IScanResult<String>
 }
 
 internal interface SetCommandExecutor : BaseSetCommands, SetCommands, CommandExecutor {
@@ -366,13 +371,13 @@ internal interface SetCommandExecutor : BaseSetCommands, SetCommands, CommandExe
         execute(_scard(key))
 
     override suspend fun sdiff(key: String, vararg keys: String): List<String> =
-        execute(_sdiff(key, *keys))
+        execute(_sdiff(key, *keys)).responseTo("sdiff")
 
     override suspend fun sdiffstore(destination: String, key: String, vararg keys: String): Long =
         execute(_sdiffstore(destination, key, *keys))
 
     override suspend fun sinter(key: String, vararg keys: String): List<String> =
-        execute(_sinter(key, *keys))
+        execute(_sinter(key, *keys)).responseTo("sinter")
 
     override suspend fun sintercard(numkeys: Int, key: String, vararg keys: String, limit: Long?): Long =
         execute(_sintercard(numkeys, key, *keys, limit = limit))
@@ -384,10 +389,10 @@ internal interface SetCommandExecutor : BaseSetCommands, SetCommands, CommandExe
         execute(_sismember(key, member))
 
     override suspend fun smembers(key: String): List<String> =
-        execute(_smembers(key))
+        execute(_smembers(key)).responseTo("smembers")
 
     override suspend fun smismember(key: String, member: String, vararg members: String): List<Long> =
-        execute(_smismember(key, member, *members))
+        execute(_smismember(key, member, *members)).responseTo("smismember")
 
     override suspend fun smove(source: String, destination: String, member: String): Long =
         execute(_smove(source, destination, member))
@@ -396,23 +401,23 @@ internal interface SetCommandExecutor : BaseSetCommands, SetCommands, CommandExe
         execute(_spop(key))
 
     override suspend fun spop(key: String, count: Int): List<String> =
-        execute(_spop(key, count))
+        execute(_spop(key, count)).responseTo("spop")
 
     override suspend fun srandmember(key: String): String? =
         execute(_srandmember(key))
 
     override suspend fun srandmember(key: String, count: Int): List<String> =
-        execute(_srandmember(key, count))
+        execute(_srandmember(key, count)).responseTo("srandmember")
 
     override suspend fun srem(key: String, member: String, vararg members: String): Long =
         execute(_srem(key, member, *members))
 
     override suspend fun sunion(key: String, vararg keys: String): List<String> =
-        execute(_sunion(key, *keys))
+        execute(_sunion(key, *keys)).responseTo("sunion")
 
     override suspend fun sunionstore(destination: String, key: String, vararg keys: String): Long =
         execute(_sunionstore(destination, key, *keys))
 
-    override suspend fun sscan(key: String, cursor: Long, matchPattern: String?, count: Long?): SScanResult =
+    override suspend fun sscan(key: String, cursor: Long, matchPattern: String?, count: Long?): IScanResult<String> =
         execute(_sscan(key, cursor, matchPattern, count))
 }

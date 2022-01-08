@@ -54,7 +54,7 @@ public interface PipelineListCommands {
         destination: String,
         leftRightOption1: LeftRightOption,
         leftRightOption2: LeftRightOption
-    ): Response<String>
+    ): Response<String?>
 
     /**
      * @see [ListCommands.lmpop]
@@ -145,7 +145,7 @@ internal interface PipelineListCommandExecutor : PipelineListCommands, QueuedCom
         destination: String,
         leftRightOption1: LeftRightOption,
         leftRightOption2: LeftRightOption
-    ): Response<String> = add(_lmove(source, destination, leftRightOption1, leftRightOption2))
+    ): Response<String?> = add(_lmove(source, destination, leftRightOption1, leftRightOption2))
 
     override suspend fun lmpop(
         numkeys: Long,
@@ -157,7 +157,8 @@ internal interface PipelineListCommandExecutor : PipelineListCommands, QueuedCom
 
     override suspend fun lpop(key: String): Response<String?> = add(_lpop(key))
 
-    override suspend fun lpop(key: String, count: Long): Response<List<String>?> = add(_lpop(key, count))
+    override suspend fun lpop(key: String, count: Long): Response<List<String>?> =
+        add(_lpop(key, count)).asReturnType()
 
     override suspend fun lpush(key: String, element: String, vararg elements: String): Response<Long> =
         add(_lpush(key, element, elements))
@@ -166,7 +167,7 @@ internal interface PipelineListCommandExecutor : PipelineListCommands, QueuedCom
         add(_lpushx(key, element, *elements))
 
     override suspend fun lrange(key: String, start: Int, stop: Int): Response<List<String>> =
-        add(_lrange(key, start, stop))
+        add(_lrange(key, start, stop), false).asReturnType()
 
     override suspend fun lrem(key: String, count: Int, element: String): Response<Long> =
         add(_lrem(key, count, element))
@@ -181,7 +182,7 @@ internal interface PipelineListCommandExecutor : PipelineListCommands, QueuedCom
         add(_rpop(key))
 
     override suspend fun rpop(key: String, count: Int): Response<List<String>?> =
-        add(_rpop(key, count))
+        add(_rpop(key, count)).asReturnType()
 
     override suspend fun rpush(key: String, element: String, vararg elements: String): Response<Long> =
         add(_rpush(key, element, *elements))

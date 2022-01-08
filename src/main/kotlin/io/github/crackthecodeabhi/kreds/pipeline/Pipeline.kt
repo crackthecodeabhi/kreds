@@ -33,19 +33,24 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 
 
-public class Response<out T> internal constructor(private val responseFlow: Flow<List<Any?>>, private val index: Int) {
+public class Response<out T> internal constructor(
+    private val responseFlow: Flow<List<Any?>>,
+    private val index: Int,
+    private val nullable: Boolean = true
+) {
 
     @Suppress("UNCHECKED_CAST")
     @Throws(KredsException::class, KredsRedisDataException::class)
     public suspend fun get(): T =
         when (val value = responseFlow.first().ifEmpty { throw KredsException("Operation was cancelled.") }[index]) {
             is KredsException -> throw value
+            null -> if (nullable) null as T else throw KredsRedisDataException("Received null from server.")
             else -> value as T
         }
 }
 
 internal interface QueuedCommand {
-    suspend fun <T> add(commandExecution: CommandExecution): Response<T>
+    suspend fun <T> add(commandExecution: CommandExecution<T>, nullable: Boolean = true): Response<T>
 }
 
 public interface Pipeline : PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands,
@@ -66,15 +71,16 @@ internal class PipelineImpl(private val client: DefaultKredsClient) : ExclusiveO
 
     private val sharedResponseFlow: Flow<List<Any?>> = responseFlow.asSharedFlow()
 
-    private val commands = mutableListOf<CommandExecution>()
+    private val commands = mutableListOf<CommandExecution<*>>()
     private val commandResponse = mutableListOf<Any?>()
 
-    override suspend fun <T> add(commandExecution: CommandExecution): Response<T> = lockByCoroutineJob {
-        commands.add(commandExecution)
-        return Response(sharedResponseFlow, commands.lastIndex)
-    }
+    override suspend fun <T> add(commandExecution: CommandExecution<T>, nullable: Boolean): Response<T> =
+        lockByCoroutineJob {
+            commands.add(commandExecution)
+            return Response(sharedResponseFlow, commands.lastIndex, nullable)
+        }
 
-    private suspend fun executePipeline(commands: List<CommandExecution>): List<Any?> = lockByCoroutineJob {
+    private suspend fun executePipeline(commands: List<CommandExecution<*>>): List<Any?> = lockByCoroutineJob {
         val responseList = mutableListOf<Any?>()
         val responseMessages = client.executeCommands(commands)
         //TODO: check this

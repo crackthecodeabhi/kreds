@@ -77,7 +77,7 @@ internal interface BaseListCommands {
         CommandExecution(LPOP, BulkStringCommandProcessor, key.toArgument())
 
     fun _lpop(key: String, count: Long) =
-        CommandExecution(LPOP, CommandProcessor(BulkStringHandler, ArrayHandler), key.toArgument(), count.toArgument())
+        CommandExecution(LPOP, ArrayCommandProcessor, key.toArgument(), count.toArgument())
 
     fun _lpush(key: String, element: String, elements: Array<out String>) =
         CommandExecution(LPUSH, IntegerCommandProcessor, element.toArgument(), *createArguments(elements))
@@ -112,13 +112,12 @@ internal interface BaseListCommands {
 public data class LMPOPResult(val key: String, val elements: List<String>)
 
 @Suppress("UNCHECKED_CAST")
-internal object LMPopResultProcessor : CommandProcessor(ArrayHandler, BulkStringHandler) {
-    override fun <T> decode(message: RedisMessage): T {
-        val reply: List<Any>? = super.decode(message)
-        reply ?: return null as T
+internal object LMPopResultProcessor : ICommandProcessor<LMPOPResult?> {
+    override fun decode(message: RedisMessage): LMPOPResult? {
+        val reply = ArrayCommandProcessor.decode(message) ?: return null
         if (reply.size != 2) throw KredsRedisDataException("Invalid response received for LMPOP command from server.")
         try {
-            return LMPOPResult(reply.first() as String, reply.second() as List<String>) as T
+            return LMPOPResult(reply.first() as String, reply.second() as List<String>)
         } catch (ex: Throwable) {
             when (ex) {
                 is ClassCastException -> throw KredsRedisDataException("Invalid response received for LMPOP command from server.")
@@ -173,7 +172,7 @@ public interface ListCommands {
         destination: String,
         leftRightOption1: LeftRightOption,
         leftRightOption2: LeftRightOption
-    ): String
+    ): String?
 
     /**
      * ### ` LMPOP numkeys key [key ...] LEFT|RIGHT [COUNT count] `
@@ -373,7 +372,7 @@ internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseList
         destination: String,
         leftRightOption1: LeftRightOption,
         leftRightOption2: LeftRightOption
-    ): String =
+    ): String? =
         execute(_lmove(source, destination, leftRightOption1, leftRightOption2))
 
     override suspend fun lmpop(
@@ -386,7 +385,8 @@ internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseList
 
     override suspend fun lpop(key: String): String? = execute(_lpop(key))
 
-    override suspend fun lpop(key: String, count: Long): List<String>? = execute(_lpop(key, count))
+    override suspend fun lpop(key: String, count: Long): List<String>? =
+        execute(_lpop(key, count)).responseTo(throwEx = false)
 
     override suspend fun lpush(key: String, element: String, vararg elements: String): Long =
         execute(_lpush(key, element, elements))
@@ -395,7 +395,7 @@ internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseList
         execute(_lpushx(key, element, *elements))
 
     override suspend fun lrange(key: String, start: Int, stop: Int): List<String> =
-        execute(_lrange(key, start, stop))
+        execute(_lrange(key, start, stop)).responseTo("lrange")
 
     override suspend fun lrem(key: String, count: Int, element: String): Long =
         execute(_lrem(key, count, element))
@@ -410,7 +410,7 @@ internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseList
         execute(_rpop(key))
 
     override suspend fun rpop(key: String, count: Int): List<String>? =
-        execute(_rpop(key, count))
+        execute(_rpop(key, count)).responseTo(throwEx = false)
 
     override suspend fun rpush(key: String, element: String, vararg elements: String): Long =
         execute(_rpush(key, element, *elements))

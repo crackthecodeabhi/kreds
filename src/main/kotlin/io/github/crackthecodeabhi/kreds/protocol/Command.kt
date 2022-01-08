@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -19,11 +19,15 @@
 
 package io.github.crackthecodeabhi.kreds.protocol
 
-import io.netty.handler.codec.redis.*
-import io.github.crackthecodeabhi.kreds.args.*
-import io.github.crackthecodeabhi.kreds.commands.*
+import io.github.crackthecodeabhi.kreds.args.Argument
+import io.github.crackthecodeabhi.kreds.args.EmptyArgument
+import io.github.crackthecodeabhi.kreds.commands.Command
+import io.github.crackthecodeabhi.kreds.commands.CommandExecution
 import io.github.crackthecodeabhi.kreds.toByteBuf
-import kotlin.jvm.Throws
+import io.netty.handler.codec.redis.ArrayRedisMessage
+import io.netty.handler.codec.redis.ErrorRedisMessage
+import io.netty.handler.codec.redis.FullBulkStringRedisMessage
+import io.netty.handler.codec.redis.RedisMessage
 
 internal fun Command.toRedisMessageList(): List<FullBulkStringRedisMessage> {
     return if (subCommand != null) {
@@ -31,27 +35,8 @@ internal fun Command.toRedisMessageList(): List<FullBulkStringRedisMessage> {
     } else listOf(FullBulkStringRedisMessage(string.toByteBuf()))
 }
 
-internal interface ICommandProcessor {
-    fun encode(command: Command, vararg args: Argument): RedisMessage
-
-    @Throws(KredsRedisDataException::class)
-    fun <T> decode(message: RedisMessage): T
-}
-
-internal interface CommandExecutor {
-    suspend fun <T> execute(command: Command, processor: ICommandProcessor, vararg args: Argument): T
-    suspend fun <T> execute(commandExecution: CommandExecution): T
-    suspend fun executeCommands(commands: List<CommandExecution>): List<RedisMessage>
-}
-
-internal val IntegerCommandProcessor = CommandProcessor(IntegerHandler)
-internal val BulkStringCommandProcessor = CommandProcessor(BulkStringHandler)
-internal val SimpleStringCommandProcessor = CommandProcessor(SimpleStringHandler)
-internal val ArrayCommandProcessor = CommandProcessor(ArrayHandler)
-
-internal open class CommandProcessor(private vararg val outputTypeHandlers: MessageHandler<*>) : ICommandProcessor {
-
-    override fun encode(command: Command, vararg args: Argument): RedisMessage {
+internal interface ICommandProcessor<out R> {
+    fun encode(command: Command, vararg args: Argument): RedisMessage {
         if (args.isEmpty()) return ArrayRedisMessage(command.toRedisMessageList())
         val x = command.toRedisMessageList().toMutableList()
         x.addAll(args.filter { it !is EmptyArgument }.map { FullBulkStringRedisMessage(it.toString().toByteBuf()) })
@@ -59,10 +44,29 @@ internal open class CommandProcessor(private vararg val outputTypeHandlers: Mess
     }
 
     @Throws(KredsRedisDataException::class)
+    fun decode(message: RedisMessage): R
+}
+
+internal interface CommandExecutor {
+    suspend fun <T> execute(command: Command, processor: ICommandProcessor<T>, vararg args: Argument): T
+    suspend fun <T> execute(commandExecution: CommandExecution<T>): T
+    suspend fun executeCommands(commands: List<CommandExecution<*>>): List<RedisMessage>
+}
+
+internal val IntegerCommandProcessor = CommandProcessor<Long>(IntegerHandler)
+internal val BulkStringCommandProcessor = CommandProcessor<String?>(BulkStringHandler)
+internal val SimpleStringCommandProcessor = CommandProcessor<String>(SimpleStringHandler)
+internal val ArrayCommandProcessor = CommandProcessor<List<*>?>(ArrayHandler)
+internal val SimpleAndBulkStringCommandProcessor = CommandProcessor<String?>(SimpleStringHandler, BulkStringHandler)
+
+internal open class CommandProcessor<R>(private vararg val outputTypeHandlers: MessageHandler<*>) :
+    ICommandProcessor<R> {
+
+    @Throws(KredsRedisDataException::class)
     @Suppress("UNCHECKED_CAST")
-    override fun <T> decode(message: RedisMessage): T {
+    override fun decode(message: RedisMessage): R {
         if (message is ErrorRedisMessage) throw KredsRedisDataException(message.content())
         val handler = outputTypeHandlers.first { it.canHandle(message) }
-        return handler.doHandle(message) as T
+        return handler.doHandle(message) as R
     }
 }
