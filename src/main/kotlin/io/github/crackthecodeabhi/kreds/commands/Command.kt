@@ -36,3 +36,8 @@ internal interface Command {
 
 internal class CommandExecution<T>(val command: Command, val processor: ICommandProcessor<T>, vararg val args: Argument)
 
+
+/**
+ * Operations block the connection until the operation completes or operation timeouts.
+ * */
+public interface BlockingOperation

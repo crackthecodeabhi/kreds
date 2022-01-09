@@ -29,7 +29,7 @@ public interface PipelineListCommands {
     /**
      * @see [ListCommands.lindex]
      */
-    public suspend fun lindex(key: String, index: Long): Response<String?>
+    public suspend fun lindex(key: String, index: Int): Response<String?>
 
     /**
      * @see [ListCommands.linsert]
@@ -52,8 +52,8 @@ public interface PipelineListCommands {
     public suspend fun lmove(
         source: String,
         destination: String,
-        leftRightOption1: LeftRightOption,
-        leftRightOption2: LeftRightOption
+        whereFrom: LeftRightOption,
+        whereTo: LeftRightOption
     ): Response<String?>
 
     /**
@@ -129,7 +129,7 @@ public interface PipelineListCommands {
 }
 
 internal interface PipelineListCommandExecutor : PipelineListCommands, QueuedCommand, BaseListCommands {
-    override suspend fun lindex(key: String, index: Long): Response<String?> = add(_lindex(key, index))
+    override suspend fun lindex(key: String, index: Int): Response<String?> = add(_lindex(key, index))
 
     override suspend fun linsert(
         key: String,
@@ -143,9 +143,9 @@ internal interface PipelineListCommandExecutor : PipelineListCommands, QueuedCom
     override suspend fun lmove(
         source: String,
         destination: String,
-        leftRightOption1: LeftRightOption,
-        leftRightOption2: LeftRightOption
-    ): Response<String?> = add(_lmove(source, destination, leftRightOption1, leftRightOption2))
+        whereFrom: LeftRightOption,
+        whereTo: LeftRightOption
+    ): Response<String?> = add(_lmove(source, destination, whereFrom, whereTo))
 
     override suspend fun lmpop(
         numkeys: Long,

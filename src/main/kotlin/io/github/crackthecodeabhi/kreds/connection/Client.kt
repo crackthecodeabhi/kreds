@@ -48,6 +48,12 @@ public fun CoroutineScope.newSubscriberClient(
 public fun newClient(endpoint: Endpoint, config: KredsClientConfig = defaultClientConfig): KredsClient =
     DefaultKredsClient(endpoint, eventLoopGroup, config)
 
+public fun newBlockingClient(
+    endpoint: Endpoint,
+    config: KredsClientConfig = defaultBlockingKredsClientConfig
+): BlockingKredsClient =
+    DefaultKredsClient(endpoint, eventLoopGroup, config)
+
 public suspend fun shutdown() {
     eventLoopGroup.shutdownGracefully().suspendableAwait()
 }
@@ -57,6 +63,8 @@ public interface KredsClient : AutoCloseable, KeyCommands, StringCommands, Conne
     ListCommands, HyperLogLogCommands, ServerCommands {
     public fun pipelined(): Pipeline
 }
+
+public interface BlockingKredsClient : AutoCloseable, BlockingListCommands
 
 internal abstract class AbstractKredsClient(
     endpoint: Endpoint,
@@ -98,7 +106,7 @@ internal abstract class AbstractKredsClient(
 internal class DefaultKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :
     AbstractKredsClient(endpoint, eventLoopGroup, config), KredsClient, KeyCommandExecutor, StringCommandsExecutor,
     ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor, SetCommandExecutor, ListCommandExecutor,
-    HyperLogLogCommandExecutor, ServerCommandExecutor {
+    HyperLogLogCommandExecutor, ServerCommandExecutor, BlockingKredsClient {
 
     override val mutex: Mutex = Mutex()
 

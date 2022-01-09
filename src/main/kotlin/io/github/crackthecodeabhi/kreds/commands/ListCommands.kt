@@ -24,6 +24,7 @@ import io.github.crackthecodeabhi.kreds.commands.ListCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
 import io.github.crackthecodeabhi.kreds.second
 import io.netty.handler.codec.redis.RedisMessage
+import kotlin.time.Duration
 
 internal enum class ListCommand(override val subCommand: Command? = null) : Command {
     BLMOVE, BLMPOP, BLPOP, BRPOP, BRPOPLPUSH, LINDEX, LINSERT, LLEN,
@@ -35,7 +36,7 @@ internal enum class ListCommand(override val subCommand: Command? = null) : Comm
 
 internal interface BaseListCommands {
 
-    fun _lindex(key: String, index: Long) =
+    fun _lindex(key: String, index: Int) =
         CommandExecution(LINDEX, BulkStringCommandProcessor, key.toArgument(), index.toArgument())
 
     fun _linsert(key: String, beforeAfterOption: BeforeAfterOption, pivot: String, element: String) =
@@ -53,15 +54,15 @@ internal interface BaseListCommands {
     fun _lmove(
         source: String,
         destination: String,
-        leftRightOption1: LeftRightOption,
-        leftRightOption2: LeftRightOption
+        whereFrom: LeftRightOption,
+        whereTo: LeftRightOption
     ) = CommandExecution(
         LMOVE,
         BulkStringCommandProcessor,
         source.toArgument(),
         destination.toArgument(),
-        leftRightOption1,
-        leftRightOption2
+        whereFrom,
+        whereTo
     )
 
     fun _lmpop(numkeys: Long, key: String, vararg keys: String, leftRight: LeftRightOption, count: Long?) =
@@ -80,10 +81,22 @@ internal interface BaseListCommands {
         CommandExecution(LPOP, ArrayCommandProcessor, key.toArgument(), count.toArgument())
 
     fun _lpush(key: String, element: String, elements: Array<out String>) =
-        CommandExecution(LPUSH, IntegerCommandProcessor, element.toArgument(), *createArguments(elements))
+        CommandExecution(
+            LPUSH,
+            IntegerCommandProcessor,
+            key.toArgument(),
+            element.toArgument(),
+            *createArguments(*elements)
+        )
 
     fun _lpushx(key: String, element: String, vararg elements: String) =
-        CommandExecution(LPUSHX, IntegerCommandProcessor, element.toArgument(), *createArguments(elements))
+        CommandExecution(
+            LPUSHX,
+            IntegerCommandProcessor,
+            key.toArgument(),
+            element.toArgument(),
+            *createArguments(*elements)
+        )
 
     fun _lrange(key: String, start: Int, stop: Int) =
         CommandExecution(LRANGE, ArrayCommandProcessor, key.toArgument(), start.toArgument(), stop.toArgument())
@@ -103,10 +116,25 @@ internal interface BaseListCommands {
         CommandExecution(RPOP, ArrayCommandProcessor, key.toArgument(), count.toArgument())
 
     fun _rpush(key: String, element: String, vararg elements: String) =
-        CommandExecution(RPUSH, IntegerCommandProcessor, *createArguments(element, *elements))
+        CommandExecution(
+            RPUSH,
+            IntegerCommandProcessor,
+            key.toArgument(),
+            element.toArgument(),
+            *createArguments(*elements)
+        )
 
     fun _rpushx(key: String, element: String, vararg elements: String) =
-        CommandExecution(RPUSHX, IntegerCommandProcessor, *createArguments(element, *elements))
+        CommandExecution(
+            RPUSHX,
+            IntegerCommandProcessor,
+            key.toArgument(),
+            element.toArgument(),
+            *createArguments(*elements)
+        )
+
+    fun _blpop(key: String, vararg keys: String, timeout: Duration) =
+        CommandExecution(BLPOP, BlPopProcessor, *createArguments(key, *keys, timeout.inWholeSeconds))
 }
 
 public data class LMPOPResult(val key: String, val elements: List<String>)
@@ -127,6 +155,38 @@ internal object LMPopResultProcessor : ICommandProcessor<LMPOPResult?> {
     }
 }
 
+public interface BlockingListCommands : BlockingOperation {
+
+    /**
+     * ### `BLPOP key [key ...] timeout`
+     *
+     * BLPOP is a blocking list pop primitive.
+     * It is the blocking version of LPOP because it blocks the connection when there are no elements to pop from any of the given lists.
+     * An element is popped from the head of the first list that is non-empty, with the given keys being checked in the order that they are given.
+     *
+     * [Doc](https://redis.io/commands/blpop)
+     * @param timeout maximum number of seconds to block
+     * @since 2.0.0
+     * @return *  A null when no element could be popped and the timeout expired.
+     *  * A pair with the first element being the name of the key where an element was popped and the second element being the value of the popped element.
+     */
+    public suspend fun blpop(key: String, vararg keys: String, timeout: Duration): Pair<String, String>?
+}
+
+internal object BlPopProcessor : ICommandProcessor<Pair<String, String>?> {
+    override fun decode(message: RedisMessage): Pair<String, String>? {
+        try {
+            @Suppress("UNCHECKED_CAST")
+            return when (val resp = ArrayCommandProcessor.decode(message) as List<String>?) {
+                null -> null
+                else -> Pair(resp.first(), resp.second())
+            }
+        } catch (ex: ClassCastException) {
+            throw KredsRedisDataException("Received corrupted response from redis for blpop.", ex)
+        }
+    }
+}
+
 public interface ListCommands {
 
     /**
@@ -138,7 +198,7 @@ public interface ListCommands {
      * @since 1.0.0
      * @return the requested element, or null when index is out of range.
      */
-    public suspend fun lindex(key: String, index: Long): String?
+    public suspend fun lindex(key: String, index: Int): String?
 
     /**
      * ### ` LINSERT key BEFORE|AFTER pivot element `
@@ -170,8 +230,8 @@ public interface ListCommands {
     public suspend fun lmove(
         source: String,
         destination: String,
-        leftRightOption1: LeftRightOption,
-        leftRightOption2: LeftRightOption
+        whereFrom: LeftRightOption,
+        whereTo: LeftRightOption
     ): String?
 
     /**
@@ -353,8 +413,8 @@ public interface ListCommands {
 
 }
 
-internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseListCommands {
-    override suspend fun lindex(key: String, index: Long): String? =
+internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseListCommands, BlockingListCommands {
+    override suspend fun lindex(key: String, index: Int): String? =
         execute(_lindex(key, index))
 
     override suspend fun linsert(
@@ -370,10 +430,10 @@ internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseList
     override suspend fun lmove(
         source: String,
         destination: String,
-        leftRightOption1: LeftRightOption,
-        leftRightOption2: LeftRightOption
+        whereFrom: LeftRightOption,
+        whereTo: LeftRightOption
     ): String? =
-        execute(_lmove(source, destination, leftRightOption1, leftRightOption2))
+        execute(_lmove(source, destination, whereFrom, whereTo))
 
     override suspend fun lmpop(
         numkeys: Long,
@@ -417,4 +477,7 @@ internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseList
 
     override suspend fun rpushx(key: String, element: String, vararg elements: String): Long =
         execute(_rpushx(key, element, *elements))
+
+    override suspend fun blpop(key: String, vararg keys: String, timeout: Duration): Pair<String, String>? =
+        execute(_blpop(key, *keys, timeout = timeout))
 }

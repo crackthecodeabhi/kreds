@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 Abhijith Shivaswamy
+ *  Copyright (C) 2022 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
  *   information regarding copyright ownership.
  *
@@ -65,4 +65,7 @@ public class KredsClientConfig {
 internal val defaultClientConfig: KredsClientConfig = KredsClientConfig.Builder().build()
 
 internal val defaultSubscriberClientConfig: KredsClientConfig =
+    KredsClientConfig.Builder(readTimeoutSeconds = KredsClientConfig.NO_READ_TIMEOUT).build()
+
+internal val defaultBlockingKredsClientConfig: KredsClientConfig =
     KredsClientConfig.Builder(readTimeoutSeconds = KredsClientConfig.NO_READ_TIMEOUT).build()
