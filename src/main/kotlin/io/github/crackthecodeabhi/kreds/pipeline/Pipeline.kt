@@ -41,12 +41,15 @@ public class Response<out T> internal constructor(
 
     @Suppress("UNCHECKED_CAST")
     @Throws(KredsException::class, KredsRedisDataException::class)
-    public suspend fun get(): T =
+    public suspend operator fun invoke(): T =
         when (val value = responseFlow.first().ifEmpty { throw KredsException("Operation was cancelled.") }[index]) {
             is KredsException -> throw value
             null -> if (nullable) null as T else throw KredsRedisDataException("Received null from server.")
             else -> value as T
         }
+
+    @Throws(KredsException::class, KredsRedisDataException::class)
+    public suspend fun get(): T = invoke()
 }
 
 internal interface QueuedCommand {

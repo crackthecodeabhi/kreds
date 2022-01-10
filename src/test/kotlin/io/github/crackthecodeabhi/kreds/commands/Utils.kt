@@ -100,6 +100,8 @@ inline fun <reified R : Any> Response<R?>.toResponseType(): ResponseType<R> {
 
 suspend inline fun <T : Any> ResponseType<T>.get(): T? {
     return if (second == null) null
-    else if (first.get() == null) null
-    else second!!.cast(first.get())
+    else if (first() == null) null
+    else second!!.cast(first())
 }
+
+suspend inline operator fun <T : Any> ResponseType<T>.invoke(): T? = get()

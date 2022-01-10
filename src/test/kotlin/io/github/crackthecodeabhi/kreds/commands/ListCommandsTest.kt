@@ -95,4 +95,121 @@ class ListCommandsTest : FunSpec({
         client.rpop("list", 2)!! shouldContainInOrder listOf("e4", "e3")
         client.llen("list") shouldBe 0
     }
+
+    test("Pipeline List commands >= API 6").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
+        val responseList = mutableListOf<ResponseType<Any>>()
+        val pipe = client.pipelined()
+
+        responseList += pipe.lpushx("list", "n1", "n2").toResponseType()
+        responseList += pipe.rpushx("list", "n1", "n2").toResponseType()
+        responseList += pipe.llen("list").toResponseType()
+        responseList += pipe.lpush("list", "e1", "e2").toResponseType()
+        responseList += pipe.llen("list").toResponseType()
+        responseList += pipe.rpush("list", "e3", "e4").toResponseType()
+        responseList += pipe.lpushx("list", "e0", "e00").toResponseType()
+        responseList += pipe.rpushx("list", "e5", "e6").toResponseType()
+
+        responseList += pipe.lrange("list", 0, 7).toResponseType()
+
+        responseList += pipe.lindex("list", 0).toResponseType()
+        responseList += pipe.lindex("list", 100).toResponseType()
+
+        responseList += pipe.linsert("list", BeforeAfterOption.BEFORE, "e3", "e22").toResponseType()
+
+        responseList += pipe.lrange("list", 0, 8).toResponseType()
+
+        responseList += pipe.lset("list", 0, "e000").toResponseType()
+        responseList += pipe.lindex("list", 0).toResponseType()
+
+        responseList += pipe.lpush("another", "x", "y", "z").toResponseType()
+        responseList += pipe.lmove("list", "another", LeftRightOption.RIGHT, LeftRightOption.LEFT).toResponseType()
+        responseList += pipe.lrange("another", 0, 3).toResponseType()
+
+        responseList += pipe.ltrim("another", 0, 2).toResponseType()
+        responseList += pipe.lrange("another", 0, 2).toResponseType()
+        responseList += pipe.lindex("another", 3).toResponseType()
+
+        responseList += pipe.lrange("list", 0, 8).toResponseType()
+
+        responseList += pipe.lpop("list").toResponseType()
+        responseList += pipe.lpop("nolist").toResponseType()
+        responseList += pipe.lpop("list", 3).toResponseType()
+        // client.lpop("nolist", 100) shouldBe null TODO: fix this after verification
+
+        responseList += pipe.lrange("list", 0, 3).toResponseType()
+
+        responseList += pipe.lrem("list", 0, "e22").toResponseType()
+
+        responseList += pipe.rpop("list").toResponseType()
+        responseList += pipe.rpop("list", 2).toResponseType()
+        responseList += pipe.llen("list").toResponseType()
+
+        pipe.execute()
+
+        @Suppress("UNCHECKED_CAST")
+        run {
+            var i = 0
+            responseList[i++]() shouldBe 0
+            responseList[i++]() shouldBe 0
+            responseList[i++]() shouldBe 0
+            responseList[i++]() shouldBe 2
+            responseList[i++]() shouldBe 2
+            responseList[i++]() shouldBe 4
+            responseList[i++]() shouldBe 6
+            responseList[i++]() shouldBe 8
+            responseList[i++]() as List<String> shouldContainInOrder listOf(
+                "e00",
+                "e0",
+                "e2",
+                "e1",
+                "e3",
+                "e4",
+                "e5",
+                "e6"
+            )
+
+            responseList[i++]() shouldBe "e00"
+            responseList[i++]() shouldBe null
+            responseList[i++]() shouldBe 9
+
+            responseList[i++]() as List<String> shouldContainInOrder listOf(
+                "e00",
+                "e0",
+                "e2",
+                "e1",
+                "e22",
+                "e3",
+                "e4",
+                "e5",
+                "e6"
+            )
+            responseList[i++]() shouldNotBe null
+            responseList[i++]() shouldBe "e000"
+            responseList[i++]() shouldBe 3
+            responseList[i++]() shouldBe "e6"
+            responseList[i++]() as List<String> shouldContainInOrder listOf("e6", "z", "y", "x")
+            responseList[i++]() shouldNotBe null
+            responseList[i++]() as List<String> shouldContainInOrder listOf("e6", "z", "y")
+            responseList[i++]() shouldBe null
+            responseList[i++]() as List<String> shouldContainInOrder listOf(
+                "e000",
+                "e0",
+                "e2",
+                "e1",
+                "e22",
+                "e3",
+                "e4",
+                "e5"
+            )
+            responseList[i++]() shouldBe "e000"
+            responseList[i++]() shouldBe null
+            responseList[i++]() as List<String> shouldContainInOrder listOf("e0", "e2", "e1")
+            // client.lpop("nolist", 100) shouldBe null TODO: fix this after verification
+            responseList[i++]() as List<String> shouldContainInOrder listOf("e22", "e3", "e4", "e5")
+            responseList[i++]() shouldBe 1
+            responseList[i++]() shouldBe "e5"
+            responseList[i++]() as List<String> shouldContainInOrder listOf("e4", "e3")
+            responseList[i]() shouldBe 0
+        }
+    }
 })
