@@ -51,10 +51,10 @@ internal interface BaseStringCommands {
     fun _incrByFloat(key: String, increment: BigDecimal) =
         CommandExecution(INCRBYFLOAT, BulkStringCommandProcessor, key.toArgument(), increment.toArgument())
 
-    fun _mget(vararg keys: String) = CommandExecution(MGET, ArrayCommandProcessor, *createArguments(keys))
+    fun _mget(vararg keys: String) = CommandExecution(MGET, ArrayCommandProcessor, *createArguments(*keys))
 
     fun _mset(vararg keyValues: Pair<String, String>) =
-        CommandExecution(MSET, SimpleStringCommandProcessor, *createArguments(keyValues))
+        CommandExecution(MSET, SimpleStringCommandProcessor, *createArguments(*keyValues))
 
     fun _set(key: String, value: String, setOption: SetOption?) =
         CommandExecution(SET, SimpleAndBulkStringCommandProcessor, *createArguments(
@@ -78,6 +78,8 @@ internal interface BaseStringCommands {
             getExOption?.pxatMillisecondTimestamp?.let { KeyValueArgument("PXAT", it.toString(10)) },
             getExOption?.persist?.let { KeyOnlyArgument("PERSIST") }
         ))
+
+    fun _strlen(key: String) = CommandExecution(STRLEN, IntegerCommandProcessor, key.toArgument())
 }
 
 
@@ -255,10 +257,22 @@ public interface StringCommands {
      * - Null if the SET operation was not performed because the user specified the NX or XX option but the condition was not met.
      */
     public suspend fun set(key: String, value: String, setOption: SetOption? = null): String?
+
+    /**
+     * ###  STRLEN key
+     *
+     * Returns the length of the string value stored at key. An error is returned when key holds a non-string value.
+     *
+     * [Doc](https://redis.io/commands/strlen)
+     * @since 2.2.0
+     * @return the length of the string at key, or 0 when key does not exist.
+     */
+    public suspend fun strlen(key: String): Long
 }
 
 internal enum class StringCommand(override val subCommand: Command? = null) : Command {
-    APPEND, DECR, DECRBY, GET, GETDEL, GETRANGE, GETSET, INCR, INCRBY, INCRBYFLOAT, MGET, MSET, SET, GETEX;
+    APPEND, DECR, DECRBY, GET, GETDEL, GETRANGE, GETSET, INCR, INCRBY, INCRBYFLOAT, MGET, MSET, SET, GETEX,
+    STRLEN;
 
     override val string = name
 }
@@ -293,4 +307,6 @@ internal interface StringCommandsExecutor : CommandExecutor, StringCommands, Bas
         execute(_set(key, value, setOption))
 
     override suspend fun getEx(key: String, getExOption: GetExOption?): String? = execute(_getEx(key, getExOption))
+
+    override suspend fun strlen(key: String): Long = execute(_strlen(key))
 }

@@ -95,6 +95,11 @@ public interface PipelineStringCommands {
      * @see [StringCommands.getEx]
      */
     public suspend fun getEx(key: String, getExOption: GetExOption? = null): Response<String?>
+
+    /**
+     * @see [StringCommands.strlen]
+     */
+    public suspend fun strlen(key: String): Response<Long>
 }
 
 
@@ -130,4 +135,6 @@ internal interface PipelineStringCommandsExecutor : PipelineStringCommands, Base
 
     override suspend fun getEx(key: String, getExOption: GetExOption?): Response<String?> =
         add(_getEx(key, getExOption))
+
+    override suspend fun strlen(key: String): Response<Long> = add(_strlen(key))
 }
