@@ -134,7 +134,35 @@ internal interface BaseListCommands {
         )
 
     fun _blpop(key: String, vararg keys: String, timeout: Duration) =
-        CommandExecution(BLPOP, BlPopProcessor, *createArguments(key, *keys, timeout.inWholeSeconds))
+        CommandExecution(BLPOP, FirstTwoArrayElementProcessor, *createArguments(key, *keys, timeout.inWholeSeconds))
+
+    fun _brpop(key: String, vararg keys: String, timeout: Duration) =
+        CommandExecution(BRPOP, FirstTwoArrayElementProcessor, *createArguments(key, *keys, timeout.inWholeSeconds))
+
+    fun _blmove(
+        source: String,
+        destination: String,
+        whereFrom: LeftRightOption,
+        whereTo: LeftRightOption,
+        timeout: Duration
+    ) = CommandExecution(
+        BLMOVE, BulkStringCommandProcessor, *createArguments(
+            source, destination, whereFrom, whereTo, timeout.inWholeSeconds
+        )
+    )
+
+    fun _blmpop(
+        timeout: Duration,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        from: LeftRightOption,
+        count: Int? = null
+    ) = CommandExecution(
+        BLMPOP, LMPopResultProcessor, *createArguments(
+            timeout.inWholeSeconds, numKeys, key, *keys, from, count ?: EmptyArgument
+        )
+    )
 }
 
 public data class LMPOPResult(val key: String, val elements: List<String>)
@@ -171,9 +199,62 @@ public interface BlockingListCommands : BlockingOperation {
      *  * A pair with the first element being the name of the key where an element was popped and the second element being the value of the popped element.
      */
     public suspend fun blpop(key: String, vararg keys: String, timeout: Duration): Pair<String, String>?
+
+    /**
+     * ### ` BRPOP key [key ...] timeout `
+     *
+     * BRPOP s a blocking list pop primitive.
+     * It is the blocking version of RPOP because it blocks the connection when there
+     * are no elements to pop from any of the given lists. An element is popped from the tail of the first list that is non-empty,
+     * with the given keys being checked in the order that they are given.
+     *
+     * [Doc](https://redis.io/commands/brpop)
+     * @since 2.0.0
+     * @return * A null when no element could be popped and the timeout expired.
+     * * A pair with the first element being the name of the key where an element was popped and the second element being the value of the popped element.
+     */
+    public suspend fun brpop(key: String, vararg keys: String, timeout: Duration): Pair<String, String>?
+
+    /**
+     * ### ` BLMOVE source destination LEFT|RIGHT LEFT|RIGHT timeout `
+     *
+     * [Doc](https://redis.io/commands/blmove)
+     * @since 6.2.0
+     * @return the element being popped from source and pushed to destination. If timeout is reached, a Null reply is returned.
+     */
+    public suspend fun blmove(
+        source: String,
+        destination: String,
+        whereFrom: LeftRightOption,
+        whereTo: LeftRightOption,
+        timeout: Duration
+    ): String?
+
+    /**
+     * ### ` BLMPOP timeout numkeys key [key ...] LEFT|RIGHT [COUNT count] `
+     *
+     * BLMPOP is the blocking variant of LMPOP.
+     *
+     * [Doc](https://redis.io/commands/blmpop)
+     * @since 7.0.0
+     * @return * A null when no element could be popped, and timeout is reached.
+     * * A pair with the first element being the name of the key from which elements were popped, and the second element is an array of elements.
+     */
+    public suspend fun blmpop(
+        timeout: Duration,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        from: LeftRightOption,
+        count: Int? = null
+    ): LMPOPResult?
 }
 
-internal object BlPopProcessor : ICommandProcessor<Pair<String, String>?> {
+/**
+ * Works on Array Redis messages
+ * Decodes first 2 elements of array to string pair, if array is null, returns null.
+ */
+internal object FirstTwoArrayElementProcessor : ICommandProcessor<Pair<String, String>?> {
     override fun decode(message: RedisMessage): Pair<String, String>? {
         try {
             @Suppress("UNCHECKED_CAST")
@@ -182,7 +263,7 @@ internal object BlPopProcessor : ICommandProcessor<Pair<String, String>?> {
                 else -> Pair(resp.first(), resp.second())
             }
         } catch (ex: ClassCastException) {
-            throw KredsRedisDataException("Received corrupted response from redis for blpop.", ex)
+            throw KredsRedisDataException("Failed to decode response.", ex)
         }
     }
 }
@@ -480,4 +561,26 @@ internal interface ListCommandExecutor : ListCommands, CommandExecutor, BaseList
 
     override suspend fun blpop(key: String, vararg keys: String, timeout: Duration): Pair<String, String>? =
         execute(_blpop(key, *keys, timeout = timeout))
+
+    override suspend fun brpop(key: String, vararg keys: String, timeout: Duration): Pair<String, String>? =
+        execute(_brpop(key, *keys, timeout = timeout))
+
+    override suspend fun blmove(
+        source: String,
+        destination: String,
+        whereFrom: LeftRightOption,
+        whereTo: LeftRightOption,
+        timeout: Duration
+    ): String? =
+        execute(_blmove(source, destination, whereFrom, whereTo, timeout))
+
+    override suspend fun blmpop(
+        timeout: Duration,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        from: LeftRightOption,
+        count: Int?
+    ): LMPOPResult? =
+        execute(_blmpop(timeout, numKeys, key, *keys, from = from, count = count))
 }

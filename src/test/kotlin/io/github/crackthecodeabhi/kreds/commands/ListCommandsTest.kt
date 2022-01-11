@@ -21,8 +21,7 @@ package io.github.crackthecodeabhi.kreds.commands
 
 import io.github.crackthecodeabhi.kreds.args.BeforeAfterOption
 import io.github.crackthecodeabhi.kreds.args.LeftRightOption
-import io.github.crackthecodeabhi.kreds.connection.Endpoint
-import io.github.crackthecodeabhi.kreds.connection.KredsClient
+import io.github.crackthecodeabhi.kreds.connection.InternalKredsClient
 import io.github.crackthecodeabhi.kreds.connection.newBlockingClient
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainInOrder
@@ -33,20 +32,57 @@ import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
 class ListCommandsTest : FunSpec({
-    lateinit var client: KredsClient
+    lateinit var client: InternalKredsClient
     val clientSetup = ClientSetup().then { client = it.client }
     beforeSpec(clientSetup)
     afterSpec(ClientTearDown(clientSetup))
     beforeTest(ClearDB(clientSetup))
 
+    test("Blocking List commands >= API 6.2").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_2_0)) {
+        newBlockingClient(client.endpoint).use { blockingClient ->
+            run {
+                //blmove
+                val result = async {
+                    blockingClient.blmove(
+                        "blist",
+                        "blist1",
+                        LeftRightOption.LEFT,
+                        LeftRightOption.RIGHT,
+                        2.seconds
+                    )
+                }
+                delay(1000)
+                client.lpush("blist1", "a", "b", "c")
+                client.lpush("blist", "x", "y", "z") // pushing to source, will run the op
+                result.await()!! shouldBe "z"
+            }
+        }
+    }
+
+    test("Blocking List commands >= API 7 ").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_7_0_0)) {
+        //TODO: BLMPOP
+    }
+
     test("Blocking List commands >= API 6").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_6_0_0)) {
-        newBlockingClient(Endpoint.from("127.0.0.1:6379")).use { blockingClient ->
-            val result = async { blockingClient.blpop("waitlist", "waitlist1", timeout = 2.seconds) }
-            delay(1000)
-            client.lpush("waitlist1", "x") shouldBe 1
-            val (list, element) = result.await()!!
-            list shouldBe "waitlist1"
-            element shouldBe "x"
+        newBlockingClient(client.endpoint).use { blockingClient ->
+            run {
+                // blpop
+                val result = async { blockingClient.blpop("waitlist", "waitlist1", timeout = 2.seconds) }
+                delay(1000)
+                client.lpush("waitlist1", "x") shouldBe 1
+                val (list, element) = result.await()!!
+                list shouldBe "waitlist1"
+                element shouldBe "x"
+            }
+            run {
+                //brpop
+                val result = async { blockingClient.brpop("waitlist", "waitlist1", timeout = 2.seconds) }
+                delay(1000)
+                client.rpush("waitlist", "brpop") shouldBe 1
+                val (list, element) = result.await()!!
+                list shouldBe "waitlist"
+                element shouldBe "brpop"
+            }
         }
     }
 

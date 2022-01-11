@@ -64,6 +64,10 @@ public interface KredsClient : AutoCloseable, KeyCommands, StringCommands, Conne
     public fun pipelined(): Pipeline
 }
 
+internal interface InternalKredsClient : KredsClient {
+    val endpoint: Endpoint
+}
+
 public interface BlockingKredsClient : AutoCloseable, BlockingListCommands
 
 internal abstract class AbstractKredsClient(
@@ -103,10 +107,14 @@ internal abstract class AbstractKredsClient(
     }
 }
 
-internal class DefaultKredsClient(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :
-    AbstractKredsClient(endpoint, eventLoopGroup, config), KredsClient, KeyCommandExecutor, StringCommandsExecutor,
-    ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor, SetCommandExecutor, ListCommandExecutor,
-    HyperLogLogCommandExecutor, ServerCommandExecutor, BlockingKredsClient {
+internal class DefaultKredsClient(
+    override val endpoint: Endpoint,
+    eventLoopGroup: EventLoopGroup,
+    config: KredsClientConfig
+) :
+    AbstractKredsClient(endpoint, eventLoopGroup, config), KredsClient, InternalKredsClient, KeyCommandExecutor,
+    StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor,
+    SetCommandExecutor, ListCommandExecutor, HyperLogLogCommandExecutor, ServerCommandExecutor, BlockingKredsClient {
 
     override val mutex: Mutex = Mutex()
 

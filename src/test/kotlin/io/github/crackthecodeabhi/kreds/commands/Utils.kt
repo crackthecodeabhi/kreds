@@ -37,10 +37,10 @@ val REDIS_6_0_0 = SemVer.parse("6.0.0")
 val REDIS_6_2_0 = SemVer.parse("6.2.0")
 val REDIS_7_0_0 = SemVer.parse("7.0.0")
 
-fun getTestClient(endpoint: Endpoint? = null, config: KredsClientConfig? = null): KredsClient {
-    return config?.let {
-        newClient(endpoint ?: Endpoint.from("127.0.0.1:6379"), it)
-    } ?: newClient(endpoint ?: Endpoint.from("127.0.0.1:6379"))
+internal fun getTestClient(endpoint: Endpoint? = null, config: KredsClientConfig? = null): InternalKredsClient {
+    val e = endpoint ?: Endpoint.from("127.0.0.1:6379")
+    val client = config?.let { newClient(e, it) } ?: newClient(e)
+    return client as InternalKredsClient
 }
 
 typealias AndThen<T> = suspend (spec: T) -> Unit
@@ -49,8 +49,8 @@ interface Then<T> {
     fun then(andThen: AndThen<T>): T
 }
 
-class ClientSetup : BeforeSpec, Then<ClientSetup> {
-    lateinit var client: KredsClient
+internal class ClientSetup : BeforeSpec, Then<ClientSetup> {
+    lateinit var client: InternalKredsClient
     lateinit var serverVersion: SemVer
     var andThen: AndThen<ClientSetup>? = null
     override suspend fun invoke(p1: Spec) {
@@ -70,7 +70,7 @@ class ClientSetup : BeforeSpec, Then<ClientSetup> {
     }
 }
 
-class ClientTearDown(private val setup: ClientSetup) : AfterSpec, Then<ClientTearDown> {
+internal class ClientTearDown(private val setup: ClientSetup) : AfterSpec, Then<ClientTearDown> {
     var andThen: AndThen<ClientTearDown>? = null
     override suspend fun invoke(p1: Spec) {
         setup.client.close()
@@ -82,7 +82,7 @@ class ClientTearDown(private val setup: ClientSetup) : AfterSpec, Then<ClientTea
     }
 }
 
-class ClearDB(private val setup: ClientSetup) : BeforeTest {
+internal class ClearDB(private val setup: ClientSetup) : BeforeTest {
     override suspend fun invoke(p1: TestCase) {
         setup.client.flushDb(SyncOption.SYNC)
     }
