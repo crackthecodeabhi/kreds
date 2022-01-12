@@ -57,6 +57,41 @@ public interface PipelineZSetCommands {
         rev: Boolean? = null,
         limit: Pair<Int, Int>? = null
     ): Response<Long>
+
+    /**
+     * @see [ZSetCommands.zrank]
+     */
+    public suspend fun zrank(key: String, member: String): Response<Long?>
+
+    /**
+     * @see [ZSetCommands.zrem]
+     */
+    public suspend fun zrem(key: String, member: String, vararg members: String): Response<Long>
+
+    /**
+     * @see [ZSetCommands.zremrangebylex]
+     */
+    public suspend fun zremrangebylex(key: String, min: Int, max: Int): Response<Long>
+
+    /**
+     * @see [ZSetCommands.zremrangebyrank]
+     */
+    public suspend fun zremrangebyrank(key: String, start: Int, stop: Int): Response<Long>
+
+    /**
+     * @see [ZSetCommands.zremrangebyscore]
+     */
+    public suspend fun zremrangebyscore(key: String, min: Int, max: Int): Response<Long>
+
+    /**
+     * @see [ZSetCommands.zrevrank]
+     */
+    public suspend fun zrevrank(key: String, member: String): Response<Long?>
+
+    /**
+     * @see [ZSetCommands.zscore]
+     */
+    public suspend fun zscore(key: String, member: String): Response<String?>
 }
 
 internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetCommands, BaseZSetCommands {
@@ -82,4 +117,25 @@ internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetComm
         limit: Pair<Int, Int>?
     ): Response<Long> =
         add(_zrangestore(dst, src, min, max, by, rev, limit))
+
+    override suspend fun zrank(key: String, member: String): Response<Long?> =
+        add(_zrank(key, member))
+
+    override suspend fun zrem(key: String, member: String, vararg members: String): Response<Long> =
+        add(_zrem(key, member, *members))
+
+    override suspend fun zremrangebylex(key: String, min: Int, max: Int): Response<Long> =
+        add(_zremrangebylex(key, min, max))
+
+    override suspend fun zremrangebyrank(key: String, start: Int, stop: Int): Response<Long> =
+        add(_zremrangebyrank(key, start, stop))
+
+    override suspend fun zremrangebyscore(key: String, min: Int, max: Int): Response<Long> =
+        add(_zremrangebyscore(key, min, max))
+
+    override suspend fun zrevrank(key: String, member: String): Response<Long?> =
+        add(_zrevrank(key, member))
+
+    override suspend fun zscore(key: String, member: String): Response<String?> =
+        add(_zscore(key, member))
 }

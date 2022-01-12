@@ -58,6 +58,7 @@ internal val BulkStringCommandProcessor = CommandProcessor<String?>(BulkStringHa
 internal val SimpleStringCommandProcessor = CommandProcessor<String>(SimpleStringHandler)
 internal val ArrayCommandProcessor = CommandProcessor<List<*>?>(ArrayHandler)
 internal val SimpleAndBulkStringCommandProcessor = CommandProcessor<String?>(SimpleStringHandler, BulkStringHandler)
+internal val IntegerOrBulkNullStringCommandProcessor = CommandProcessor<Long?>(IntegerHandler, BulkStringHandler)
 
 internal open class CommandProcessor<R>(private vararg val outputTypeHandlers: MessageHandler<*>) :
     ICommandProcessor<R> {

@@ -41,6 +41,8 @@ public typealias SScanResult = ScanResult
 public data class HScanResult(override val cursor: Long, override val elements: List<FieldValue<String, String>>) :
     IScanResult<FieldValue<String, String>>
 
+public data class ZScanResult(override val cursor: Long, override val elements: List<Pair<String, Long>>) :
+    IScanResult<Pair<String, Long>>
 
 internal abstract class AbstractScanResultProcessor<T : IScanResultProvider<R>, R>(private val scanResultProvider: T) :
     ICommandProcessor<IScanResult<R>> {
@@ -73,3 +75,6 @@ internal typealias SScanResultProcessor = ScanResultProcessor
 
 internal object HScanResultProcessor :
     AbstractScanResultProcessor<IScanResultProvider<StringFieldValue>, StringFieldValue>(::HScanResult)
+
+internal object ZScanResultProcessor :
+    AbstractScanResultProcessor<IScanResultProvider<Pair<String, Long>>, Pair<String, Long>>(::ZScanResult)
