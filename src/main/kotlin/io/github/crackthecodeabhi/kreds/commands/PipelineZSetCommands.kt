@@ -19,12 +19,67 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
+import io.github.crackthecodeabhi.kreds.args.ZRangeStoreBy
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
+import io.github.crackthecodeabhi.kreds.pipeline.Response
 
 public interface PipelineZSetCommands {
+    /**
+     * @see [ZSetCommands.zcard]
+     */
+    public suspend fun zcard(key: String): Response<Long>
 
+    /**
+     * @see [ZSetCommands.zcount]
+     */
+    public suspend fun zcount(key: String, min: Int, max: Int): Response<Long>
+
+    /**
+     * @see [ZSetCommands.zincrBy]
+     */
+    public suspend fun zincrBy(key: String, increment: Int, member: String): Response<String?>
+
+    /**
+     * @see [ZSetCommands.zlexcount]
+     */
+    public suspend fun zlexcount(key: String, min: Int, max: Int): Response<Long>
+
+
+    /**
+     * @see [ZSetCommands.zrangestore]
+     */
+    public suspend fun zrangestore(
+        dst: String,
+        src: String,
+        min: Int,
+        max: Int,
+        by: ZRangeStoreBy? = null,
+        rev: Boolean? = null,
+        limit: Pair<Int, Int>? = null
+    ): Response<Long>
 }
 
-internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetCommands {
+internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetCommands, BaseZSetCommands {
+    override suspend fun zcard(key: String): Response<Long> =
+        add(_zcard(key))
 
+    override suspend fun zcount(key: String, min: Int, max: Int): Response<Long> =
+        add(_zcount(key, min, max))
+
+    override suspend fun zincrBy(key: String, increment: Int, member: String): Response<String?> =
+        add(_zincrBy(key, increment, member))
+
+    override suspend fun zlexcount(key: String, min: Int, max: Int): Response<Long> =
+        add(_zlexcount(key, min, max))
+
+    override suspend fun zrangestore(
+        dst: String,
+        src: String,
+        min: Int,
+        max: Int,
+        by: ZRangeStoreBy?,
+        rev: Boolean?,
+        limit: Pair<Int, Int>?
+    ): Response<Long> =
+        add(_zrangestore(dst, src, min, max, by, rev, limit))
 }
