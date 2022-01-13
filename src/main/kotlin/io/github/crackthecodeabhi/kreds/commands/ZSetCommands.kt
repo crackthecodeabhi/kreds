@@ -128,6 +128,100 @@ internal interface BaseZSetCommands {
 
     fun _zscore(key: String, member: String) =
         CommandExecution(ZSCORE, BulkStringCommandProcessor, key.toArgument(), member.toArgument())
+
+    fun _zunionstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights? = null,
+        aggregate: AggregateType? = null
+    ) =
+        CommandExecution(
+            ZUNIONSTORE, IntegerCommandProcessor, *createArguments(
+                destination,
+                numKeys,
+                key,
+                *keys,
+                weights,
+                aggregate
+            )
+        )
+
+    fun _zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX? = null,
+        gtOrLt: ZAddGTOrLT? = null,
+        ch: Boolean? = null,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ) =
+        CommandExecution(
+            ZADD, IntegerCommandProcessor, *createArguments(
+                key,
+                nxOrXX,
+                gtOrLt,
+                ch?.let { KeyOnlyArgument("CH") },
+                scoreMember,
+                *scoreMembers
+            )
+        )
+
+    fun _zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX? = null,
+        gtOrLt: ZAddGTOrLT? = null,
+        ch: Boolean? = null,
+        incr: Boolean,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ) =
+        CommandExecution(
+            ZADD, BulkStringCommandProcessor, *createArguments(
+                key,
+                nxOrXX,
+                gtOrLt,
+                ch?.let { KeyOnlyArgument("CH") },
+                incr.let { KeyOnlyArgument("INCR") },
+                scoreMember,
+                *scoreMembers
+            )
+        )
+
+    fun _zdiff(numKeys: Int, key: String, vararg keys: String, withScores: Boolean? = null) =
+        CommandExecution(ZDIFF, ArrayCommandProcessor, *createArguments(
+            numKeys,
+            key,
+            *keys,
+            withScores?.let { if (it) KeyOnlyArgument("WITHSCORES") else null }
+        ))
+
+    fun _zdiffstore(destination: String, numKeys: Int, key: String, vararg keys: String) =
+        CommandExecution(
+            ZDIFFSTORE, IntegerCommandProcessor, *createArguments(
+                destination,
+                numKeys,
+                key,
+                *keys
+            )
+        )
+
+    fun _zinter(
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights? = null,
+        aggregate: AggregateType? = null,
+        withScores: Boolean? = null
+    ) =
+        CommandExecution(ZINTER, ArrayCommandProcessor, *createArguments(
+            numKeys,
+            key,
+            *keys,
+            weights,
+            aggregate,
+            withScores?.let { if (it) KeyOnlyArgument("WITHSCORES") else null }
+        ))
 }
 
 public interface BlockingZSetCommands : BlockingOperation {
@@ -292,6 +386,98 @@ public interface ZSetCommands {
      * @return the score of member (a double precision floating point number), represented as string.
      */
     public suspend fun zscore(key: String, member: String): String?
+
+    /**
+     * ### ` ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX] `
+     *
+     * [Doc](https://redis.io/commands/zunionstore)
+     * @since 2.0.0
+     * @return he number of elements in the resulting sorted set at destination.
+     */
+    public suspend fun zunionstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights? = null,
+        aggregate: AggregateType? = null
+    ): Long
+
+
+    /**
+     * ### ` ZADD key [NX|XX] [GT|LT] [CH] [INCR] score member [score member ...] `
+     *
+     * Adds all the specified members with the specified scores to the sorted set stored at key
+     *
+     * [Doc](https://redis.io/commands/zadd)
+     * @since 1.2.0
+     * @return * When used without optional arguments, the number of elements added to the sorted set (excluding score updates).
+     * * If the CH option is specified, the number of elements that were changed (added or updated).
+     */
+    public suspend fun zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX? = null,
+        gtOrLt: ZAddGTOrLT? = null,
+        ch: Boolean? = null,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ): Long
+
+    /**
+     * @since 1.2.0
+     * @see [ZSetCommands.zadd]
+     * @return the new score of member (a double precision floating point number) represented as string, or nil if the operation was aborted (when called with either the XX or the NX option).
+     */
+    public suspend fun zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX? = null,
+        gtOrLt: ZAddGTOrLT? = null,
+        ch: Boolean? = null,
+        incr: Boolean,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ): String?
+
+    /**
+     * ### ` ZDIFF numkeys key [key ...] [WITHSCORES] `
+     *
+     * This command is similar to ZDIFFSTORE, but instead of storing the resulting sorted set, it is returned to the client.
+     *
+     * [Doc](https://redis.io/commands/zdiff)
+     * @since 6.2.0
+     * @return the result of the difference (optionally with their scores, in case the WITHSCORES option is given).
+     */
+    public suspend fun zdiff(numKeys: Int, key: String, vararg keys: String, withScores: Boolean? = null): List<String>
+
+
+    /**
+     * ### ` ZDIFFSTORE destination numkeys key [key ...] `
+     *
+     * [Doc](https://redis.io/commands/zdiffstore)
+     * @since 6.2.0
+     * @return the number of elements in the resulting sorted set at destination.
+     */
+    public suspend fun zdiffstore(destination: String, numKeys: Int, key: String, vararg keys: String): Long
+
+
+    /**
+     * ### ` ZINTER numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX] [WITHSCORES] `
+     *
+     * This command is similar to ZINTERSTORE, but instead of storing the resulting sorted set, it is returned to the client.
+     * For a description of the WEIGHTS and AGGREGATE options, see ZUNIONSTORE.
+     *
+     * [Doc](https://redis.io/commands/zinter)
+     * @since 6.2.0
+     * @return he result of intersection (optionally with their scores, in case the WITHSCORES option is given).
+     */
+    public suspend fun zinter(
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights? = null,
+        aggregate: AggregateType? = null,
+        withScores: Boolean? = null
+    ): List<String>
 }
 
 internal interface ZSetCommandExecutor : BaseZSetCommands, CommandExecutor, BlockingZSetCommands, ZSetCommands {
@@ -346,5 +532,58 @@ internal interface ZSetCommandExecutor : BaseZSetCommands, CommandExecutor, Bloc
 
     override suspend fun zscore(key: String, member: String): String? =
         execute(_zscore(key, member))
+
+    override suspend fun zunionstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?
+    ): Long = execute(_zunionstore(destination, numKeys, key, *keys, weights = weights, aggregate = aggregate))
+
+    override suspend fun zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX?,
+        gtOrLt: ZAddGTOrLT?,
+        ch: Boolean?,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ): Long = execute(_zadd(key, nxOrXX, gtOrLt, ch, scoreMember, scoreMembers = scoreMembers))
+
+    override suspend fun zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX?,
+        gtOrLt: ZAddGTOrLT?,
+        ch: Boolean?,
+        incr: Boolean,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ): String? = execute(_zadd(key, nxOrXX, gtOrLt, ch, incr, scoreMember, scoreMembers = scoreMembers))
+
+    override suspend fun zdiff(numKeys: Int, key: String, vararg keys: String, withScores: Boolean?): List<String> =
+        execute(_zdiff(numKeys, key, *keys, withScores = withScores)).responseTo("zdiff")
+
+    override suspend fun zdiffstore(destination: String, numKeys: Int, key: String, vararg keys: String): Long =
+        execute(_zdiffstore(destination, numKeys, key, *keys))
+
+    override suspend fun zinter(
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?,
+        withScores: Boolean?
+    ): List<String> =
+        execute(
+            _zinter(
+                numKeys,
+                key,
+                *keys,
+                weights = weights,
+                aggregate = aggregate,
+                withScores = withScores
+            )
+        ).responseTo("zinter")
 }
 

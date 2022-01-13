@@ -176,3 +176,21 @@ public enum class ZRangeStoreBy : Argument {
 
     override fun toString(): String = name
 }
+
+public enum class AggregateType : Argument {
+    SUM, MIN, MAX;
+
+    override fun toString(): String = "AGGREGATE $name"
+}
+
+public enum class ZAddNXOrXX : Argument {
+    NX, XX;
+}
+
+public enum class ZAddGTOrLT : Argument {
+    GT, LT;
+}
+
+public class Weights(public val weight: Int, public val weights: Array<Int>? = null) : Argument {
+    override fun toString(): String = "WEIGHTS $weight ${weights?.joinToString(separator = " ") ?: ""}"
+}

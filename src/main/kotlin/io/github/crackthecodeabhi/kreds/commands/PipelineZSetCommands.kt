@@ -19,7 +19,7 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
-import io.github.crackthecodeabhi.kreds.args.ZRangeStoreBy
+import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.pipeline.QueuedCommand
 import io.github.crackthecodeabhi.kreds.pipeline.Response
 
@@ -92,6 +92,54 @@ public interface PipelineZSetCommands {
      * @see [ZSetCommands.zscore]
      */
     public suspend fun zscore(key: String, member: String): Response<String?>
+
+    public suspend fun zunionstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights? = null,
+        aggregate: AggregateType? = null
+    ): Response<Long>
+
+
+    public suspend fun zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX? = null,
+        gtOrLt: ZAddGTOrLT? = null,
+        ch: Boolean? = null,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ): Response<Long>
+
+    public suspend fun zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX? = null,
+        gtOrLt: ZAddGTOrLT? = null,
+        ch: Boolean? = null,
+        incr: Boolean,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ): Response<String?>
+
+    public suspend fun zdiff(
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        withScores: Boolean? = null
+    ): Response<List<String>>
+
+
+    public suspend fun zdiffstore(destination: String, numKeys: Int, key: String, vararg keys: String): Response<Long>
+
+    public suspend fun zinter(
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights? = null,
+        aggregate: AggregateType? = null,
+        withScores: Boolean? = null
+    ): Response<List<String>>
 }
 
 internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetCommands, BaseZSetCommands {
@@ -138,4 +186,59 @@ internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetComm
 
     override suspend fun zscore(key: String, member: String): Response<String?> =
         add(_zscore(key, member))
+
+    override suspend fun zunionstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?
+    ): Response<Long> = add(_zunionstore(destination, numKeys, key, *keys, weights = weights, aggregate = aggregate))
+
+    override suspend fun zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX?,
+        gtOrLt: ZAddGTOrLT?,
+        ch: Boolean?,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ): Response<Long> = add(_zadd(key, nxOrXX, gtOrLt, ch, scoreMember, scoreMembers = scoreMembers))
+
+    override suspend fun zadd(
+        key: String,
+        nxOrXX: ZAddNXOrXX?,
+        gtOrLt: ZAddGTOrLT?,
+        ch: Boolean?,
+        incr: Boolean,
+        scoreMember: Pair<Int, String>,
+        vararg scoreMembers: Pair<Int, String>
+    ): Response<String?> = add(_zadd(key, nxOrXX, gtOrLt, ch, incr, scoreMember, scoreMembers = scoreMembers))
+
+    override suspend fun zdiff(
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        withScores: Boolean?
+    ): Response<List<String>> = add(_zdiff(numKeys, key, *keys, withScores = withScores), false).asReturnType()
+
+    override suspend fun zdiffstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String
+    ): Response<Long> = add(_zdiffstore(destination, numKeys, key, *keys))
+
+    override suspend fun zinter(
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?,
+        withScores: Boolean?
+    ): Response<List<String>> =
+        add(
+            _zinter(numKeys, key, *keys, weights = weights, aggregate = aggregate, withScores = withScores),
+            false
+        ).asReturnType()
 }
