@@ -10,6 +10,8 @@
 [![Join the chat at https://gitter.im/kreds-redis/community](https://badges.gitter.im/kreds-redis/community.svg)](https://gitter.im/kreds-redis/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/crackthecodeabhi/kreds)
 ![GitHub](https://img.shields.io/github/license/crackthecodeabhi/kreds)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=crackthecodeabhi_kreds&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=crackthecodeabhi_kreds)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=crackthecodeabhi_kreds&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=crackthecodeabhi_kreds)
 
 # Work in Progress!!!
 
