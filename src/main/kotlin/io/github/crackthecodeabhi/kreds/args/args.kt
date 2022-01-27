@@ -44,6 +44,7 @@ internal fun <T> T.toArgument(): Argument =
         is String -> StringArgument(this)
         is Int -> StringArgument(this.toString(10))
         is Long -> StringArgument(this.toString(10))
+        is Double -> StringArgument(this.toBigDecimal().toPlainString())
         is ULong -> StringArgument(this.toString(10))
         is BigDecimal -> StringArgument(this.toEngineeringString())
         else -> throw KredsException("Fatal error, cannot convert to Argument, unknown type.")

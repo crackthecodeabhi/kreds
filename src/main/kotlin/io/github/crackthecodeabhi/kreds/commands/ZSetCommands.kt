@@ -41,7 +41,7 @@ internal interface BaseZSetCommands {
     fun _zcount(key: String, min: Int, max: Int) =
         CommandExecution(ZCOUNT, IntegerCommandProcessor, key.toArgument(), min.toArgument(), max.toArgument())
 
-    fun _zincrBy(key: String, increment: Int, member: String) =
+    fun _zincrBy(key: String, increment: Double, member: String) =
         CommandExecution(
             ZINCRBY,
             BulkStringCommandProcessor,
@@ -258,7 +258,7 @@ public interface ZSetCommands {
      * @since 1.2.0
      * @return the new score of member (a double precision floating point number), represented as string.
      */
-    public suspend fun zincrBy(key: String, increment: Int, member: String): String?
+    public suspend fun zincrBy(key: String, increment: Double, member: String): String?
 
     /**
      * ###  ZLEXCOUNT key min max
@@ -487,7 +487,7 @@ internal interface ZSetCommandExecutor : BaseZSetCommands, CommandExecutor, Bloc
     override suspend fun zcount(key: String, min: Int, max: Int): Long =
         execute(_zcount(key, min, max))
 
-    override suspend fun zincrBy(key: String, increment: Int, member: String): String? =
+    override suspend fun zincrBy(key: String, increment: Double, member: String): String? =
         execute(_zincrBy(key, increment, member))
 
     override suspend fun zlexcount(key: String, min: Int, max: Int): Long =

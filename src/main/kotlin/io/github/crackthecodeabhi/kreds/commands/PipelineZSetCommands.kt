@@ -37,7 +37,7 @@ public interface PipelineZSetCommands {
     /**
      * @see [ZSetCommands.zincrBy]
      */
-    public suspend fun zincrBy(key: String, increment: Int, member: String): Response<String?>
+    public suspend fun zincrBy(key: String, increment: Double, member: String): Response<String?>
 
     /**
      * @see [ZSetCommands.zlexcount]
@@ -149,7 +149,7 @@ internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetComm
     override suspend fun zcount(key: String, min: Int, max: Int): Response<Long> =
         add(_zcount(key, min, max))
 
-    override suspend fun zincrBy(key: String, increment: Int, member: String): Response<String?> =
+    override suspend fun zincrBy(key: String, increment: Double, member: String): Response<String?> =
         add(_zincrBy(key, increment, member))
 
     override suspend fun zlexcount(key: String, min: Int, max: Int): Response<Long> =
