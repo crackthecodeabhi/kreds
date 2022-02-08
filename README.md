@@ -31,29 +31,26 @@ You can find the user guide and documentation [here](https://crackthecodeabhi.gi
 
 All the following redis features are supported:
 
-* Connection handling commands
-* Server commands
-* Cluster commands
-* Commands operating on strings,hashes,lists,keys,sets,sorted sets 
-* Transactions 
-* Pipelining 
-* Publish/Subscribe
+* Commands operating on strings,hashes,lists,keys,sets,sorted sets :heavy_check_mark:
+* Pipelining :heavy_check_mark:
+* Publish/Subscribe :heavy_check_mark:
+* Connection handling commands :heavy_check_mark:
+* Transactions :construction:
 
-More features will be added in upcoming releases.
+More Redis features will be added in upcoming releases.
 
 ## How do I use it?
 
 To use it just:
 ```kotlin
 launch {
-    KredsClientGroup.newClient(Endpoint.from("127.0.0.1:6379")).use { client ->
+    newClient(Endpoint.from("127.0.0.1:6379")).use { client ->
         client.set("foo","100") 
         println("incremented value of foo ${client.incr("foo")}") // prints 101
         client.expire("foo",3u) // set expiration to 3 seconds
         delay(3000)
         assert(client.get("foo") == null)
     }
-    KredsClientGroup.shutdown() // shutdown the client group.
 }
 ```
 
@@ -63,19 +60,19 @@ launch {
 <dependency>
   <groupId>io.github.crackthecodeabhi</groupId>
   <artifactId>kreds</artifactId>
-  <version>0.3</version>
+  <version>0.6</version>
 </dependency>
 ```
 
 Gradle Groovy DSL
 
 ```groovy
-implementation 'io.github.crackthecodeabhi:kreds:0.3'
+implementation 'io.github.crackthecodeabhi:kreds:0.6'
 
 ```
 Gradle Kotlin DSL
 ```kotlin
-implementation("io.github.crackthecodeabhi:kreds:0.3")
+implementation("io.github.crackthecodeabhi:kreds:0.6")
 ```
 
 ## License
