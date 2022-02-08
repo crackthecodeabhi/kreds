@@ -13,7 +13,6 @@
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=crackthecodeabhi_kreds&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=crackthecodeabhi_kreds)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=crackthecodeabhi_kreds&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=crackthecodeabhi_kreds)
 
-# Work in Progress!!!
 
 Kreds is a idiomatic, non-blocking, coroutine based redis client for Kotlin.
 
