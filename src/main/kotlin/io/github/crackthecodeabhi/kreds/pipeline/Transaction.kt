@@ -19,9 +19,21 @@
 
 package io.github.crackthecodeabhi.kreds.pipeline
 
+import io.github.crackthecodeabhi.kreds.ExclusiveObject
 import io.github.crackthecodeabhi.kreds.KredsException
+import io.github.crackthecodeabhi.kreds.args.createArguments
 import io.github.crackthecodeabhi.kreds.commands.*
+import io.github.crackthecodeabhi.kreds.connection.DefaultKredsClient
+import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 import io.github.crackthecodeabhi.kreds.pipeline.TransactionCommand.*
+import io.github.crackthecodeabhi.kreds.protocol.ArrayCommandProcessor
+import io.github.crackthecodeabhi.kreds.protocol.ArrayHandler
+import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
+import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
+import io.netty.handler.codec.redis.ArrayRedisMessage
+import io.netty.handler.codec.redis.ErrorRedisMessage
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.sync.Mutex
 
 public class KredsTransactionException internal constructor(message: String) : KredsException(message)
 
@@ -52,7 +64,7 @@ public interface Transaction : PipelineStringCommands, PipelineKeyCommands, Pipe
      * @throws KredsTransactionException if transaction was aborted when using WATCH or if any command in transaction fails.
      *
      */
-    public suspend fun exec()
+    public suspend fun exec(): Unit
 
     /**
      * ### MULTI
@@ -61,135 +73,119 @@ public interface Transaction : PipelineStringCommands, PipelineKeyCommands, Pipe
      *
      * [Doc](https://redis.io/commands/multi)
      * @since 1.2.0
-     * @return always OK.
      */
-    public suspend fun multi(): Response<String>
+    public suspend fun multi(): Unit
 
     /**
-     * ### DISCARD
+     * ### `WATCH key [key ...] `
      *
-     * Discards this pipelined transaction. After transaction is discarded, any operation invoked on this transaction
-     * throws [KredsTransactionException]
+     * Marks the given keys to be watched for conditional execution of a transaction.
+     *
+     * [Doc](https://redis.io/commands/watch)
+     * @since 2.2.0
      */
-    public suspend fun discard()
+    public suspend fun watch(key: String, vararg keys: String): Unit
+
+    /**
+     * ### UNWATCH
+     *
+     * Flushes all the previously watched keys for a transaction.
+     * If you call EXEC or DISCARD, there's no need to manually call UNWATCH.
+     *
+     * [Doc](https://redis.io/commands/unwatch)
+     * @since 2.2.0
+     */
+    public suspend fun unwatch(): Unit
+
 }
 
-/*internal class TransactionImpl(private val client: DefaultKredsClient) : ExclusiveObject, Transaction,
+internal class TransactionImpl(private val client: DefaultKredsClient) : ExclusiveObject, Transaction,
     PipelineStringCommandsExecutor, PipelineKeyCommandExecutor, PipelineHashCommandExecutor,
     PipelineListCommandExecutor, PipelineHyperLogLogCommandExecutor, PipelineSetCommandExecutor {
 
     override val mutex: Mutex = Mutex()
 
+    /**
+     * Guarded by mutex.
+     */
     private var done = false
-    private var discarded = false
+
+    /**
+     * Guarded by mutex.
+     */
+    private var transactionStarted = false
 
     private val responseFlow = MutableSharedFlow<List<Any?>>(1)
 
-    private var multiCommandIndex: Int? = null
+    /**
+     * Guarded by mutex.
+     */
+    private val commands = mutableListOf<CommandExecution<*>>()
 
-    private val commands = mutableListOf<CommandExecution>()
     private val commandResponse = mutableListOf<Any?>()
 
-    override suspend fun <T> add(commandExecution: CommandExecution): Response<T> = mutex.withLock {
-        if(multiCommandIndex == null) {
-            with(commandExecution) {
-                if(command != WATCH || command != UNWATCH || command != MULTI)
-                    throw KredsTransactionException("Only WATCH, UNWATCH, MULTI commands are allowed " +
-                            "before starting the transaction with MULTI command")
+    override suspend fun <T> add(commandExecution: CommandExecution<T>, nullable: Boolean): Response<T> =
+        lockByCoroutineJob {
+            if (!transactionStarted) {
+                with(commandExecution) {
+                    if (command != WATCH || command != UNWATCH || command != MULTI)
+                        throw KredsTransactionException(
+                            "Only WATCH, UNWATCH, MULTI commands are allowed " +
+                                    "before starting the transaction with MULTI."
+                        )
+                }
             }
+
+            commands.add(commandExecution)
+
+            Response(responseFlow, commands.lastIndex, nullable)
         }
 
-        commands.add(commandExecution)
-
-        if(commandExecution.command == MULTI) multiCommandIndex = commands.lastIndex
-
-        Response(responseFlow, commands.lastIndex)
-    }
-    override suspend fun multi(): Response<String> {
-        return if(transactionStarted()) throw KredsTransactionException("Cannot nest multi command inside a transaction.")
-        else add(CommandExecution(MULTI, SimpleStringCommandProcessor))
-    }
-
-    */
-/**
- * Do not call holding [mutex]
- *//*
-    private suspend inline fun checkTransactionDiscarded(): Boolean = mutex.withLock {
-        if(discarded)  throw KredsTransactionException("Transaction discarded.")
-        else false
-    }
-
-    */
-/**
- * Do not call holding [mutex]
- *//*
-    private suspend inline fun transactionStarted(): Boolean = mutex.withLock { multiCommandIndex != null  }
-
-    override suspend fun discard() {
-        if(!transactionStarted()) throw KredsTransactionException("Cannot discard transaction which is not started yet.")
-        mutex.withLock {
-            responseFlow.tryEmit(emptyList())
-            discarded = true
+    override suspend fun multi(): Unit = lockByCoroutineJob {
+        if (transactionStarted) throw KredsTransactionException("Cannot nest multi command inside a transaction.")
+        else {
+            transactionStarted = true
+            add(CommandExecution(MULTI, SimpleStringCommandProcessor))
         }
     }
 
-    */
-/**
- * ### [mutex] should be held while calling this method
- *//*
+    override suspend fun watch(key: String, vararg keys: String): Unit = lockByCoroutineJob {
+        commands.add(CommandExecution(WATCH, SimpleStringCommandProcessor, *createArguments(key, *keys)))
+    }
 
-    private suspend fun executeTransaction(commands: List<CommandExecution>, multiCommandIdx: Int): List<Any?> {
+    override suspend fun unwatch(): Unit = lockByCoroutineJob {
+        commands.add(CommandExecution(UNWATCH, SimpleStringCommandProcessor))
+    }
+
+    private suspend fun executeTransaction(commands: List<CommandExecution<*>>): List<*>? = lockByCoroutineJob {
         val responseList = mutableListOf<Any?>()
         val responseMessages = client.executeCommands(commands)
-        val beforeMultiCommand = responseMessages.subList(0,multiCommandIdx + 1)
-        val afterMultiCommandWithoutExec  = responseMessages.subList(multiCommandIdx+ 1, responseMessages.size).dropLast(1)
-        val execResult = responseMessages.last()
 
-        val beforeMultiCommandResponse: List<Any?> = beforeMultiCommand.mapIndexed{ idx, it -> commands[idx].processor.decode(it) }
-
-        val afterMultiCommandResponse: MutableList<Any?> =  afterMultiCommandWithoutExec.map {
-            when(it){
-                is ErrorRedisMessage -> KredsRedisDataException(it.content(),null,enableSuppression = true, writableStackTrace = false)
-                is SimpleStringRedisMessage -> it.content()
-                else -> throw KredsTransactionException("Invalid data received from Redis.")
-            }
-        }.toMutableList()
-
-        return when(execResult) {
-            is ErrorRedisMessage -> {
-                val execException = KredsRedisDataException(execResult.content(),null, enableSuppression = true, writableStackTrace = false)
-                responseList.addAll(beforeMultiCommandResponse)
-                responseList.addAll(afterMultiCommandResponse.filter{ it !is KredsRedisDataException }.map { KredsRedisDataException("Transaction failed.",execException, enableSuppression = true,writableStackTrace = false) })
-                responseList.add(execException)
-                responseList
-            }
+        return when (val execResult = responseMessages.last()) {
+            is ErrorRedisMessage -> throw KredsRedisDataException(execResult.content())
             is ArrayRedisMessage -> {
-                if(execResult.isNull || execResult.children().isEmpty()) throw KredsTransactionException("Invalid data received from Redis.")
-                val results = execResult.children()
-                responseList.addAll(beforeMultiCommandResponse)
-                var idx = 0
-                for(i in (multiCommandIdx + 1) until afterMultiCommandResponse.size) {
-                    afterMultiCommandResponse[idx] = commands[i].processor.decode(results[idx])
-                    ++idx
-                }
-                responseList.addAll(afterMultiCommandResponse)
-                responseList.add(ArrayHandler.doHandle(execResult))
+                val results = ArrayHandler.doHandle(execResult) ?: return null
+                responseList.add(results)
                 responseList
             }
             else -> throw KredsTransactionException("Invalid data received from Redis.")
         }
     }
 
-    override suspend fun exec() {
-        checkTransactionDiscarded()
-        mutex.withLock {
-            if(multiCommandIndex == null) throw KredsTransactionException("Start transaction with multi() before exec()")
-            if (!done) {
+    override suspend fun exec() = lockByCoroutineJob {
+        if (!transactionStarted) throw KredsTransactionException("Start transaction with multi() before exec()")
+        if (!done) {
+            try {
                 commands.add(CommandExecution(EXEC, ArrayCommandProcessor))
-                commandResponse.addAll(executeTransaction(commands, multiCommandIndex!!))
+                val response = executeTransaction(commands) ?: throw KredsTransactionException("Transaction aborted.")
+                commandResponse.addAll(response)
                 done = true
                 responseFlow.tryEmit(commandResponse)
+            } catch (ex: KredsException) {
+                // failed to execute transaction. emit empty list to signal operation cancelled.
+                responseFlow.tryEmit(emptyList())
+                throw ex
             }
         }
     }
-}*/
+}
