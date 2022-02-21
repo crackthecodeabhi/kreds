@@ -19,21 +19,21 @@
 
 package io.github.crackthecodeabhi.kreds
 
-import io.github.crackthecodeabhi.kreds.commands.ClearDB
-import io.github.crackthecodeabhi.kreds.commands.ClientSetup
-import io.github.crackthecodeabhi.kreds.commands.ClientTearDown
+import io.github.crackthecodeabhi.kreds.commands.*
 import io.github.crackthecodeabhi.kreds.connection.KredsClient
+import io.github.crackthecodeabhi.kreds.pipeline.KredsTransactionException
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class HashCommandsTest : FunSpec({
+class TransactionsTest : FunSpec({
     lateinit var client: KredsClient
     val clientSetup = ClientSetup().then { client = it.client }
     beforeSpec(clientSetup)
     afterSpec(ClientTearDown(clientSetup))
     beforeTest(ClearDB(clientSetup))
 
-    test("Simple Transaction").config(enabled = false) {
+    test("Simple Transaction") {
         val txn = client.transaction()
         txn.multi()
         txn.set("txn", "test")
@@ -42,7 +42,41 @@ class HashCommandsTest : FunSpec({
         val resp2 = txn.get("txn_id")
         txn.exec()
 
-        resp1() shouldBe "txn"
+        resp1() shouldBe "test"
         resp2() shouldBe "1"
     }
+
+    test("Transaction with Watch") {
+        client.set("kred", "1")!!.shouldBeOk()
+        client.set("kred2", "2")!!.shouldBeOk()
+        val txn = client.transaction()
+        txn.watch("kred", "kred2")
+        txn.multi()
+        val setResponse = txn.set("kred", "3")
+        val incrResponse = txn.incr("kred2")
+        txn.exec()
+
+        setResponse()!!.shouldBeOk()
+        incrResponse() shouldBe 3
+    }
+
+    // How do we simulate a WATCH failure?
+    test("Transaction with Watch aborted").config(enabled = false) {
+        client.set("kred", "1")!!.shouldBeOk()
+        client.set("kred2", "2")!!.shouldBeOk()
+
+        val txn = client.transaction()
+        txn.watch("kred", "kred2") //WATCH for any changes.
+        txn.multi()
+
+        val client2 = getTestClient()
+        client2.set("kred", "SOME OTHER VALUE") // change kred key from different connection
+        client2.close()
+
+        txn.set("kred", "3")
+        txn.incr("kred2")
+        shouldThrow<KredsTransactionException> { txn.exec() } // Transaction should fail because exec returned null.
+    }
+
+    //TODO: Test case for 1. MULTI/WATCH is called in transaction, 2. Other commands are called before starting a transaction except WATCH
 })
