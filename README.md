@@ -14,14 +14,15 @@
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=crackthecodeabhi_kreds&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=crackthecodeabhi_kreds)
 
 
-Kreds is a idiomatic, non-blocking, coroutine based redis client for Kotlin.
+Kreds is a first and only thread-safe, idiomatic, coroutine based Redis client written in 100% Kotlin.
 
 Kreds is designed to be EASY to use.
 
-Kreds is built around coroutines, providing you an imperative paradigm of programming 
-without blocking threads or callback hell.
+Kreds is built around coroutines, providing you an imperative paradigm of programming without blocking threads, futures or callback hell, thanks to Kotlin Coroutines!
 
 Kreds is compatible with redis 6.x.x and above.
+
+Kreds uses Netty under the hood.
 
 ## Documentation
 You can find the user guide and documentation [here](https://crackthecodeabhi.github.io/kreds) :construction:
@@ -34,7 +35,7 @@ All the following redis features are supported:
 * Pipelining :heavy_check_mark:
 * Publish/Subscribe :heavy_check_mark:
 * Connection handling commands :heavy_check_mark:
-* Transactions :construction:
+* Transactions :construction: [Implementation done, testing in progress.]
 
 More Redis features will be added in upcoming releases.
 
