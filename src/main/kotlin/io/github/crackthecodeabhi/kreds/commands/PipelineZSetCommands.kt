@@ -93,6 +93,9 @@ public interface PipelineZSetCommands {
      */
     public suspend fun zscore(key: String, member: String): Response<String?>
 
+    /**
+     * @see [ZSetCommands.zunionstore]
+     */
     public suspend fun zunionstore(
         destination: String,
         numKeys: Int,
@@ -102,7 +105,9 @@ public interface PipelineZSetCommands {
         aggregate: AggregateType? = null
     ): Response<Long>
 
-
+    /**
+     * @see [ZSetCommands.zadd]
+     */
     public suspend fun zadd(
         key: String,
         nxOrXX: ZAddNXOrXX? = null,
@@ -112,6 +117,9 @@ public interface PipelineZSetCommands {
         vararg scoreMembers: Pair<Int, String>
     ): Response<Long>
 
+    /**
+     * @see [ZSetCommands.zadd]
+     */
     public suspend fun zadd(
         key: String,
         nxOrXX: ZAddNXOrXX? = null,
@@ -122,6 +130,9 @@ public interface PipelineZSetCommands {
         vararg scoreMembers: Pair<Int, String>
     ): Response<String?>
 
+    /**
+     * @see [ZSetCommands.zdiff]
+     */
     public suspend fun zdiff(
         numKeys: Int,
         key: String,
@@ -129,9 +140,14 @@ public interface PipelineZSetCommands {
         withScores: Boolean? = null
     ): Response<List<String>>
 
-
+    /**
+     * @see [ZSetCommands.zdiffstore]
+     */
     public suspend fun zdiffstore(destination: String, numKeys: Int, key: String, vararg keys: String): Response<Long>
 
+    /**
+     * @see [ZSetCommands.zinter]
+     */
     public suspend fun zinter(
         numKeys: Int,
         key: String,
@@ -140,6 +156,28 @@ public interface PipelineZSetCommands {
         aggregate: AggregateType? = null,
         withScores: Boolean? = null
     ): Response<List<String>>
+
+    /**
+     * @see [ZSetCommands.zintercard]
+     */
+    public suspend fun zintercard(
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        limit: Boolean? = null
+    ): Response<Long>
+
+    /**
+     * @see [ZSetCommands.zinterstore]
+     */
+    public suspend fun zinterstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?
+    ): Response<Long>
 }
 
 internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetCommands, BaseZSetCommands {
@@ -241,4 +279,18 @@ internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetComm
             _zinter(numKeys, key, *keys, weights = weights, aggregate = aggregate, withScores = withScores),
             false
         ).asReturnType()
+
+    override suspend fun zintercard(numKeys: Int, key: String, vararg keys: String, limit: Boolean?): Response<Long> =
+        add(_zintercard(numKeys, key, *keys, limit = limit))
+
+
+    override suspend fun zinterstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?
+    ): Response<Long> = add(_zinterstore(destination, numKeys, key, *keys, weights = weights, aggregate = aggregate))
+
 }

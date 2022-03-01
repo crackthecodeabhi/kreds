@@ -222,6 +222,34 @@ internal interface BaseZSetCommands {
             aggregate,
             withScores?.let { if (it) KeyOnlyArgument("WITHSCORES") else null }
         ))
+
+    fun _zintercard(numKeys: Int, key: String, vararg keys: String, limit: Boolean? = null) =
+        CommandExecution(
+            ZINTERCARD, IntegerCommandProcessor, *createArguments(
+                numKeys,
+                key,
+                *keys,
+                limit
+            )
+        )
+
+    fun _zinterstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?
+    ) = CommandExecution(
+        ZINTERSTORE, IntegerCommandProcessor, *createArguments(
+            destination,
+            numKeys,
+            key,
+            *keys,
+            weights,
+            aggregate
+        )
+    )
 }
 
 public interface BlockingZSetCommands : BlockingOperation {
@@ -478,6 +506,34 @@ public interface ZSetCommands {
         aggregate: AggregateType? = null,
         withScores: Boolean? = null
     ): List<String>
+
+    /**
+     * ### `ZINTERCARD numkeys key [key ...] [LIMIT limit]'
+     *
+     * This command is similar to ZINTER, but instead of returning the result set, it returns just the cardinality of the result.
+     *
+     * [Doc](https://redis.io/commands/zintercard)
+     * @since 7.0.0
+     * @return the number of elements in the resulting intersection.
+     */
+    public suspend fun zintercard(numKeys: Int, key: String, vararg keys: String, limit: Boolean? = null): Long
+
+    /**
+     * ### ` ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]`
+     *
+     * [Doc](https://redis.io/commands/zinterstore)
+     * @since 2.0.0
+     * @return the number of elements in the resulting sorted set at destination.
+     */
+    public suspend fun zinterstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?
+    ): Long
+
 }
 
 internal interface ZSetCommandExecutor : BaseZSetCommands, CommandExecutor, BlockingZSetCommands, ZSetCommands {
@@ -585,5 +641,19 @@ internal interface ZSetCommandExecutor : BaseZSetCommands, CommandExecutor, Bloc
                 withScores = withScores
             )
         ).responseTo("zinter")
+
+
+    override suspend fun zintercard(numKeys: Int, key: String, vararg keys: String, limit: Boolean?): Long =
+        execute(_zintercard(numKeys, key, *keys, limit = limit))
+
+    override suspend fun zinterstore(
+        destination: String,
+        numKeys: Int,
+        key: String,
+        vararg keys: String,
+        weights: Weights?,
+        aggregate: AggregateType?
+    ): Long = execute(_zinterstore(destination, numKeys, key, *keys, weights = weights, aggregate = aggregate))
+
 }
 
