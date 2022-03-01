@@ -20,6 +20,8 @@ Kreds is designed to be EASY to use.
 
 Kreds is built around coroutines, providing you an imperative paradigm of programming without blocking threads, futures or callback hell, thanks to Kotlin Coroutines!
 
+Run blocking commands wihtout blocking Java threads. (Only the inexpensive coroutines are blocked)
+
 Kreds is compatible with redis 6.x.x and above.
 
 Kreds uses Netty under the hood.
@@ -31,13 +33,12 @@ You can find the user guide and documentation [here](https://crackthecodeabhi.gi
 
 All the following redis features are supported:
 
-* Commands operating on strings,hashes,lists,keys,sets,sorted sets :heavy_check_mark:
-* Pipelining :heavy_check_mark:
-* Publish/Subscribe :heavy_check_mark:
-* Connection handling commands :heavy_check_mark:
-* Transactions :construction: [Implementation done, testing in progress.]
-
-More Redis features will be added in upcoming releases.
+* Commands operating on Strings, Hash, Lists, Keys, Sets, Sorted Sets. :heavy_check_mark:
+* Blocking commands. :heavy_check_mark: 
+* Pipelining. :heavy_check_mark:
+* Publish/Subscribe. :heavy_check_mark:
+* Connection handling commands. :heavy_check_mark:
+* Transactions. :construction: [Implementation done, testing in progress.]
 
 ## How do I use it?
 
