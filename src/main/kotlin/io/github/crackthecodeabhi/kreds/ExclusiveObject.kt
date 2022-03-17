@@ -1,8 +1,9 @@
 package io.github.crackthecodeabhi.kreds
 
-import kotlinx.coroutines.job
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -11,11 +12,18 @@ import kotlin.coroutines.coroutineContext
  */
 internal interface ExclusiveObject {
     val mutex: Mutex
+    val key: ReentrantMutexContextKey
 }
 
-internal suspend inline fun <R> ExclusiveObject.lockByCoroutineJob(block: () -> R): R {
-    return if(mutex.holdsLock(coroutineContext.job)) block()
-    else mutex.withLock(coroutineContext.job) {
-        block()
+internal data class ReentrantMutexContextKey(val mutex: Mutex): CoroutineContext.Key<ReentrantMutexContextElement>
+internal class ReentrantMutexContextElement(override val key: ReentrantMutexContextKey): CoroutineContext.Element
+
+internal suspend inline fun <R> ExclusiveObject.withReentrantLock(crossinline block: suspend () -> R): R {
+    if(coroutineContext[key] != null) return block()
+
+    return withContext(ReentrantMutexContextElement(key)){
+        this@withReentrantLock.mutex.withLock {
+            block()
+        }
     }
 }

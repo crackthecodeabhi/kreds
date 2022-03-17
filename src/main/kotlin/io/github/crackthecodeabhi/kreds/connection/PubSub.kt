@@ -266,16 +266,20 @@ internal class DefaultKredsSubscriberClient(
 
     override val mutex: Mutex = Mutex()
 
+    override val key: ReentrantMutexContextKey = ReentrantMutexContextKey(mutex)
+
     private val reader = Reader(kredsSubscriber)
 
-    private val writer = Writer(mutex)
+    private val writer = Writer(mutex, key)
 
     inner class Reader(private val kredsSubscriber: KredsSubscriber) : ExclusiveObject {
         override val mutex = Mutex()
+        override val key: ReentrantMutexContextKey = ReentrantMutexContextKey(mutex)
+
         private var job: Job? = null
         val readChannel = Channel<RedisMessage>(Channel.UNLIMITED)
 
-        suspend fun <R> preemptRead(writeOp: suspend () -> R) = lockByCoroutineJob {
+        suspend fun <R> preemptRead(writeOp: suspend () -> R) = withReentrantLock {
             try {
                 stop()
                 writeOp()
@@ -284,7 +288,7 @@ internal class DefaultKredsSubscriberClient(
             }
         }
 
-        suspend fun close() = lockByCoroutineJob {
+        suspend fun close() = withReentrantLock {
             stop()
         }
 
@@ -418,8 +422,8 @@ internal class DefaultKredsSubscriberClient(
         }
     }
 
-    inner class Writer(override val mutex: Mutex) : ExclusiveObject {
-        suspend fun write(execution: CommandExecution<*>) = lockByCoroutineJob {
+    inner class Writer(override val mutex: Mutex, override val key: ReentrantMutexContextKey) : ExclusiveObject {
+        suspend fun write(execution: CommandExecution<*>) = withReentrantLock {
             with(execution) {
                 connectWriteAndFlush(processor.encode(command, *args))
             }

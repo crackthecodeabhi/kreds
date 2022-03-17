@@ -19,15 +19,16 @@
 
 package io.github.crackthecodeabhi.kreds.connection
 
+import io.github.crackthecodeabhi.kreds.ReentrantMutexContextKey
 import io.github.crackthecodeabhi.kreds.args.Argument
 import io.github.crackthecodeabhi.kreds.commands.*
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 import io.github.crackthecodeabhi.kreds.pipeline.Pipeline
 import io.github.crackthecodeabhi.kreds.pipeline.PipelineImpl
 import io.github.crackthecodeabhi.kreds.pipeline.Transaction
 import io.github.crackthecodeabhi.kreds.pipeline.TransactionImpl
 import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
 import io.github.crackthecodeabhi.kreds.protocol.ICommandProcessor
+import io.github.crackthecodeabhi.kreds.withReentrantLock
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.handler.codec.redis.RedisMessage
@@ -81,19 +82,19 @@ internal abstract class AbstractKredsClient(
     KonnectionImpl(endpoint, eventLoopGroup, config), CommandExecutor {
 
     override suspend fun <T> execute(command: Command, processor: ICommandProcessor<T>, vararg args: Argument): T =
-        lockByCoroutineJob {
+         withReentrantLock {
             connectWriteAndFlush(processor.encode(command, *args))
             processor.decode(read())
         }
 
-    override suspend fun <T> execute(commandExecution: CommandExecution<T>): T = lockByCoroutineJob {
+    override suspend fun <T> execute(commandExecution: CommandExecution<T>): T = withReentrantLock {
         with(commandExecution) {
             connectWriteAndFlush(processor.encode(command, *args))
             processor.decode(read())
         }
     }
 
-    override suspend fun executeCommands(commands: List<CommandExecution<*>>): List<RedisMessage> = lockByCoroutineJob {
+    override suspend fun executeCommands(commands: List<CommandExecution<*>>): List<RedisMessage> = withReentrantLock {
         connect()
         commands.forEach {
             with(it) {
@@ -122,13 +123,15 @@ internal class DefaultKredsClient(
 
     override val mutex: Mutex = Mutex()
 
+    override val key: ReentrantMutexContextKey = ReentrantMutexContextKey(mutex)
+
     override fun pipelined(): Pipeline = PipelineImpl(this)
 
     override fun transaction(): Transaction = TransactionImpl(this)
 
     override fun close() {
         runBlocking {
-            lockByCoroutineJob {
+             withReentrantLock {
                 disconnect()
             }
         }

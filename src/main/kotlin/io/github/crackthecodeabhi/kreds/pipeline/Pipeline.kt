@@ -21,10 +21,11 @@ package io.github.crackthecodeabhi.kreds.pipeline
 
 import io.github.crackthecodeabhi.kreds.ExclusiveObject
 import io.github.crackthecodeabhi.kreds.KredsException
+import io.github.crackthecodeabhi.kreds.ReentrantMutexContextKey
 import io.github.crackthecodeabhi.kreds.commands.*
 import io.github.crackthecodeabhi.kreds.connection.DefaultKredsClient
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
+import io.github.crackthecodeabhi.kreds.withReentrantLock
 import io.netty.handler.codec.redis.ErrorRedisMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -68,6 +69,8 @@ internal class PipelineImpl(private val client: DefaultKredsClient) : ExclusiveO
 
     override val mutex: Mutex = Mutex()
 
+    override val key: ReentrantMutexContextKey = ReentrantMutexContextKey(mutex)
+
     private var done = false
 
     private val responseFlow = MutableSharedFlow<List<Any?>>(1)
@@ -78,12 +81,12 @@ internal class PipelineImpl(private val client: DefaultKredsClient) : ExclusiveO
     private val commandResponse = mutableListOf<Any?>()
 
     override suspend fun <T> add(commandExecution: CommandExecution<T>, nullable: Boolean): Response<T> =
-        lockByCoroutineJob {
+        withReentrantLock {
             commands.add(commandExecution)
-            return Response(sharedResponseFlow, commands.lastIndex, nullable)
+            Response(sharedResponseFlow, commands.lastIndex, nullable)
         }
 
-    private suspend fun executePipeline(commands: List<CommandExecution<*>>): List<Any?> = lockByCoroutineJob {
+    private suspend fun executePipeline(commands: List<CommandExecution<*>>): List<Any?> = withReentrantLock {
         val responseList = mutableListOf<Any?>()
         val responseMessages = client.executeCommands(commands)
         //TODO: check this
@@ -99,10 +102,10 @@ internal class PipelineImpl(private val client: DefaultKredsClient) : ExclusiveO
                 )
             else responseList.add(commands[idx].processor.decode(msg))
         }
-        return responseList
+        responseList
     }
 
-    override suspend fun execute(): Unit = lockByCoroutineJob {
+    override suspend fun execute(): Unit = withReentrantLock {
         if (!done) {
             commandResponse.addAll(executePipeline(commands))
             done = true

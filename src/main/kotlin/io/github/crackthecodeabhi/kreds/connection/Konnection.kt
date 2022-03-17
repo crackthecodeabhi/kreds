@@ -21,7 +21,7 @@ package io.github.crackthecodeabhi.kreds.connection
 
 import io.github.crackthecodeabhi.kreds.CoroutineSafe
 import io.github.crackthecodeabhi.kreds.ExclusiveObject
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
+import io.github.crackthecodeabhi.kreds.withReentrantLock
 import io.netty.handler.codec.redis.RedisMessage
 
 /**
@@ -92,7 +92,7 @@ internal interface Konnection : ExclusiveObject {
  * @throws KredsTimeoutException
  * @throws KredsNotYetConnectedException
  */
-internal suspend inline fun Konnection.connectWriteAndFlush(message: RedisMessage) = lockByCoroutineJob {
+internal suspend inline fun Konnection.connectWriteAndFlush(message: RedisMessage) =  withReentrantLock {
     if (isConnected()) writeAndFlush(message)
     else {
         connect()

@@ -3,7 +3,7 @@
     <deployment type="docker-image">
       <settings>
         <option name="imageTag" value="redis:latest" />
-        <option name="command" value="" />
+        <option name="command" value="redis-server /usr/local/etc/redis/redis.conf" />
         <option name="containerName" value="redis" />
         <option name="portBindings">
           <list>
@@ -15,6 +15,14 @@
           </list>
         </option>
         <option name="showCommandPreview" value="true" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/usr/local/etc/redis" />
+              <option name="hostPath" value="/home/osboxes" />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
       </settings>
     </deployment>
     <method v="2" />

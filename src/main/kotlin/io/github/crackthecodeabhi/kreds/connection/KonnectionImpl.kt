@@ -20,7 +20,7 @@
 package io.github.crackthecodeabhi.kreds.connection
 
 import io.github.crackthecodeabhi.kreds.ExclusiveObject
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
+import io.github.crackthecodeabhi.kreds.withReentrantLock
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
 import io.netty.channel.socket.SocketChannel
@@ -92,9 +92,9 @@ internal abstract class KonnectionImpl(
      * Returns the connected SocketChannel and ReadChannel as [Pair<SocketChannel,Channel<RedisMessage>>]
      * @throws SocketException
      */
-    private suspend fun createNewConnection(): Pair<SocketChannel, KChannel<RedisMessage>> = lockByCoroutineJob {
+    private suspend fun createNewConnection(): Pair<SocketChannel, KChannel<RedisMessage>> =  withReentrantLock {
         val newReadChannel = KChannel<RedisMessage>(KChannel.UNLIMITED)
-        return Pair(
+        Pair(
             bootstrap.handler(createChannelInitializer(newReadChannel)).connect().suspendableAwait() as SocketChannel,
             newReadChannel
         )
@@ -115,12 +115,12 @@ internal abstract class KonnectionImpl(
         }
     }
 
-    override suspend fun isConnected() = lockByCoroutineJob {
+    override suspend fun isConnected() =  withReentrantLock {
         if (channel == null || readChannel == null) false
         else channel!!.isActive
     }
 
-    private suspend fun writeInternal(message: RedisMessage, flush: Boolean): Unit = lockByCoroutineJob {
+    private suspend fun writeInternal(message: RedisMessage, flush: Boolean): Unit = withReentrantLock {
         if (!isConnected()) throw KredsNotYetConnectedException()
         try {
             if (flush) channel!!.writeAndFlush(message).suspendableAwait()
@@ -134,7 +134,7 @@ internal abstract class KonnectionImpl(
         }
     }
 
-    override suspend fun flush(): Unit = lockByCoroutineJob {
+    override suspend fun flush(): Unit = withReentrantLock {
         if (!isConnected()) throw KredsNotYetConnectedException()
         else channel!!.flush()
     }
@@ -143,7 +143,7 @@ internal abstract class KonnectionImpl(
 
     override suspend fun writeAndFlush(message: RedisMessage): Unit = writeInternal(message, true)
 
-    override suspend fun read(): RedisMessage = lockByCoroutineJob {
+    override suspend fun read(): RedisMessage = withReentrantLock {
         if (!isConnected()) throw KredsNotYetConnectedException()
         try {
             readChannel!!.receive()
@@ -157,7 +157,7 @@ internal abstract class KonnectionImpl(
         }
     }
 
-    override suspend fun connect(): Unit = lockByCoroutineJob {
+    override suspend fun connect(): Unit = withReentrantLock {
         if (!isConnected()) {
             try {
                 val (channel, readChannel) = createNewConnection()
@@ -170,7 +170,7 @@ internal abstract class KonnectionImpl(
         }
     }
 
-    override suspend fun disconnect(): Unit = lockByCoroutineJob {
+    override suspend fun disconnect(): Unit = withReentrantLock {
         if (isConnected()) {
             readChannel!!.close()
             channel!!.close().suspendableAwait()

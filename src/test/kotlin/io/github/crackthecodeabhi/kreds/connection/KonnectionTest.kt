@@ -19,6 +19,7 @@
 
 package io.github.crackthecodeabhi.kreds.connection
 
+import io.github.crackthecodeabhi.kreds.ReentrantMutexContextKey
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.channel.*
@@ -32,13 +33,14 @@ import kotlinx.coroutines.sync.Mutex
 import io.github.crackthecodeabhi.kreds.toByteBuf
 import io.github.crackthecodeabhi.kreds.toDefaultCharset
 import java.util.concurrent.atomic.AtomicInteger
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
+import io.github.crackthecodeabhi.kreds.withReentrantLock
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 
 internal class TestConnectionImpl(endpoint: Endpoint, eventLoopGroup: EventLoopGroup, config: KredsClientConfig) :
     KonnectionImpl(endpoint, eventLoopGroup, config) {
     override val mutex: Mutex = Mutex()
+    override val key: ReentrantMutexContextKey = ReentrantMutexContextKey(mutex)
 }
 
 private fun createPing(message: String): ArrayRedisMessage {
@@ -69,7 +71,7 @@ class KonnectionTest : FunSpec({
                 repeat(concurrencyCount) {
                     launch {
                         val count = it.toString(10)
-                        conn.lockByCoroutineJob {
+                        conn.withReentrantLock {
                             conn.connect()
                             conn.writeAndFlush(createPing(count))
                             when (val reply = conn.read()) {
@@ -93,7 +95,7 @@ class KonnectionTest : FunSpec({
     test("Connection Fail") {
         val conn = TestConnectionImpl(Endpoint.from("127.0.0.1:6373"), eventLoopGroup, defaultClientConfig)
         val ex = shouldThrow<KredsConnectionException> {
-            conn.lockByCoroutineJob {
+            conn.withReentrantLock {
                 conn.connect()
             }
         }
@@ -103,7 +105,7 @@ class KonnectionTest : FunSpec({
     test("Connection Timeout") {
         val conn = TestConnectionImpl(Endpoint.from("www.google.com:81"), eventLoopGroup, defaultClientConfig)
         val ex = shouldThrow<KredsConnectionException> {
-            conn.lockByCoroutineJob {
+            conn.withReentrantLock {
                 conn.connect()
             }
         }

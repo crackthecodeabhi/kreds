@@ -21,15 +21,16 @@ package io.github.crackthecodeabhi.kreds.pipeline
 
 import io.github.crackthecodeabhi.kreds.ExclusiveObject
 import io.github.crackthecodeabhi.kreds.KredsException
+import io.github.crackthecodeabhi.kreds.ReentrantMutexContextKey
 import io.github.crackthecodeabhi.kreds.args.createArguments
 import io.github.crackthecodeabhi.kreds.commands.*
 import io.github.crackthecodeabhi.kreds.connection.DefaultKredsClient
-import io.github.crackthecodeabhi.kreds.lockByCoroutineJob
 import io.github.crackthecodeabhi.kreds.pipeline.TransactionCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.ArrayCommandProcessor
 import io.github.crackthecodeabhi.kreds.protocol.ArrayHandler
 import io.github.crackthecodeabhi.kreds.protocol.KredsRedisDataException
 import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
+import io.github.crackthecodeabhi.kreds.withReentrantLock
 import io.netty.handler.codec.redis.ArrayRedisMessage
 import io.netty.handler.codec.redis.ErrorRedisMessage
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -122,6 +123,8 @@ internal class TransactionImpl(private val client: DefaultKredsClient) : Exclusi
 
     override val mutex: Mutex = Mutex()
 
+    override val key: ReentrantMutexContextKey = ReentrantMutexContextKey(mutex)
+
     /**
      * Guarded by [mutex].
      */
@@ -147,7 +150,7 @@ internal class TransactionImpl(private val client: DefaultKredsClient) : Exclusi
      */
     private val commands = mutableListOf<CommandExecution<*>>()
 
-    private suspend fun addTransactionCommand(commandExecution: CommandExecution<String>) = lockByCoroutineJob {
+    private suspend fun addTransactionCommand(commandExecution: CommandExecution<String>) = withReentrantLock {
         if (!transactionStarted) {
             with(commandExecution) {
                 if (command != WATCH && command != MULTI)
@@ -169,7 +172,7 @@ internal class TransactionImpl(private val client: DefaultKredsClient) : Exclusi
     }
 
     override suspend fun <T> add(commandExecution: CommandExecution<T>, nullable: Boolean): Response<T> =
-        lockByCoroutineJob {
+        withReentrantLock {
             commands.add(commandExecution)
 
             if (multiIdx > -1) {
@@ -180,7 +183,7 @@ internal class TransactionImpl(private val client: DefaultKredsClient) : Exclusi
             }
         }
 
-    override suspend fun multi(): Unit = lockByCoroutineJob {
+    override suspend fun multi(): Unit = withReentrantLock {
         if (transactionStarted) throw KredsTransactionException("Cannot nest multi command inside a transaction.")
         else {
             addTransactionCommand(CommandExecution(MULTI, SimpleStringCommandProcessor))
@@ -188,21 +191,21 @@ internal class TransactionImpl(private val client: DefaultKredsClient) : Exclusi
         }
     }
 
-    override suspend fun watch(key: String, vararg keys: String): Unit = lockByCoroutineJob {
+    override suspend fun watch(key: String, vararg keys: String): Unit = withReentrantLock {
         addTransactionCommand(CommandExecution(WATCH, SimpleStringCommandProcessor, *createArguments(key, *keys)))
     }
 
-    private suspend fun executeTransaction(commands: List<CommandExecution<*>>): List<*>? = lockByCoroutineJob {
+    private suspend fun executeTransaction(commands: List<CommandExecution<*>>): List<*>? = withReentrantLock {
         val responseMessages = client.executeCommands(commands)
 
-        return when (val execResult = responseMessages.last()) {
+        when (val execResult = responseMessages.last()) {
             is ErrorRedisMessage -> throw KredsRedisDataException(execResult.content())
             is ArrayRedisMessage -> ArrayHandler.doHandle(execResult)
             else -> throw KredsTransactionException("Invalid data received from Redis.")
         }
     }
 
-    override suspend fun exec() = lockByCoroutineJob {
+    override suspend fun exec() = withReentrantLock {
         if (!transactionStarted) throw KredsTransactionException("Start transaction with multi() before exec()")
         if (!done) {
             try {
