@@ -14,7 +14,7 @@
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=crackthecodeabhi_kreds&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=crackthecodeabhi_kreds)
 
 
-Kreds is a first and only thread-safe, idiomatic, coroutine based Redis client written in 100% Kotlin.
+Kreds is a thread-safe, idiomatic, coroutine based Redis client written in 100% Kotlin.
 
 Kreds is designed to be EASY to use.
 
