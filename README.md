@@ -61,19 +61,19 @@ launch {
 <dependency>
   <groupId>io.github.crackthecodeabhi</groupId>
   <artifactId>kreds</artifactId>
-  <version>0.6</version>
+  <version>0.7</version>
 </dependency>
 ```
 
 Gradle Groovy DSL
 
 ```groovy
-implementation 'io.github.crackthecodeabhi:kreds:0.6'
+implementation 'io.github.crackthecodeabhi:kreds:0.7'
 
 ```
 Gradle Kotlin DSL
 ```kotlin
-implementation("io.github.crackthecodeabhi:kreds:0.6")
+implementation("io.github.crackthecodeabhi:kreds:0.7")
 ```
 
 ## License
