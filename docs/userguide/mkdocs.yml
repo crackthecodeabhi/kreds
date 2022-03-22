@@ -34,14 +34,16 @@ theme:
         link: https://github.com/crackthecodeabhi
       - icon: fontawesome/brands/gitter
         link: https://gitter.im/kreds-redis/community
-    analytics:
-      provider: google
-      property: UA-120322560-4
-
+     
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+ 
+extra:
+  analytics:
+    provider: google
+    property: UA-120322560-4
  
