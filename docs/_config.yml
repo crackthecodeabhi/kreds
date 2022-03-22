@@ -1,7 +1,1 @@
 theme: jekyll-theme-leap-day
-
-extra:
-  analytics:
-    provider: google
-    property: UA-120322560-4
-    
