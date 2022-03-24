@@ -12,6 +12,7 @@ copyright: Copyright &copy; 2020 Abhijith Shivaswamy
 
 theme:
   name: material
+  custom_dir: overrides
   features:
     - navigation.expand
     - navigation.instant
