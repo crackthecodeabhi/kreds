@@ -42,9 +42,5 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
- 
-extra:
-  analytics:
-    provider: google
-    property: UA-120322560-4
+
  
