@@ -53,6 +53,9 @@ internal fun <T> T.toArgument(): Argument =
 internal fun Array<out String>.toArguments(): Array<out StringArgument> =
     this.map { it.toArgument() as StringArgument }.toTypedArray()
 
+/**
+ * null arguments are skipped.
+ */
 internal fun createArguments(vararg args: Any?): Array<out Argument> {
     val argList = mutableListOf<Argument>()
     for (arg in args) {

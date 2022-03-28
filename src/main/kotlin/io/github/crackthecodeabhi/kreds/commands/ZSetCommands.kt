@@ -59,7 +59,7 @@ internal interface BaseZSetCommands {
         src: String,
         min: Int,
         max: Int,
-        by: ZRangeStoreBy? = null,
+        by: ZSetByOption? = null,
         rev: Boolean? = null,
         limit: Pair<Int, Int>? = null
     ) =
@@ -250,6 +250,28 @@ internal interface BaseZSetCommands {
             aggregate
         )
     )
+
+    fun _zrange(
+        key: String,
+        min: Long,
+        max: Long,
+        by: ZSetByOption?,
+        rev: Boolean?,
+        limit: Pair<Int, Int>?,
+        withScores: Boolean?
+    ) = CommandExecution(
+        ZRANGE,
+        ArrayCommandProcessor,
+        *createArguments(
+            key,
+            min,
+            max,
+            by,
+            rev?.let { KeyOnlyArgument("REV") },
+            limit?.let { KeyValueArgument("LIMIT","${it.first} ${it.second}") },
+            withScores.let { "WITHSCORES" }
+        )
+    )
 }
 
 public interface BlockingZSetCommands : BlockingOperation {
@@ -313,7 +335,7 @@ public interface ZSetCommands {
         src: String,
         min: Int,
         max: Int,
-        by: ZRangeStoreBy? = null,
+        by: ZSetByOption? = null,
         rev: Boolean? = null,
         limit: Pair<Int, Int>? = null
     ): Long
@@ -496,7 +518,7 @@ public interface ZSetCommands {
      *
      * [Doc](https://redis.io/commands/zinter)
      * @since 6.2.0
-     * @return he result of intersection (optionally with their scores, in case the WITHSCORES option is given).
+     * @return the result of intersection (optionally with their scores, in case the WITHSCORES option is given).
      */
     public suspend fun zinter(
         numKeys: Int,
@@ -534,6 +556,23 @@ public interface ZSetCommands {
         aggregate: AggregateType?
     ): Long
 
+    /**
+     * ### `ZRANGE key min max [BYSCORE|BYLEX] [REV] [LIMIT offset count] [WITHSCORES]`
+     *
+     * [Doc](https://redis.io/commands/zrange/)
+     * @since 1.2.0
+     *  @param limit a pair of offset and count.
+     * @return list of elements in the specified range (optionally with their scores, in case the WITHSCORES option is given).
+     */
+    public suspend fun zrange(
+        key: String,
+        min: Long,
+        max: Long,
+        by: ZSetByOption?,
+        rev: Boolean?,
+        limit: Pair<Int, Int>?,
+        withScores: Boolean?
+    ): List<String>
 }
 
 internal interface ZSetCommandExecutor : BaseZSetCommands, CommandExecutor, BlockingZSetCommands, ZSetCommands {
@@ -554,7 +593,7 @@ internal interface ZSetCommandExecutor : BaseZSetCommands, CommandExecutor, Bloc
         src: String,
         min: Int,
         max: Int,
-        by: ZRangeStoreBy?,
+        by: ZSetByOption?,
         rev: Boolean?,
         limit: Pair<Int, Int>?
     ): Long =
@@ -655,5 +694,14 @@ internal interface ZSetCommandExecutor : BaseZSetCommands, CommandExecutor, Bloc
         aggregate: AggregateType?
     ): Long = execute(_zinterstore(destination, numKeys, key, *keys, weights = weights, aggregate = aggregate))
 
+    override suspend fun zrange(
+        key: String,
+        min: Long,
+        max: Long,
+        by: ZSetByOption?,
+        rev: Boolean?,
+        limit: Pair<Int, Int>?,
+        withScores: Boolean?
+    ): List<String> = execute(_zrange(key, min, max, by, rev, limit, withScores)).responseTo("zrange")
 }
 

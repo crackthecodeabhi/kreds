@@ -53,7 +53,7 @@ public interface PipelineZSetCommands {
         src: String,
         min: Int,
         max: Int,
-        by: ZRangeStoreBy? = null,
+        by: ZSetByOption? = null,
         rev: Boolean? = null,
         limit: Pair<Int, Int>? = null
     ): Response<Long>
@@ -178,6 +178,19 @@ public interface PipelineZSetCommands {
         weights: Weights?,
         aggregate: AggregateType?
     ): Response<Long>
+
+    /**
+     * @see [ZSetCommands.zrange]
+     */
+    public suspend fun zrange(
+        key: String,
+        min: Long,
+        max: Long,
+        by: ZSetByOption?,
+        rev: Boolean?,
+        limit: Pair<Int, Int>?,
+        withScores: Boolean?
+    ): Response<List<String>>
 }
 
 internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetCommands, BaseZSetCommands {
@@ -198,7 +211,7 @@ internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetComm
         src: String,
         min: Int,
         max: Int,
-        by: ZRangeStoreBy?,
+        by: ZSetByOption?,
         rev: Boolean?,
         limit: Pair<Int, Int>?
     ): Response<Long> =
@@ -293,4 +306,16 @@ internal interface PipelineZSetCommandExecutor : QueuedCommand, PipelineZSetComm
         aggregate: AggregateType?
     ): Response<Long> = add(_zinterstore(destination, numKeys, key, *keys, weights = weights, aggregate = aggregate))
 
+    override suspend fun zrange(
+        key: String,
+        min: Long,
+        max: Long,
+        by: ZSetByOption?,
+        rev: Boolean?,
+        limit: Pair<Int, Int>?,
+        withScores: Boolean?
+    ): Response<List<String>> = add(
+        _zrange(key, min, max, by, rev, limit, withScores),
+        nullable = false
+    ).asReturnType()
 }

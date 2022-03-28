@@ -171,7 +171,7 @@ public enum class ServerInfoSection : Argument {
     override fun toString(): String = name
 }
 
-public enum class ZRangeStoreBy : Argument {
+public enum class ZSetByOption: Argument {
     BYSCORE, BYLEX;
 
     override fun toString(): String = name
