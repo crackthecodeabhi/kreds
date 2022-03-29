@@ -1,4 +1,4 @@
-# Kreds 
+# Kreds
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.crackthecodeabhi/kreds.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.crackthecodeabhi%22%20AND%20a:%22kreds%22)
 [![javadoc](https://javadoc.io/badge2/io.github.crackthecodeabhi/kreds/javadoc.svg)](https://javadoc.io/doc/io.github.crackthecodeabhi/kreds)
@@ -16,15 +16,16 @@
 
 Kreds is a thread-safe, idiomatic, coroutine based Redis client written in 100% Kotlin.
 
-Kreds is designed to be EASY to use.
+## Why Kreds? 
 
-Kreds is built around coroutines, providing you an imperative paradigm of programming without blocking threads, futures or callback hell, thanks to Kotlin Coroutines!
-
-Run blocking commands wihtout blocking Java threads. (Only the inexpensive coroutines are blocked)
+* Kreds is designed to be EASY to use. 
+* Kreds has clean API, clear return types, **avoid the dreaded null pointer exception at compile time!**
+* Kreds is built around coroutines, providing you an **imperative paradigm of programming without blocking threads, futures or callback hell**, thanks to Kotlin Coroutines!
+* Run blocking commands **without blocking** Java threads. (Only the inexpensive coroutines are blocked)
+* Kreds uses Netty under the hood and is **truly asynchronous**.
+* High throughput.
 
 Kreds is compatible with redis 6.x.x and above.
-
-Kreds uses Netty under the hood.
 
 ## Documentation
 You can find the user guide and documentation [here](https://crackthecodeabhi.github.io/kreds) :construction:
