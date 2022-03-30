@@ -25,7 +25,11 @@ Kreds is a thread-safe, idiomatic, coroutine based Redis client written in 100% 
 * Kreds uses Netty under the hood and is **truly asynchronous**.
 * High throughput.
 
-Kreds is compatible with redis 6.x.x and above.
+## Use cases
+* Web app cache client: Don't open multiple connections to redis, for each http request, use single connection in a thred-safe manner.
+* Pub/Sub: Subscribe to multiple channels from one or multiple Redis, without being limited by java threads.
+ 
+**Kreds is compatible with redis 6.x.x and above.**
 
 ## Documentation
 You can find the user guide and documentation [here](https://crackthecodeabhi.github.io/kreds) :construction:
