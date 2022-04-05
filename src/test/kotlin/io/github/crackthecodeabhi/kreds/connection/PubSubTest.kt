@@ -74,3 +74,29 @@ class PubSubTest : FunSpec({
         }
     }
 })
+
+
+class PubSubAuthTest: FunSpec({
+    /** Test the auth before any command is issued to redis **/
+    test("Pub/sub auth: simple"){
+        launch {
+            val subscriber = newSubscriberClient(Endpoint.from("127.0.0.1:6379"), object : AbstractKredsSubscriber() {
+                override fun onException(ex: Throwable) {
+                    println(ex)
+                }
+            }, password = "redis")
+            subscriber.ping() shouldBe "PONG"
+        }
+    }
+
+    test("Pub/sub auth: Wrong auth"){
+        launch {
+            val subscriber = newSubscriberClient(Endpoint.from("127.0.0.1:6379"), object : AbstractKredsSubscriber() {
+                override fun onException(ex: Throwable) {
+                    println(ex)
+                }
+            })
+            subscriber.ping() shouldBe "PONG"
+        }
+    }
+})

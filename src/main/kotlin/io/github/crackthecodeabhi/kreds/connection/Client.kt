@@ -32,21 +32,32 @@ import io.github.crackthecodeabhi.kreds.withReentrantLock
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.handler.codec.redis.RedisMessage
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
+import kotlin.coroutines.coroutineContext
 
 
 //TODO: INCRBY can be negative also! check that in api, should accept long, not ulong
 
 private val eventLoopGroup = NioEventLoopGroup()
 
-public fun CoroutineScope.newSubscriberClient(
+/**
+ * @throws [KredsRedisDataException] if auth fails.
+ */
+public suspend fun newSubscriberClient(
     endpoint: Endpoint,
     handler: KredsSubscriber,
-    config: KredsClientConfig = defaultSubscriberClientConfig
-): KredsSubscriberClient =
-    DefaultKredsSubscriberClient(endpoint, eventLoopGroup, coroutineContext, handler, config)
+    config: KredsClientConfig = defaultSubscriberClientConfig,
+    password: String? = null,
+    username: String? = null
+): KredsSubscriberClient {
+    val client = DefaultKredsSubscriberClient(endpoint, eventLoopGroup, coroutineContext, handler, config)
+    return if(password != null){
+        client.authenticate(SubscriberAuthInfo(password, username))
+        client
+    }
+    else client
+}
 
 public fun newClient(endpoint: Endpoint, config: KredsClientConfig = defaultClientConfig): KredsClient =
     DefaultKredsClient(endpoint, eventLoopGroup, config)

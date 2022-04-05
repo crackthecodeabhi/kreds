@@ -51,6 +51,8 @@ public class KredsPubSubException : KredsException {
     internal constructor(message: String, throwable: Throwable) : super(message, throwable)
 }
 
+internal data class SubscriberAuthInfo(val password: String, val username: String?)
+
 internal enum class PubSubCommand(override val subCommand: Command? = null, commandString: String? = null) : Command {
     PSUBSCRIBE, PUBLISH, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE,
 
@@ -497,5 +499,18 @@ internal class DefaultKredsSubscriberClient(
             disconnect()
             if (scope.isActive) scope.cancel()
         }
+    }
+
+    suspend fun authenticate(authInfo: SubscriberAuthInfo): String {
+        val onlyPassword = authInfo.username == null
+        val commandExecution =
+            if(onlyPassword)
+                CommandExecution(ConnectionCommand.AUTH, SimpleStringCommandProcessor, authInfo.password.toArgument())
+            else
+                CommandExecution(ConnectionCommand.AUTH, SimpleStringCommandProcessor, authInfo.username.toArgument(), authInfo.password.toArgument())
+
+        reader.preemptRead { writer.write(commandExecution) }
+
+        return SimpleStringCommandProcessor.decode(reader.readChannel.receive())
     }
 }
