@@ -26,10 +26,13 @@ import io.netty.channel.*
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.redis.*
+import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.ssl.SslHandler
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.TimeoutException
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import mu.KotlinLogging
+import java.io.FileInputStream
 import java.net.SocketException
 import kotlinx.coroutines.channels.Channel as KChannel
 
@@ -70,6 +73,14 @@ internal abstract class KonnectionImpl(
         return object : ChannelInitializer<SocketChannel>() {
             override fun initChannel(ch: SocketChannel) {
                 val pipeline = ch.pipeline()
+
+                if (config.isSslEnabled()) {
+                    val sslCtx = SslContextBuilder.forClient()
+                        .trustManager(FileInputStream(config.sslTrustManager!!))
+                        .build()
+                    val sslEngine = sslCtx.newEngine(ch.alloc())
+                    pipeline.addLast(SslHandler(sslEngine))
+                }
 
                 pipeline.addLast(RedisEncoder()) // outbound M
                 //pipeline.addLast(WriteTimeoutHandler(10)) // outbound M - 1

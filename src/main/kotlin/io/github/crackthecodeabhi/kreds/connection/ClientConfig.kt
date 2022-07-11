@@ -19,6 +19,8 @@
 
 package io.github.crackthecodeabhi.kreds.connection
 
+import java.io.File
+
 public class KredsClientConfig {
 
     public companion object {
@@ -30,6 +32,12 @@ public class KredsClientConfig {
     public val soKeepAlive: Boolean
 
     /**
+     * SSL certificate file to load trusted certificates.
+     * The file must contain X.509 certificates in PEM format.
+     */
+    public val sslTrustManager: File?
+
+    /**
      * In Subscriber client, readTimeout can be set to -1, to never timeout from reading from subscription connection.
      */
     public val readTimeoutSeconds: Int
@@ -39,6 +47,7 @@ public class KredsClientConfig {
         connectTimeOutMillis = builder.connectTimeOutMillis ?: 5000
         readTimeoutSeconds = builder.readTimeoutSeconds ?: 30
         soKeepAlive = builder.soKeepAlive ?: true
+        sslTrustManager = builder.sslTrustManager
     }
 
     private constructor(builder: Builder, other: KredsClientConfig) {
@@ -46,12 +55,18 @@ public class KredsClientConfig {
         connectTimeOutMillis = builder.connectTimeOutMillis ?: other.connectTimeOutMillis
         readTimeoutSeconds = builder.readTimeoutSeconds ?: other.readTimeoutSeconds
         soKeepAlive = builder.soKeepAlive ?: other.soKeepAlive
+        sslTrustManager = builder.sslTrustManager ?: other.sslTrustManager
+    }
+
+    public fun isSslEnabled(): Boolean {
+        return sslTrustManager != null
     }
 
     public data class Builder(
         var connectTimeOutMillis: Int? = null,
         var readTimeoutSeconds: Int? = null,
-        var soKeepAlive: Boolean? = null
+        var soKeepAlive: Boolean? = null,
+        var sslTrustManager: File? = null,
     ) {
         /**
          * @param defaultSource if any property is not set, values will be initialized from [defaultSource]
