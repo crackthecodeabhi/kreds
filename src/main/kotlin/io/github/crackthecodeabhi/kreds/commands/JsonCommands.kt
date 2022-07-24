@@ -212,7 +212,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.arrappend/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an array.
      */
     public suspend fun jsonArrAppend(
@@ -233,7 +232,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.arrindex/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an array.
      */
     public suspend fun jsonArrIndex(
@@ -253,7 +251,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.arrinsert/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an array.
      */
     public suspend fun jsonArrInsert(
@@ -272,7 +269,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.arrlen/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an array.
      */
     public suspend fun jsonArrLen(key: String, path: String = ROOT_PATH): List<Int?>
@@ -287,7 +283,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.arrpop/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an array.
      */
     public suspend fun jsonArrPop(key: String, path: String = ROOT_PATH, index: Int = -1): List<String?>
@@ -305,7 +300,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.arrtrim/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an array.
      */
     public suspend fun jsonArrTrim(key: String, path: String = ROOT_PATH, start: Int, stop: Int): List<Int?>
@@ -319,7 +313,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.clear/)
      * @since JSON 2.0.0
-     *
      * @return Integer reply: specifically the number of values cleared.
      */
     public suspend fun jsonClear(key: String, path: String = ROOT_PATH): Long
@@ -332,7 +325,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.del/)
      * @since JSON 1.0.0
-     *
      * @return Integer reply - the number of paths deleted (0 or more).
      */
     public suspend fun jsonDel(key: String, path: String = ROOT_PATH): Long
@@ -349,7 +341,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.get/)
      * @since JSON 1.0.0
-     *
      * @return [] - each string is the JSON serialization of each JSON value that matches a path.
      */
     public suspend fun jsonGet(
@@ -368,7 +359,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.mget/)
      * @since JSON 1.0.0
-     *
      * @return [] - the JSON serialization of the value at each key's path.
      */
     public suspend fun jsonMGet(key: String, vararg keys: String, path: String = ROOT_PATH): List<String>
@@ -380,7 +370,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.numincrby/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not a number.
      */
     public suspend fun jsonNumIncrBy(key: String, path: String, by: Double): String
@@ -393,7 +382,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.objkeys/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an object.
      */
     public suspend fun jsonObjKeys(key: String, path: String = ROOT_PATH): List<List<String>?>
@@ -406,7 +394,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.objlen/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an object.
      */
     public suspend fun jsonObjLen(key: String, path: String = ROOT_PATH): List<Int?>
@@ -428,7 +415,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.set/)
      * @since JSON 1.0.0
-     *
      * @return false if the specified NX or XX conditions were not met.
      */
     public suspend fun jsonSet(key: String, path: String, value: String, option: JsonSetOption? = null): Boolean
@@ -440,7 +426,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.strappend/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not an array.
      */
     public suspend fun jsonStrAppend(key: String, path: String, value: String): List<Int?>
@@ -453,7 +438,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.strlen/)
      * @since JSON 1.0.0
-     *
      * @return [] if the matching JSON value is not a string.
      */
     public suspend fun jsonStrLen(key: String, path: String): List<Int?>
@@ -465,7 +449,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.toggle/)
      * @since JSON 2.0.0
-     *
      * @return [] element for JSON values matching the path which are not boolean.
      */
     public suspend fun jsonToggle(key: String, path: String): List<Int?>
@@ -478,7 +461,6 @@ public interface JsonCommands {
      *
      * [Doc](https://redis.io/commands/json.type/)
      * @since JSON 1.0.0
-     *
      * @return [] - for each path, the value's type.
      */
     public suspend fun jsonType(key: String, path: String): List<String>
