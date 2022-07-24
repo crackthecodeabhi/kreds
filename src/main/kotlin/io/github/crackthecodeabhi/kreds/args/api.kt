@@ -194,3 +194,7 @@ public enum class ZAddGTOrLT : Argument {
 public class Weights(public val weight: Int, public val weights: Array<Int>? = null) : Argument {
     override fun toString(): String = "WEIGHTS $weight ${weights?.joinToString(separator = " ") ?: ""}"
 }
+
+public enum class JsonSetOption : Argument {
+    NX, XX
+}
