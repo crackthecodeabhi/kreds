@@ -19,6 +19,7 @@
 
 package io.github.crackthecodeabhi.kreds.commands
 
+import io.github.crackthecodeabhi.kreds.args.ServerInfoSection
 import io.github.crackthecodeabhi.kreds.args.SyncOption
 import io.github.crackthecodeabhi.kreds.connection.*
 import io.github.crackthecodeabhi.kreds.pipeline.Response
@@ -51,12 +52,25 @@ interface Then<T> {
 
 internal class ClientSetup : BeforeSpec, Then<ClientSetup> {
     lateinit var client: InternalKredsClient
+        private set
     lateinit var serverVersion: SemVer
+        private set
+    lateinit var serverModules: Set<String>
+        private set
     var andThen: AndThen<ClientSetup>? = null
+
     override suspend fun invoke(p1: Spec) {
         client = getTestClient(config = KredsClientConfig.Builder(readTimeoutSeconds = 1).build(defaultClientConfig))
         client.flushAll(SyncOption.SYNC)
         serverVersion = SemVer.parse(client.serverVersion())
+
+        serverModules = client
+            .info(ServerInfoSection.modules)!!
+            .lines()
+            .filter { it.isNotEmpty() && !it.startsWith('#') }
+            .map { it.substring("module:name=".length, it.indexOf(',')) }
+            .toSet()
+
         andThen?.invoke(this)
     }
 
@@ -67,6 +81,13 @@ internal class ClientSetup : BeforeSpec, Then<ClientSetup> {
     fun enableIf(version: SemVer): (TestCase) -> Enabled = {
         if (serverVersion < version) Enabled.disabled("Target $serverVersion < required $version")
         else Enabled.enabled
+    }
+
+    fun enableIfModulePresent(module: String): (TestCase) -> Enabled = {
+        if (!serverModules.contains(module))
+            Enabled.disabled("Module $module is not installed")
+        else
+            Enabled.enabled
     }
 }
 

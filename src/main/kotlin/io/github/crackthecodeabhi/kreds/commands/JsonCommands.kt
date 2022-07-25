@@ -216,7 +216,7 @@ public interface JsonCommands {
      */
     public suspend fun jsonArrAppend(
         key: String,
-        path: String = ROOT_PATH,
+        path: String,
         element: String,
         vararg elements: String
     ): List<Int?>
@@ -236,7 +236,7 @@ public interface JsonCommands {
      */
     public suspend fun jsonArrIndex(
         key: String,
-        path: String = ROOT_PATH,
+        path: String,
         value: String,
         start: Int = 0,
         stop: Int = 0
@@ -255,7 +255,7 @@ public interface JsonCommands {
      */
     public suspend fun jsonArrInsert(
         key: String,
-        path: String = ROOT_PATH,
+        path: String,
         index: Int,
         element: String,
         vararg elements: String
@@ -271,7 +271,7 @@ public interface JsonCommands {
      * @since JSON 1.0.0
      * @return [] if the matching JSON value is not an array.
      */
-    public suspend fun jsonArrLen(key: String, path: String = ROOT_PATH): List<Int?>
+    public suspend fun jsonArrLen(key: String, path: String): List<Int?>
 
     /**
      * ### ` JSON.ARRPOP key [ path [index]] `
@@ -285,7 +285,7 @@ public interface JsonCommands {
      * @since JSON 1.0.0
      * @return [] if the matching JSON value is not an array.
      */
-    public suspend fun jsonArrPop(key: String, path: String = ROOT_PATH, index: Int = -1): List<String?>
+    public suspend fun jsonArrPop(key: String, path: String, index: Int = -1): List<String?>
 
     /**
      * ### ` JSON.ARRTRIM key path start stop `
@@ -302,7 +302,7 @@ public interface JsonCommands {
      * @since JSON 1.0.0
      * @return [] if the matching JSON value is not an array.
      */
-    public suspend fun jsonArrTrim(key: String, path: String = ROOT_PATH, start: Int, stop: Int): List<Int?>
+    public suspend fun jsonArrTrim(key: String, path: String, start: Int, stop: Int): List<Int?>
 
     /**
      * ### ` JSON.CLEAR key [path] `
@@ -315,7 +315,7 @@ public interface JsonCommands {
      * @since JSON 2.0.0
      * @return Integer reply: specifically the number of values cleared.
      */
-    public suspend fun jsonClear(key: String, path: String = ROOT_PATH): Long
+    public suspend fun jsonClear(key: String, path: String): Long
 
     /**
      * ### ` https://redis.io/commands/json.del/ `
@@ -327,7 +327,7 @@ public interface JsonCommands {
      * @since JSON 1.0.0
      * @return Integer reply - the number of paths deleted (0 or more).
      */
-    public suspend fun jsonDel(key: String, path: String = ROOT_PATH): Long
+    public suspend fun jsonDel(key: String, path: String): Long
 
     /**
      * ### ` JSON.GET key [INDENT indent] [NEWLINE newline] [SPACE space] [paths [paths ...]] `
@@ -350,7 +350,7 @@ public interface JsonCommands {
         indent: String? = null,
         newline: String? = null,
         space: String? = null
-    ): String
+    ): String?
 
     /**
      * ### ` JSON.MGET key [key ...] path `
@@ -361,7 +361,7 @@ public interface JsonCommands {
      * @since JSON 1.0.0
      * @return [] - the JSON serialization of the value at each key's path.
      */
-    public suspend fun jsonMGet(key: String, vararg keys: String, path: String = ROOT_PATH): List<String>
+    public suspend fun jsonMGet(key: String, vararg keys: String, path: String): List<String>
 
     /**
      * ### ` JSON.NUMINCRBY key path value `
@@ -384,7 +384,7 @@ public interface JsonCommands {
      * @since JSON 1.0.0
      * @return [] if the matching JSON value is not an object.
      */
-    public suspend fun jsonObjKeys(key: String, path: String = ROOT_PATH): List<List<String>?>
+    public suspend fun jsonObjKeys(key: String, path: String): List<List<String>?>
 
     /**
      * ### ` JSON.OBJLEN key [path] `
@@ -396,7 +396,7 @@ public interface JsonCommands {
      * @since JSON 1.0.0
      * @return [] if the matching JSON value is not an object.
      */
-    public suspend fun jsonObjLen(key: String, path: String = ROOT_PATH): List<Int?>
+    public suspend fun jsonObjLen(key: String, path: String): List<Int?>
 
     /**
      * ### ` JSON.SET key path value [ NX | XX] `
@@ -508,7 +508,7 @@ internal interface JsonCommandExecutor : BaseJsonCommands, JsonCommands, Command
         indent: String?,
         newline: String?,
         space: String?
-    ): String = execute(_jsonGet(key, paths = arrayOf(path, *paths), indent, newline, space)).responseTo()
+    ): String? = execute(_jsonGet(key, paths = arrayOf(path, *paths), indent, newline, space)).responseTo()
 
     override suspend fun jsonMGet(key: String, vararg keys: String, path: String): List<String> =
         execute(_jsonMGet(keys = arrayOf(key, *keys), path)).responseTo()
