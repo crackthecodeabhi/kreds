@@ -35,7 +35,7 @@ internal enum class JsonCommand(override val subCommand: Command? = null) : Comm
 }
 
 internal interface BaseJsonCommands {
-    fun _jsonArrAppend(key: String, path: String, vararg elements: String) =
+    fun _jsonArrAppend(key: String, path: String, elements: Array<String>) =
         CommandExecution(
             ARRAPPEND,
             ArrayCommandProcessor,
@@ -55,7 +55,7 @@ internal interface BaseJsonCommands {
             stop.toArgument()
         )
 
-    fun _jsonArrInsert(key: String, path: String, index: Int, vararg elements: String) =
+    fun _jsonArrInsert(key: String, path: String, index: Int, elements: Array<String>) =
         CommandExecution(
             ARRINSERT,
             ArrayCommandProcessor,
@@ -105,7 +105,7 @@ internal interface BaseJsonCommands {
 
     fun _jsonGet(
         key: String,
-        vararg paths: String,
+        paths: Array<String>,
         indent: String?,
         newline: String?,
         space: String?
@@ -123,12 +123,21 @@ internal interface BaseJsonCommands {
         )
     }
 
-    fun _jsonMGet(vararg keys: String, path: String) =
+    fun _jsonMGet(keys: Array<String>, path: String) =
         CommandExecution(
             MGET,
             ArrayCommandProcessor,
             *createArguments(*keys),
             path.toArgument()
+        )
+
+    fun _jsonNumIncrBy(key: String, path: String, by: Long) =
+        CommandExecution(
+            NUMINCRBY,
+            BulkStringCommandProcessor,
+            key.toArgument(),
+            path.toArgument(),
+            by.toArgument()
         )
 
     fun _jsonNumIncrBy(key: String, path: String, by: Double) =
@@ -217,6 +226,21 @@ public interface JsonCommands {
     public suspend fun jsonArrAppend(
         key: String,
         path: String,
+        elements: Array<String>
+    ): List<Int?>
+
+    /**
+     * ### ` JSON.ARRAPPEND key [path] value [value ...] `
+     *
+     * Append the json values into the array at path after the last element in it.
+     *
+     * [Doc](https://redis.io/commands/json.arrappend/)
+     * @since JSON 1.0.0
+     * @return [] if the matching JSON value is not an array.
+     */
+    public suspend fun jsonArrAppend(
+        key: String,
+        path: String,
         element: String,
         vararg elements: String
     ): List<Int?>
@@ -240,6 +264,24 @@ public interface JsonCommands {
         value: String,
         start: Int = 0,
         stop: Int = 0
+    ): List<Int?>
+
+    /**
+     * ### ` JSON.ARRINSERT key path index value [value ...] `
+     *
+     * Inserts the json values into the array at path before the index (shifts to the right).
+     * The index must be in the array's range. Inserting at index 0 prepends to the array.
+     * Negative index values start from the end of the array.
+     *
+     * [Doc](https://redis.io/commands/json.arrinsert/)
+     * @since JSON 1.0.0
+     * @return [] if the matching JSON value is not an array.
+     */
+    public suspend fun jsonArrInsert(
+        key: String,
+        path: String,
+        index: Int,
+        elements: Array<String>
     ): List<Int?>
 
     /**
@@ -345,6 +387,28 @@ public interface JsonCommands {
      */
     public suspend fun jsonGet(
         key: String,
+        paths: Array<String>,
+        indent: String? = null,
+        newline: String? = null,
+        space: String? = null
+    ): String?
+
+    /**
+     * ### ` JSON.GET key [INDENT indent] [NEWLINE newline] [SPACE space] [paths [paths ...]] `
+     *
+     * Returns the value at path in JSON serialized form.
+     * This command accepts multiple path arguments. If no path is given, it defaults to the value's root.
+     * The following subcommands change the reply's format (all are empty string by default):
+     * - INDENT sets the indentation string for nested levels
+     * - NEWLINE sets the string that's printed at the end of each line
+     * - SPACE sets the string that's put between a key and a value
+     *
+     * [Doc](https://redis.io/commands/json.get/)
+     * @since JSON 1.0.0
+     * @return [] - each string is the JSON serialization of each JSON value that matches a path.
+     */
+    public suspend fun jsonGet(
+        key: String,
         path: String,
         vararg paths: String,
         indent: String? = null,
@@ -361,7 +425,29 @@ public interface JsonCommands {
      * @since JSON 1.0.0
      * @return [] - the JSON serialization of the value at each key's path.
      */
+    public suspend fun jsonMGet(keys: Array<String>, path: String): List<String>
+
+    /**
+     * ### ` JSON.MGET key [key ...] path `
+     *
+     * Returns the values at path from multiple key arguments. Returns null for nonexistent keys and nonexistent paths.
+     *
+     * [Doc](https://redis.io/commands/json.mget/)
+     * @since JSON 1.0.0
+     * @return [] - the JSON serialization of the value at each key's path.
+     */
     public suspend fun jsonMGet(key: String, vararg keys: String, path: String): List<String>
+
+    /**
+     * ### ` JSON.NUMINCRBY key path value `
+     *
+     * Increments the number value stored at path by number.
+     *
+     * [Doc](https://redis.io/commands/json.numincrby/)
+     * @since JSON 1.0.0
+     * @return [] if the matching JSON value is not a number.
+     */
+    public suspend fun jsonNumIncrBy(key: String, path: String, by: Long): String
 
     /**
      * ### ` JSON.NUMINCRBY key path value `
@@ -467,16 +553,22 @@ public interface JsonCommands {
 }
 
 internal interface JsonCommandExecutor : BaseJsonCommands, JsonCommands, CommandExecutor {
+    override suspend fun jsonArrAppend(key: String, path: String, elements: Array<String>): List<Int?> =
+        execute(_jsonArrAppend(key, path, elements)).responseTo()
+
     override suspend fun jsonArrAppend(
         key: String,
         path: String,
         element: String,
         vararg elements: String
     ): List<Int?> =
-        execute(_jsonArrAppend(key, path, element, *elements)).responseTo()
+        execute(_jsonArrAppend(key, path, arrayOf(element, *elements))).responseTo()
 
     override suspend fun jsonArrIndex(key: String, path: String, value: String, start: Int, stop: Int): List<Int?> =
         execute(_jsonArrIndex(key, path, value, start, stop)).responseTo()
+
+    override suspend fun jsonArrInsert(key: String, path: String, index: Int, elements: Array<String>): List<Int?> =
+        execute(_jsonArrInsert(key, path, index, elements)).responseTo()
 
     override suspend fun jsonArrInsert(
         key: String,
@@ -484,7 +576,7 @@ internal interface JsonCommandExecutor : BaseJsonCommands, JsonCommands, Command
         index: Int,
         element: String,
         vararg elements: String
-    ): List<Int?> = execute(_jsonArrInsert(key, path, index, element, *elements)).responseTo()
+    ): List<Int?> = execute(_jsonArrInsert(key, path, index, elements = arrayOf(element, *elements))).responseTo()
 
     override suspend fun jsonArrLen(key: String, path: String): List<Int?> =
         execute(_jsonArrLen(key, path)).responseTo()
@@ -503,6 +595,14 @@ internal interface JsonCommandExecutor : BaseJsonCommands, JsonCommands, Command
 
     override suspend fun jsonGet(
         key: String,
+        paths: Array<String>,
+        indent: String?,
+        newline: String?,
+        space: String?
+    ): String? = execute(_jsonGet(key, paths = paths, indent, newline, space))
+
+    override suspend fun jsonGet(
+        key: String,
         path: String,
         vararg paths: String,
         indent: String?,
@@ -510,8 +610,14 @@ internal interface JsonCommandExecutor : BaseJsonCommands, JsonCommands, Command
         space: String?
     ): String? = execute(_jsonGet(key, paths = arrayOf(path, *paths), indent, newline, space)).responseTo()
 
+    override suspend fun jsonMGet(keys: Array<String>, path: String): List<String> =
+        execute(_jsonMGet(keys, path)).responseTo()
+
     override suspend fun jsonMGet(key: String, vararg keys: String, path: String): List<String> =
         execute(_jsonMGet(keys = arrayOf(key, *keys), path)).responseTo()
+
+    override suspend fun jsonNumIncrBy(key: String, path: String, by: Long): String =
+        execute(_jsonNumIncrBy(key, path, by)).responseTo()
 
     override suspend fun jsonNumIncrBy(key: String, path: String, by: Double): String =
         execute(_jsonNumIncrBy(key, path, by)).responseTo()
