@@ -123,3 +123,12 @@ suspend fun publish(){
     }
 }
 ```
+
+## SSL support
+You can protect your connection to redis by using SSL certificates. Currently, Reds client supports the trust manager option (a file with X.509 certificates in PEM format). In order to configure it on the server side, please read [the official redis documentation](https://redis.io/docs/manual/security/encryption/). You can configure Reds client using the following code:
+```kotlin title="SSL Configuration"
+     val client = newClient(
+         Endpoint.from("127.0.0.1:6379"),
+         KredsClientConfig.Builder(sslTrustManager = File("/path/to/server-ca.cer")).build()
+     )
+```
