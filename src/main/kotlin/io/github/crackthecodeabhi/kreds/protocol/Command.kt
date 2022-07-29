@@ -53,6 +53,7 @@ internal interface CommandExecutor {
     suspend fun executeCommands(commands: List<CommandExecution<*>>): List<RedisMessage>
 }
 
+internal val AllCommandProcessor = CommandProcessor<Any?>(SimpleStringHandler, IntegerHandler, BulkStringHandler, ArrayHandler)
 internal val IntegerCommandProcessor = CommandProcessor<Long>(IntegerHandler)
 internal val BulkStringCommandProcessor = CommandProcessor<String?>(BulkStringHandler)
 internal val SimpleStringCommandProcessor = CommandProcessor<String>(SimpleStringHandler)
