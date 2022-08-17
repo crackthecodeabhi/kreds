@@ -84,7 +84,7 @@ tasks.getByName<Test>("test") {
 }
 
 tasks.withType(JavaCompile::class) {
-    targetCompatibility = "17"
+    targetCompatibility = "11"
     sourceCompatibility = "17"
 }
 
