@@ -18,7 +18,7 @@
  */
 
 plugins {
-    kotlin("jvm") version "1.6.0"
+    kotlin("jvm") version "1.7.10"
     id("org.jetbrains.dokka") version "1.6.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     `java-library`
@@ -65,16 +65,16 @@ nexusPublishing {
 }
 
 dependencies {
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
     implementation("io.netty:netty-codec-redis:4.1.72.Final")
     implementation("io.netty:netty-handler:4.1.72.Final")
     implementation(kotlin("stdlib"))
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
-    testImplementation("io.kotest:kotest-runner-junit5:5.0.2")
-    testImplementation("io.kotest:kotest-assertions-core:5.0.2")
-    testImplementation("net.swiftzer.semver:semver:1.1.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation("io.kotest:kotest-runner-junit5:5.4.1")
+    testImplementation("io.kotest:kotest-assertions-core:5.4.1")
+    testImplementation("net.swiftzer.semver:semver:1.2.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
     testImplementation("ch.qos.logback:logback-classic:1.3.0-alpha11")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
