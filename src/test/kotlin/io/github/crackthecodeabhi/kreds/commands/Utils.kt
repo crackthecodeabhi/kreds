@@ -39,7 +39,8 @@ val REDIS_6_2_0 = SemVer.parse("6.2.0")
 val REDIS_7_0_0 = SemVer.parse("7.0.0")
 
 internal fun getTestClient(endpoint: Endpoint? = null, config: KredsClientConfig? = null): InternalKredsClient {
-    val e = endpoint ?: Endpoint.from("127.0.0.1:6379")
+    val redisPort = System.getProperty("REDIS_PORT") ?: throw RuntimeException("Required system property: REDIS_PORT")
+    val e = endpoint ?: Endpoint.from("127.0.0.1:${redisPort}")
     val client = config?.let { newClient(e, it) } ?: newClient(e)
     return client as InternalKredsClient
 }
