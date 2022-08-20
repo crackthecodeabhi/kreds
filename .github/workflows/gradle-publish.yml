@@ -10,9 +10,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up JDK 17
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '11'
           distribution: 'adopt'
       - name: Publish
         run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -no-daemon --no-parallel --stacktrace -DSONATYPE_USERNAME="$SONATYPE_USERNAME" -DSONATYPE_PASSWORD="$SONATYPE_PASSWORD" -DGPG_PRIVATE_PASSWORD="$GPG_PRIVATE_PASSWORD" -DGPG_PRIVATE_KEY="$GPG_PRIVATE_KEY"
