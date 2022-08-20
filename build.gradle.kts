@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 /*
  *  Copyright (C) 2021 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
@@ -98,6 +100,11 @@ kotlin {
 }
 
 tasks {
+    withType<KotlinCompile>{
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
     register<Jar>("dokkaJar") {
         from(dokkaHtml)
         dependsOn(dokkaHtml)
