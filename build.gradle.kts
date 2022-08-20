@@ -17,6 +17,10 @@
  *
  */
 
+println("============================")
+println("Gradle Running on Java: ${JavaVersion.current()}")
+println("============================")
+
 plugins {
     kotlin("jvm") version "1.6.21"
     id("org.jetbrains.dokka") version "1.6.0"
