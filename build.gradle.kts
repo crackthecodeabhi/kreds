@@ -81,6 +81,7 @@ dependencies {
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
+    systemProperty("REDIS_PORT",System.getProperty("REDIS_PORT")?: "6379")
 }
 
 tasks.withType(JavaCompile::class) {
