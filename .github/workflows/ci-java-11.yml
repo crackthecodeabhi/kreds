@@ -18,7 +18,7 @@ jobs:
       rejson:
         image: redislabs/rejson:2.2.0
         ports:
-          - 6379:6399
+          - 6399:6379
     steps:
       - name: Checkout
         uses: actions/checkout@v2
