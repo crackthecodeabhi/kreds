@@ -28,8 +28,11 @@ Kreds is a thread-safe, idiomatic, coroutine based Redis client written in 100% 
 ## Use cases
 * Web app cache client: Don't open multiple connections to redis, for each http request, use single connection in a thread-safe manner.
 * Pub/Sub: Subscribe to multiple channels from one or multiple Redis, without being limited by java threads.
- 
-**Kreds is compatible with redis 6.x.x and above.**
+
+## Compatibility
+* Java 11 and above
+* Compatible with Redis: 6 and above.
+* Tested against Redis: 6.2.7, 7.0
 
 ## Documentation
 You can find the user guide and documentation [here](https://crackthecodeabhi.github.io/kreds) :construction:
@@ -44,6 +47,7 @@ All the following redis features are supported:
 * Publish/Subscribe. :heavy_check_mark:
 * Connection handling commands. :heavy_check_mark:
 * RedisJSON support. :heavy_check_mark:
+* Scripting support. :heavy_check_mark:
 * Transactions. :construction: [Implementation done, testing in progress.]
 
 ## How do I use it?
@@ -67,20 +71,25 @@ launch {
 <dependency>
   <groupId>io.github.crackthecodeabhi</groupId>
   <artifactId>kreds</artifactId>
-  <version>0.7.1</version>
+  <version>0.8</version>
 </dependency>
 ```
 
 Gradle Groovy DSL
 
 ```groovy
-implementation 'io.github.crackthecodeabhi:kreds:0.7.1'
+implementation 'io.github.crackthecodeabhi:kreds:0.8'
 
 ```
 Gradle Kotlin DSL
 ```kotlin
-implementation("io.github.crackthecodeabhi:kreds:0.7.1")
+implementation("io.github.crackthecodeabhi:kreds:0.8")
 ```
+
+## Sponsor the project on Github or Patreon!
+Do you find this project useful? Please show your support by sponsoring the project.
+* [Patreon](https://patreon.com/abhicreates)
+* [Github Sponsors](https://github.com/sponsors/crackthecodeabhi)
 
 ## License
 

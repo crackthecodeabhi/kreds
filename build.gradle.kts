@@ -36,7 +36,7 @@ plugins {
 }
 
 group = "io.github.crackthecodeabhi"
-version = "0.7.1"
+version = "0.8"
 
 repositories {
     mavenCentral()
