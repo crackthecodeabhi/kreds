@@ -41,7 +41,7 @@ class PubSubTest : FunSpec({
         val counter = AtomicInteger(0)
         launch {
             val subscriber =
-                newSubscriberClient(Endpoint.from("127.0.0.1:6379"), object : AbstractKredsSubscriber() {
+                newSubscriberClient(setup.client.endpoint, object : AbstractKredsSubscriber() {
                     override fun onException(ex: Throwable) {
                         println(ex)
                     }
