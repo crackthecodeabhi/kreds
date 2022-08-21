@@ -237,7 +237,7 @@ class ListCommandsTest : FunSpec({
                 "e4",
                 "e5"
             )
-            responseList[i++]() shouldBe "TEST"
+            responseList[i++]() shouldBe "e000"
             responseList[i++]() shouldBe null
             responseList[i++]() as List<String> shouldContainInOrder listOf("e0", "e2", "e1")
             // client.lpop("nolist", 100) shouldBe null TODO: fix this after verification
