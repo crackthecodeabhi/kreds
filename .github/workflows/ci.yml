@@ -52,7 +52,7 @@ jobs:
         run: ./gradlew test -DREDIS_PORT=6399 --tests io.github.crackthecodeabhi.kreds.commands.JsonCommandsTest
 
       - name: Codecov-Umbrella
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           directory: ./build/reports/jacoco
           flags: unittests
