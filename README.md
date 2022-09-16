@@ -91,6 +91,11 @@ Do you find this project useful? Please show your support by sponsoring the proj
 * [Patreon](https://patreon.com/abhicreates)
 * [Github Sponsors](https://github.com/sponsors/crackthecodeabhi)
 
+## Contribution
+Most of the frequently used commands are implemented, if you find any command unimplemented, you are welcome to open a pull request or request for feature.
+
+### Please write test cases which cover your new code sections.
+
 ## License
 
 Copyright (c) 2021 Abhijith Shivaswamy
