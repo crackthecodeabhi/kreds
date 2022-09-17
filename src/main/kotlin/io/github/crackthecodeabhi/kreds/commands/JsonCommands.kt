@@ -264,7 +264,7 @@ public interface JsonCommands {
         value: String,
         start: Int = 0,
         stop: Int = 0
-    ): List<Int?>
+    ): List<Long?>
 
     /**
      * ### ` JSON.ARRINSERT key path index value [value ...] `
@@ -564,7 +564,7 @@ internal interface JsonCommandExecutor : BaseJsonCommands, JsonCommands, Command
     ): List<Int?> =
         execute(_jsonArrAppend(key, path, arrayOf(element, *elements))).responseTo()
 
-    override suspend fun jsonArrIndex(key: String, path: String, value: String, start: Int, stop: Int): List<Int?> =
+    override suspend fun jsonArrIndex(key: String, path: String, value: String, start: Int, stop: Int): List<Long?> =
         execute(_jsonArrIndex(key, path, value, start, stop)).responseTo()
 
     override suspend fun jsonArrInsert(key: String, path: String, index: Int, elements: Array<String>): List<Int?> =
@@ -608,7 +608,7 @@ internal interface JsonCommandExecutor : BaseJsonCommands, JsonCommands, Command
         indent: String?,
         newline: String?,
         space: String?
-    ): String? = execute(_jsonGet(key, paths = arrayOf(path, *paths), indent, newline, space)).responseTo()
+    ): String? = execute(_jsonGet(key, paths = arrayOf(path, *paths), indent, newline, space))
 
     override suspend fun jsonMGet(keys: Array<String>, path: String): List<String> =
         execute(_jsonMGet(keys, path)).responseTo()
