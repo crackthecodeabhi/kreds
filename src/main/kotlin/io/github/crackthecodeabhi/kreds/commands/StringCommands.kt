@@ -59,10 +59,10 @@ internal interface BaseStringCommands {
     fun _set(key: String, value: String, setOption: SetOption?) =
         CommandExecution(SET, SimpleAndBulkStringCommandProcessor, *createArguments(
             key, value,
-            setOption?.exSeconds?.let { KeyValueArgument("EX", it.toString(10)) },
-            setOption?.pxMilliseconds?.let { KeyValueArgument("PX", it.toString(10)) },
-            setOption?.exatTimestamp?.let { KeyValueArgument("EXAT", it.toString(10)) },
-            setOption?.pxatMillisecondTimestamp?.let { KeyValueArgument("PXAT", it.toString(10)) },
+            setOption?.exSeconds?.let { Pair("EX", it.toString(10)) },
+            setOption?.pxMilliseconds?.let { Pair("PX", it.toString(10)) },
+            setOption?.exatTimestamp?.let { Pair("EXAT", it.toString(10)) },
+            setOption?.pxatMillisecondTimestamp?.let { Pair("PXAT", it.toString(10)) },
             setOption?.keepTTL?.let { KeyOnlyArgument("KEEPTTL") },
             setOption?.nx?.let { KeyOnlyArgument("NX") },
             setOption?.xx?.let { KeyOnlyArgument("XX") },
@@ -72,10 +72,10 @@ internal interface BaseStringCommands {
     fun _getEx(key: String, getExOption: GetExOption? = null) =
         CommandExecution(GETEX, BulkStringCommandProcessor, *createArguments(
             key,
-            getExOption?.exSeconds?.let { KeyValueArgument("EX", it.toString(10)) },
-            getExOption?.pxMilliseconds?.let { KeyValueArgument("PX", it.toString(10)) },
-            getExOption?.exatTimestamp?.let { KeyValueArgument("EXAT", it.toString(10)) },
-            getExOption?.pxatMillisecondTimestamp?.let { KeyValueArgument("PXAT", it.toString(10)) },
+            getExOption?.exSeconds?.let { Pair("EX", it.toString(10)) },
+            getExOption?.pxMilliseconds?.let { Pair("PX", it.toString(10)) },
+            getExOption?.exatTimestamp?.let { Pair("EXAT", it.toString(10)) },
+            getExOption?.pxatMillisecondTimestamp?.let { Pair("PXAT", it.toString(10)) },
             getExOption?.persist?.let { KeyOnlyArgument("PERSIST") }
         ))
 
