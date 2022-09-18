@@ -33,7 +33,7 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
       - name: "Restore Gradle cache"
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.8
         with:
           path: |
             ~/.gradle/caches
