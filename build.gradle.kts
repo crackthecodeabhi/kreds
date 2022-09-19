@@ -71,7 +71,7 @@ nexusPublishing {
 }
 
 dependencies {
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.0")
     implementation("io.netty:netty-codec-redis:4.1.82.Final")
     implementation("io.netty:netty-handler:4.1.82.Final")
     implementation(kotlin("stdlib"))
