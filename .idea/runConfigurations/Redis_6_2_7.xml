@@ -3,6 +3,7 @@
     <deployment type="docker-image">
       <settings>
         <option name="imageTag" value="redis:6.2.7-alpine" />
+        <option name="command" value="redis-server /usr/local/etc/redis/redis.conf" />
         <option name="containerName" value="redis-6.2.7" />
         <option name="portBindings">
           <list>
@@ -10,6 +11,16 @@
               <option name="containerPort" value="6379" />
               <option name="hostPort" value="6379" />
             </DockerPortBindingImpl>
+          </list>
+        </option>
+        <option name="showCommandPreview" value="true" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/usr/local/etc/redis" />
+              <option name="hostPath" value="$PROJECT_DIR$/test/config" />
+              <option name="readOnly" value="true" />
+            </DockerVolumeBindingImpl>
           </list>
         </option>
       </settings>
