@@ -78,7 +78,7 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
     testImplementation("io.kotest:kotest-runner-junit5:5.5.4")
-    testImplementation("io.kotest:kotest-assertions-core:5.4.2")
+    testImplementation("io.kotest:kotest-assertions-core:5.5.4")
     testImplementation("net.swiftzer.semver:semver:1.2.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
     testImplementation("ch.qos.logback:logback-classic:1.4.4")
