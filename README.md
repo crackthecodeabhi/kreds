@@ -96,6 +96,9 @@ Most of the frequently used commands are implemented, if you find any command un
 
 ### Please write test cases which cover your new code sections.
 
+### Sponsors
+* [Neobhi](https://www.neobhi.com)
+
 ## License
 
 Copyright (c) 2021 Abhijith Shivaswamy
