@@ -267,9 +267,19 @@ internal interface BaseZSetCommands {
             min,
             max,
             by,
-            rev?.let { KeyOnlyArgument("REV") },
+            rev?.let {
+                if (it)
+                    KeyOnlyArgument("REV")
+                else
+                    EmptyArgument
+            },
             limit?.let { KeyValueArgument("LIMIT","${it.first} ${it.second}") },
-            withScores.let { "WITHSCORES" }
+            withScores?.let {
+                if (it)
+                    KeyOnlyArgument("WITHSCORES")
+                else
+                    EmptyArgument
+            }
         )
     )
 }
