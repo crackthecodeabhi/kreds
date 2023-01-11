@@ -30,7 +30,7 @@ plugins {
     `java-library`
     `maven-publish`
     signing
-    id("com.dorongold.task-tree") version "2.1.0"
+    id("com.dorongold.task-tree") version "2.1.1"
     id("io.gitlab.arturbosch.detekt") version "1.18.0"
     jacoco
 }
