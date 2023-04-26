@@ -80,7 +80,7 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5:5.5.4")
     testImplementation("io.kotest:kotest-assertions-core:5.5.4")
     testImplementation("net.swiftzer.semver:semver:1.2.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
     testImplementation("ch.qos.logback:logback-classic:1.4.5")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
