@@ -72,12 +72,12 @@ class FunctionCommandsTest : FunSpec({
             client.fcall("test_function", arrayOf("key"), arrayOf("value"), readOnly = true)
         }
 
-        client.functionDelete(moduleName).shouldBeOk()
+        client.functionDelete(moduleName)
         checkNotFound()
 
         client.functionLoad(replace = false, code) shouldBe moduleName
 
-        client.functionFlush(SyncOption.SYNC).shouldBeOk()
+        client.functionFlush(SyncOption.SYNC)
         checkNotFound()
 
         shouldThrow<KredsRedisDataException> {

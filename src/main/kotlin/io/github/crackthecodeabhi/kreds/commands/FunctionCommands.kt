@@ -91,6 +91,15 @@ internal interface BaseFunctionCommands {
 }
 
 public interface FunctionCommands {
+    /**
+     * ### `FCALL function numkeys [key [key ...]] [arg [arg ...]]`
+     * Invokes a function.
+     *
+     * [Doc](https://redis.io/commands/fcall/)
+     * @since 7.0.0
+     * @param readOnly Whether to allow commands that modify data
+     * @return Value returned by executed function
+     */
     public suspend fun fcall(
         function: String,
         keys: Array<String>,
@@ -98,12 +107,41 @@ public interface FunctionCommands {
         readOnly: Boolean = false
     ): Any?
 
-    public suspend fun functionDelete(libraryName: String): String
+    /**
+     * ### `FUNCTION DELETE library-name`
+     * Delete a library and all its functions.
+     *
+     * [Doc](https://redis.io/commands/function-delete/)
+     * @since 7.0.0
+     */
+    public suspend fun functionDelete(libraryName: String)
 
-    public suspend fun functionFlush(sync: SyncOption): String
+    /**
+     * ### `FUNCTION FLUSH [ASYNC | SYNC]`
+     * Deletes all the libraries.
+     *
+     * [Doc](https://redis.io/commands/function-flush/)
+     * @since 7.0.0
+     */
+    public suspend fun functionFlush(sync: SyncOption)
 
-    public suspend fun functionKill(): String
+    /**
+     * ### `FUNCTION KILL`
+     * Kill a function that is currently executing.
+     *
+     * [Doc](https://redis.io/commands/function-kill/)
+     * @since 7.0.0
+     */
+    public suspend fun functionKill()
 
+    /**
+     * ### `FUNCTION LOAD \[REPLACE] function-code`
+     * Loads a library to Redis.
+     *
+     * [Doc](https://redis.io/commands/function-load/)
+     * @since 7.0.0
+     * @return The library name that was loaded
+     */
     public suspend fun functionLoad(replace: Boolean, functionCode: String): String
 }
 
@@ -111,11 +149,17 @@ internal interface FunctionCommandExecutor : CommandExecutor, FunctionCommands, 
     override suspend fun fcall(function: String, keys: Array<String>, args: Array<String>, readOnly: Boolean) =
         execute(_fcall(function, keys, args, readOnly))
 
-    override suspend fun functionDelete(libraryName: String): String = execute(_functionDelete(libraryName))
+    override suspend fun functionDelete(libraryName: String) {
+        execute(_functionDelete(libraryName))
+    }
 
-    override suspend fun functionFlush(sync: SyncOption): String = execute(_functionFlush(sync))
+    override suspend fun functionFlush(sync: SyncOption) {
+        execute(_functionFlush(sync))
+    }
 
-    override suspend fun functionKill(): String = execute(_functionKill())
+    override suspend fun functionKill() {
+        execute(_functionKill())
+    }
 
     override suspend fun functionLoad(replace: Boolean, functionCode: String): String =
         execute(_functionLoad(replace, functionCode)).responseTo()
