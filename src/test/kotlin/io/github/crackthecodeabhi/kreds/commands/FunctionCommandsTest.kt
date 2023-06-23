@@ -44,22 +44,22 @@ class FunctionCommandsTest : FunSpec({
 
         checkNotFound()
 
-        val moduleName = "functionstest"
+        val libraryName = "functionstest"
         val code = """
-            #!lua name=$moduleName
+            #!lua name=$libraryName
             redis.register_function("test_function", function(keys, args)
                 return redis.call("SET", keys[1], args[1])
             end)
         """.trimIndent()
 
-        client.functionLoad(replace = false, code) shouldBe moduleName
+        client.functionLoad(replace = false, code) shouldBe libraryName
 
         shouldThrow<KredsRedisDataException> {
             // ERR Library 'functionstest' already exists
             client.functionLoad(replace = false, code)
         }
 
-        client.functionLoad(replace = true, code) shouldBe moduleName
+        client.functionLoad(replace = true, code) shouldBe libraryName
 
         val key = "test_key"
         val value = "Hello World"
@@ -72,10 +72,10 @@ class FunctionCommandsTest : FunSpec({
             client.fcall("test_function", arrayOf("key"), arrayOf("value"), readOnly = true)
         }
 
-        client.functionDelete(moduleName)
+        client.functionDelete(libraryName)
         checkNotFound()
 
-        client.functionLoad(replace = false, code) shouldBe moduleName
+        client.functionLoad(replace = false, code) shouldBe libraryName
 
         client.functionFlush(SyncOption.SYNC)
         checkNotFound()
