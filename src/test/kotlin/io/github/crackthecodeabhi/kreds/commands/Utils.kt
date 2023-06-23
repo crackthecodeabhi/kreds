@@ -68,8 +68,14 @@ internal class ClientSetup : BeforeSpec, Then<ClientSetup> {
         serverModules = client
             .info(ServerInfoSection.modules)!!
             .lines()
-            .filter { it.isNotEmpty() && !it.startsWith('#') }
-            .map { it.substring("module:name=".length, it.indexOf(',')) }
+            .mapNotNull { line ->
+                val start = "module:name="
+                if (!line.startsWith(start)) {
+                    null
+                } else {
+                    line.substring(start.length, line.indexOf(','))
+                }
+            }
             .toSet()
 
         andThen?.invoke(this)
