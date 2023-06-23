@@ -26,14 +26,11 @@ import io.github.crackthecodeabhi.kreds.args.toArgument
 import io.github.crackthecodeabhi.kreds.commands.FunctionCommand.FUNCTION_DELETE
 import io.github.crackthecodeabhi.kreds.commands.FunctionCommand.FUNCTION_FLUSH
 import io.github.crackthecodeabhi.kreds.commands.FunctionCommand.FUNCTION_KILL
-import io.github.crackthecodeabhi.kreds.commands.FunctionCommand.FUNCTION_LIST
 import io.github.crackthecodeabhi.kreds.commands.FunctionSubCommand.DELETE
 import io.github.crackthecodeabhi.kreds.commands.FunctionSubCommand.FLUSH
 import io.github.crackthecodeabhi.kreds.commands.FunctionSubCommand.KILL
-import io.github.crackthecodeabhi.kreds.commands.FunctionSubCommand.LIST
 import io.github.crackthecodeabhi.kreds.commands.FunctionSubCommand.LOAD
 import io.github.crackthecodeabhi.kreds.protocol.AllCommandProcessor
-import io.github.crackthecodeabhi.kreds.protocol.ArrayCommandProcessor
 import io.github.crackthecodeabhi.kreds.protocol.BulkStringCommandProcessor
 import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
 import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
@@ -47,12 +44,11 @@ internal enum class FunctionCommand(
     FUNCTION_DELETE(DELETE),
     FUNCTION_FLUSH(FLUSH),
     FUNCTION_KILL(KILL),
-    FUNCTION_LIST(LIST),
     FUNCTION_LOAD(LOAD);
 }
 
 internal enum class FunctionSubCommand(override val subCommand: Command? = null) : Command {
-    DELETE, FLUSH, KILL, LIST, LOAD;
+    DELETE, FLUSH, KILL, LOAD;
 
     override val string = name
 }
@@ -74,13 +70,6 @@ internal interface BaseFunctionCommands {
         CommandExecution(FUNCTION_FLUSH, SimpleStringCommandProcessor, sync)
 
     fun _functionKill() = CommandExecution(FUNCTION_KILL, SimpleStringCommandProcessor)
-
-    fun _functionList(libraryName: String?, withCode: Boolean) = CommandExecution(
-        FUNCTION_LIST,
-        ArrayCommandProcessor,
-        libraryName.toArgument(),
-        if (withCode) "WITHCODE".toArgument() else EmptyArgument
-    )
 
     fun _functionLoad(replace: Boolean, functionCode: String) = CommandExecution(
         FunctionCommand.FUNCTION_LOAD,
