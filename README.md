@@ -48,6 +48,7 @@ All the following redis features are supported:
 * Connection handling commands. :heavy_check_mark:
 * RedisJSON support. :heavy_check_mark:
 * Scripting support. :heavy_check_mark:
+* Functions. :heavy_check_mark:
 * Transactions. :construction: [Implementation done, testing in progress.]
 
 ## How do I use it?
