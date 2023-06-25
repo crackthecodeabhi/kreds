@@ -35,22 +35,23 @@ class FunctionCommandsTest : FunSpec({
     beforeTest { client.functionFlush(SyncOption.SYNC) }
 
     test("Function commands").config(enabledOrReasonIf = clientSetup.enableIf(REDIS_7_0_0)) {
+        val libraryName = "functionstest"
+        val functionName = "testfunction"
+        val code = """
+            #!lua name=$libraryName
+            redis.register_function("$functionName", function(keys, args)
+                return redis.call("SET", keys[1], args[1])
+            end)
+        """.trimIndent()
+
         suspend fun checkNotFound() {
             shouldThrow<KredsRedisDataException> {
                 // ERR Function not found
-                client.fcall("test_function", arrayOf("key"), arrayOf("value"))
+                client.fcall(functionName, arrayOf("key"), arrayOf("value"))
             }
         }
 
         checkNotFound()
-
-        val libraryName = "functionstest"
-        val code = """
-            #!lua name=$libraryName
-            redis.register_function("test_function", function(keys, args)
-                return redis.call("SET", keys[1], args[1])
-            end)
-        """.trimIndent()
 
         client.functionLoad(replace = false, code) shouldBe libraryName
 
@@ -63,13 +64,13 @@ class FunctionCommandsTest : FunSpec({
 
         val key = "test_key"
         val value = "Hello World"
-        (client.fcall("test_function", arrayOf(key), arrayOf(value)) as String).shouldBeOk()
+        (client.fcall(functionName, arrayOf(key), arrayOf(value)) as String).shouldBeOk()
         client.get(key) shouldBe value
         client.del(key)
 
         shouldThrow<KredsRedisDataException> {
             // ERR Can not execute a script with write flag using *_ro command.
-            client.fcall("test_function", arrayOf("key"), arrayOf("value"), readOnly = true)
+            client.fcall(functionName, arrayOf("key"), arrayOf("value"), readOnly = true)
         }
 
         client.functionDelete(libraryName)
