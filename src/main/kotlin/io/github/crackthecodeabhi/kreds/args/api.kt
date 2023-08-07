@@ -198,3 +198,9 @@ public class Weights(public val weight: Int, public val weights: Array<Int>? = n
 public enum class JsonSetOption : Argument {
     NX, XX
 }
+
+public enum class FunctionRestorePolicy : Argument {
+    FLUSH, APPEND, REPLACE;
+
+    override fun toString(): String = name
+}

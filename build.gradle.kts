@@ -24,14 +24,14 @@ println("Gradle Running on Java: ${JavaVersion.current()}")
 println("============================")
 
 plugins {
-    kotlin("jvm") version "1.6.21"
+    kotlin("jvm") version "1.8.22"
     id("org.jetbrains.dokka") version "1.7.10"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     `java-library`
     `maven-publish`
     signing
     id("com.dorongold.task-tree") version "2.1.1"
-    id("io.gitlab.arturbosch.detekt") version "1.18.0"
+    id("io.gitlab.arturbosch.detekt") version "1.23.0"
     jacoco
 }
 
@@ -76,6 +76,7 @@ dependencies {
     implementation("io.netty:netty-handler:4.1.91.Final")
     implementation(kotlin("stdlib"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.0")
 
     testImplementation("io.kotest:kotest-runner-junit5:5.5.4")
     testImplementation("io.kotest:kotest-assertions-core:5.5.4")
