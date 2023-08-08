@@ -26,7 +26,7 @@ println("============================")
 plugins {
     kotlin("jvm") version "1.8.22"
     id("org.jetbrains.dokka") version "1.7.10"
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     `java-library`
     `maven-publish`
     signing
