@@ -72,19 +72,19 @@ launch {
 <dependency>
   <groupId>io.github.crackthecodeabhi</groupId>
   <artifactId>kreds</artifactId>
-  <version>0.8</version>
+  <version>0.9.0</version>
 </dependency>
 ```
 
 Gradle Groovy DSL
 
 ```groovy
-implementation 'io.github.crackthecodeabhi:kreds:0.8'
+implementation 'io.github.crackthecodeabhi:kreds:0.9.0'
 
 ```
 Gradle Kotlin DSL
 ```kotlin
-implementation("io.github.crackthecodeabhi:kreds:0.8")
+implementation("io.github.crackthecodeabhi:kreds:0.9.0")
 ```
 
 ## Sponsor the project on Github or Patreon!
