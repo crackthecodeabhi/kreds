@@ -31,12 +31,12 @@ plugins {
     `maven-publish`
     signing
     id("com.dorongold.task-tree") version "2.1.1"
-    id("io.gitlab.arturbosch.detekt") version "1.18.0"
+    id("io.gitlab.arturbosch.detekt") version "1.23.0"
     jacoco
 }
 
 group = "io.github.crackthecodeabhi"
-version = "0.8.1"
+version = "0.9.0"
 
 repositories {
     mavenCentral()
@@ -76,12 +76,13 @@ dependencies {
     implementation("io.netty:netty-handler:4.1.91.Final")
     implementation(kotlin("stdlib"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.0")
 
     testImplementation("io.kotest:kotest-runner-junit5:5.5.4")
     testImplementation("io.kotest:kotest-assertions-core:5.5.4")
     testImplementation("net.swiftzer.semver:semver:1.2.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
-    testImplementation("ch.qos.logback:logback-classic:1.4.5")
+    testImplementation("ch.qos.logback:logback-classic:1.4.7")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 

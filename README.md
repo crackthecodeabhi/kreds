@@ -48,6 +48,7 @@ All the following redis features are supported:
 * Connection handling commands. :heavy_check_mark:
 * RedisJSON support. :heavy_check_mark:
 * Scripting support. :heavy_check_mark:
+* Functions. :heavy_check_mark:
 * Transactions. :construction: [Implementation done, testing in progress.]
 
 ## How do I use it?
@@ -71,19 +72,19 @@ launch {
 <dependency>
   <groupId>io.github.crackthecodeabhi</groupId>
   <artifactId>kreds</artifactId>
-  <version>0.8</version>
+  <version>0.9.0</version>
 </dependency>
 ```
 
 Gradle Groovy DSL
 
 ```groovy
-implementation 'io.github.crackthecodeabhi:kreds:0.8'
+implementation 'io.github.crackthecodeabhi:kreds:0.9.0'
 
 ```
 Gradle Kotlin DSL
 ```kotlin
-implementation("io.github.crackthecodeabhi:kreds:0.8")
+implementation("io.github.crackthecodeabhi:kreds:0.9.0")
 ```
 
 ## Sponsor the project on Github or Patreon!
