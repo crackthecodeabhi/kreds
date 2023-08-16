@@ -24,7 +24,7 @@ println("Gradle Running on Java: ${JavaVersion.current()}")
 println("============================")
 
 plugins {
-    kotlin("jvm") version "1.8.22"
+    kotlin("jvm") version "1.9.0"
     id("org.jetbrains.dokka") version "1.7.10"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     `java-library`
