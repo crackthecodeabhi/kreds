@@ -75,7 +75,7 @@ dependencies {
     implementation("io.netty:netty-codec-redis:4.1.86.Final")
     implementation("io.netty:netty-handler:4.1.91.Final")
     implementation(kotlin("stdlib"))
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.0")
 
     testImplementation("io.kotest:kotest-runner-junit5:5.6.2")
