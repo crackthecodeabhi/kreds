@@ -1,4 +1,4 @@
-# Kreds
+# Kreds by [Neobhi](https://neobhi.com)
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.crackthecodeabhi/kreds.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.crackthecodeabhi%22%20AND%20a:%22kreds%22)
 [![javadoc](https://javadoc.io/badge2/io.github.crackthecodeabhi/kreds/javadoc.svg)](https://javadoc.io/doc/io.github.crackthecodeabhi/kreds)
@@ -86,12 +86,6 @@ Gradle Kotlin DSL
 ```kotlin
 implementation("io.github.crackthecodeabhi:kreds:0.9.0")
 ```
-
-## Sponsor the project on Github or Patreon!
-Do you find this project useful? Please show your support by sponsoring the project.
-* [Patreon](https://patreon.com/abhicreates)
-* [Github Sponsors](https://github.com/sponsors/crackthecodeabhi)
-
 ## Contribution
 Most of the frequently used commands are implemented, if you find any command unimplemented, you are welcome to open a pull request or request for feature.
 
