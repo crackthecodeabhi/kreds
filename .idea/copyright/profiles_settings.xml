@@ -1,8 +1,0 @@
-<component name="CopyrightManager">
-  <settings default="Apache 2.0">
-    <module2copyright>
-      <element module="Production" copyright="Apache 2.0" />
-      <element module="Tests" copyright="Apache 2.0" />
-    </module2copyright>
-  </settings>
-</component>

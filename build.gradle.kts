@@ -182,13 +182,13 @@ publishing {
     }
 }
 
-signing {
-    useInMemoryPgpKeys(
-        System.getProperty("GPG_PRIVATE_KEY"),
-        System.getProperty("GPG_PRIVATE_PASSWORD")
-    )
-    sign(publishing.publications)
-}
+//signing {
+//    useInMemoryPgpKeys(
+//        System.getProperty("GPG_PRIVATE_KEY"),
+//        System.getProperty("GPG_PRIVATE_PASSWORD")
+//    )
+//    sign(publishing.publications)
+//}
 
 detekt {
     buildUponDefaultConfig = true

@@ -1,3 +1,4 @@
 .gradle
 build
 docs/userguide/site
+/.idea/
