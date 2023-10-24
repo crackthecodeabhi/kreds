@@ -36,7 +36,7 @@ plugins {
 }
 
 group = "io.github.crackthecodeabhi"
-version = "0.9.0"
+version = "0.9.2"
 
 repositories {
     mavenCentral()
@@ -142,6 +142,7 @@ tasks {
 }
 
 publishing {
+
     publications {
         create<MavenPublication>("mavenJava") {
             pom {
@@ -177,6 +178,15 @@ publishing {
                 artifact(tasks.kotlinSourcesJar) {
                     classifier = "sources"
                 }
+            }
+
+            repositories {
+
+                maven {
+                    name = "fyre"
+                    url = uri("https://maven.pkg.jetbrains.space/fyre/p/fyre-games/maven")
+                }
+
             }
         }
     }

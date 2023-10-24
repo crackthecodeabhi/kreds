@@ -46,6 +46,9 @@ internal interface BaseHashCommands {
     fun _hgetAll(key: String) =
         CommandExecution(HGETALL, ArrayCommandProcessor, key.toArgument())
 
+    fun _hgetAllMap(key: String) =
+        CommandExecution(HGETALL, MapCommandProcessor, key.toArgument())
+
     fun _hincrBy(key: String, field: String, increment: Long) =
         CommandExecution(HINCRBY, IntegerCommandProcessor, *createArguments(key, field, increment))
 
@@ -72,6 +75,13 @@ internal interface BaseHashCommands {
         CommandExecution(
             HSET, IntegerCommandProcessor, *createArguments(
                 key, fieldValuePair, *fieldValuePairs
+            )
+        )
+
+    fun _hset(key: String, entries: Map<*,*>) =
+        CommandExecution(
+            HSET, IntegerCommandProcessor, *createArguments(
+                key, entries
             )
         )
 
@@ -153,6 +163,18 @@ public interface HashCommands {
      *  @return list of fields and their values stored in the hash, or an empty list when key does not exist.
      */
     public suspend fun hgetAll(key: String): List<String>
+
+    /**
+     * ###  HGETALL key
+     *
+     *  Returns a map of all fields and values of the hash stored at key.
+     *  In the returned value, every field name is attached to its value,
+     *
+     *  [Doc](https://redis.io/commands/hgetall)
+     *  @since 2.0.0
+     *  @return map of fields and their values stored in the hash, or an empty map when key does not exist.
+     */
+    public suspend fun hgetAllMap(key: String): Map<String,String>
 
     /***
      * ###  HINCRBY key field increment
@@ -261,6 +283,26 @@ public interface HashCommands {
     ): Long
 
     /**
+     * ### ` HSET key [field value ...] `
+     *
+     * Sets field in the hash stored at key to value. If key does not exist, a new key holding a hash is created. If field already exists in the hash, it is overwritten.
+     *
+     * [Doc](https://redis.io/commands/hset)
+     *
+     * Example Usage:
+     * ```
+     * hset(key,entries)
+     * ```
+     * @since 2.0.0
+     * @return The number of fields that were added.
+     *
+     */
+    public suspend fun hset(
+        key: String,
+        entries: Map<*,*>
+    ): Long
+
+    /**
      * ###  HSETNX key field value
      *
      * Sets field in the hash stored at key to value, only if field does not yet exist. If key does not exist, a new key holding a hash is created. If field already exists, this operation has no effect.
@@ -323,6 +365,9 @@ internal interface HashCommandsExecutor : HashCommands, BaseHashCommands, Comman
     override suspend fun hgetAll(key: String): List<String> =
         execute(_hgetAll(key)).responseTo("hgetAll")
 
+    override suspend fun hgetAllMap(key: String): Map<String,String> =
+        execute(_hgetAllMap(key)).responseTo("hgetAll")
+
     override suspend fun hincrBy(key: String, field: String, increment: Long): Long =
         execute(_hincrBy(key, field, increment))
 
@@ -349,6 +394,11 @@ internal interface HashCommandsExecutor : HashCommands, BaseHashCommands, Comman
         fieldValuePair: Pair<String, String>,
         vararg fieldValuePairs: Pair<String, String>
     ): Long = execute(_hset(key, fieldValuePair, *fieldValuePairs))
+
+    override suspend fun hset(
+        key: String,
+        entries: Map<*,*>
+    ): Long = execute(_hset(key,entries))
 
     override suspend fun hsetnx(key: String, field: String, value: String): Long =
         execute(_hsetnx(key, field, value))

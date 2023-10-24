@@ -91,6 +91,14 @@ public interface PipelineHashCommands {
     ): Response<Long>
 
     /**
+     * @see [HashCommands.hset]
+     */
+    public suspend fun hset(
+        key: String,
+        entries: Map<String,String>,
+    ): Response<Long>
+
+    /**
      * @see [HashCommands.hsetnx]
      */
     public suspend fun hsetnx(key: String, field: String, value: String): Response<Long>
@@ -147,6 +155,9 @@ internal interface PipelineHashCommandExecutor : QueuedCommand, PipelineHashComm
         vararg fieldValuePairs: Pair<String, String>
     ): Response<Long> =
         add(_hset(key, fieldValuePair, *fieldValuePairs))
+
+    override suspend fun hset(key: String,entries: Map<String,String>): Response<Long> =
+        add(_hset(key,entries))
 
     override suspend fun hsetnx(key: String, field: String, value: String): Response<Long> =
         add(_hsetnx(key, field, value))

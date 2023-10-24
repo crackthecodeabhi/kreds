@@ -58,6 +58,7 @@ internal val IntegerCommandProcessor = CommandProcessor<Long>(IntegerHandler)
 internal val BulkStringCommandProcessor = CommandProcessor<String?>(BulkStringHandler)
 internal val SimpleStringCommandProcessor = CommandProcessor<String>(SimpleStringHandler)
 internal val ArrayCommandProcessor = CommandProcessor<List<*>?>(ArrayHandler)
+internal val MapCommandProcessor = CommandProcessor<Map<*,*>?>(MapHandler)
 internal val SimpleAndBulkStringCommandProcessor = CommandProcessor<String?>(SimpleStringHandler, BulkStringHandler)
 internal val IntegerOrBulkNullStringCommandProcessor = CommandProcessor<Long?>(IntegerHandler, BulkStringHandler)
 

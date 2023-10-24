@@ -77,3 +77,42 @@ internal object ArrayHandler : MessageHandler<List<*>?> {
         }
     }
 }
+
+internal object MapHandler : MessageHandler<Map<*,*>?> {
+    override fun canHandle(message: RedisMessage): Boolean = message is ArrayRedisMessage
+
+    override fun doHandle(message: RedisMessage): Map<*,*>? {
+        val msg = message as ArrayRedisMessage
+        return if (msg.isNull) {
+            null
+        } else if (msg.children().isEmpty()) {
+            emptyMap()
+        } else {
+
+            val map = hashMapOf<Any?,Any?>()
+
+            var key: Any? = null
+
+            for (data in msg.children()) {
+
+                val handled = when (true) {
+                    SimpleStringHandler.canHandle(data) -> SimpleStringHandler.doHandle(data)
+                    IntegerHandler.canHandle(data) -> IntegerHandler.doHandle(data)
+                    BulkStringHandler.canHandle(data) -> BulkStringHandler.doHandle(data)
+                    canHandle(data) -> doHandle(data)
+                    else -> throw KredsRedisDataException("Received unexpected data type from redis server.")
+                }
+
+                if (key == null) {
+                    key = handled
+                } else {
+                    map[key] = handled
+                    key = null
+                }
+
+            }
+
+            map
+        }
+    }
+}

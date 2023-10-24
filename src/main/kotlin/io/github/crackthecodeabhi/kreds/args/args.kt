@@ -66,6 +66,12 @@ internal fun createArguments(vararg args: Any?): Array<out Argument> {
                 argList.add(arg.first.toArgument())
                 argList.add(arg.second.toArgument())
             }
+            is Map<*,*> -> {
+                arg.forEach{(key,value) ->
+                    argList.add(key.toArgument())
+                    argList.add(value.toArgument())
+                }
+            }
             is Argument -> argList.add(arg)
             else -> throw KredsException("Fatal error. Unknown argument type.")
         }
