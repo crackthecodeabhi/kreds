@@ -73,7 +73,7 @@ nexusPublishing {
 dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
     implementation("io.netty:netty-codec-redis:4.1.86.Final")
-    implementation("io.netty:netty-handler:4.1.91.Final")
+    implementation("io.netty:netty-handler:4.1.101.Final")
     implementation(kotlin("stdlib"))
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.0")
