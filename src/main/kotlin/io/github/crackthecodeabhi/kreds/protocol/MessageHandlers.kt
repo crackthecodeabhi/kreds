@@ -22,10 +22,22 @@ package io.github.crackthecodeabhi.kreds.protocol
 import io.github.crackthecodeabhi.kreds.toDefaultCharset
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.redis.*
+import io.netty.util.ReferenceCounted
 
 internal interface MessageHandler<T> {
     fun canHandle(message: RedisMessage): Boolean
     fun doHandle(message: RedisMessage): T
+
+    /**
+     * Handles the message and releases it
+     */
+    fun doHandleAndRelease(message: RedisMessage): T = try {
+        doHandle(message)
+    } finally {
+        if (message is ReferenceCounted) {
+            message.release()
+        }
+    }
 }
 
 internal object SimpleStringHandler : MessageHandler<String> {
@@ -67,10 +79,10 @@ internal object ArrayHandler : MessageHandler<List<*>?> {
         else {
             msg.children().map {
                 when (true) {
-                    SimpleStringHandler.canHandle(it) -> SimpleStringHandler.doHandle(it)
-                    IntegerHandler.canHandle(it) -> IntegerHandler.doHandle(it)
-                    BulkStringHandler.canHandle(it) -> BulkStringHandler.doHandle(it)
-                    canHandle(it) -> doHandle(it)
+                    SimpleStringHandler.canHandle(it) -> SimpleStringHandler.doHandleAndRelease(it)
+                    IntegerHandler.canHandle(it) -> IntegerHandler.doHandleAndRelease(it)
+                    BulkStringHandler.canHandle(it) -> BulkStringHandler.doHandleAndRelease(it)
+                    canHandle(it) -> doHandleAndRelease(it)
                     else -> throw KredsRedisDataException("Received unexpected data type from redis server.")
                 }
             }
