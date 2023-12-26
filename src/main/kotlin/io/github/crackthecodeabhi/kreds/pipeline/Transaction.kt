@@ -200,7 +200,7 @@ internal class TransactionImpl(private val client: DefaultKredsClient) : Exclusi
 
         when (val execResult = responseMessages.last()) {
             is ErrorRedisMessage -> throw KredsRedisDataException(execResult.content())
-            is ArrayRedisMessage -> ArrayHandler.doHandle(execResult)
+            is ArrayRedisMessage -> ArrayHandler.doHandleAndRelease(execResult)
             else -> throw KredsTransactionException("Invalid data received from Redis.")
         }
     }

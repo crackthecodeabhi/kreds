@@ -22,13 +22,27 @@ package io.github.crackthecodeabhi.kreds.protocol
 import io.github.crackthecodeabhi.kreds.toDefaultCharset
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.redis.*
+import io.netty.util.ReferenceCounted
 
 internal interface MessageHandler<T> {
     fun canHandle(message: RedisMessage): Boolean
-    fun doHandle(message: RedisMessage): T
+    /**
+     * Handles the message and releases it
+     */
+    fun doHandleAndRelease(message: RedisMessage): T
+}
+internal abstract class AbstractMessageHandler<T>: MessageHandler<T> {
+    abstract fun doHandle(message: RedisMessage): T
+    override fun doHandleAndRelease(message: RedisMessage): T = try {
+        doHandle(message)
+    } finally {
+        if (message is ReferenceCounted) {
+            message.release()
+        }
+    }
 }
 
-internal object SimpleStringHandler : MessageHandler<String> {
+internal object SimpleStringHandler : AbstractMessageHandler<String>() {
     override fun canHandle(message: RedisMessage): Boolean = message is SimpleStringRedisMessage
 
     override fun doHandle(message: RedisMessage): String {
@@ -37,7 +51,7 @@ internal object SimpleStringHandler : MessageHandler<String> {
     }
 }
 
-internal object IntegerHandler : MessageHandler<Long> {
+internal object IntegerHandler : AbstractMessageHandler<Long>() {
     override fun canHandle(message: RedisMessage): Boolean = message is IntegerRedisMessage
 
     override fun doHandle(message: RedisMessage): Long {
@@ -46,7 +60,7 @@ internal object IntegerHandler : MessageHandler<Long> {
     }
 }
 
-internal object BulkStringHandler : MessageHandler<String?> {
+internal object BulkStringHandler : AbstractMessageHandler<String?>() {
     override fun canHandle(message: RedisMessage): Boolean = message is FullBulkStringRedisMessage
 
     override fun doHandle(message: RedisMessage): String? {
@@ -57,7 +71,7 @@ internal object BulkStringHandler : MessageHandler<String?> {
     }
 }
 
-internal object ArrayHandler : MessageHandler<List<*>?> {
+internal object ArrayHandler : AbstractMessageHandler<List<*>?>() {
     override fun canHandle(message: RedisMessage): Boolean = message is ArrayRedisMessage
 
     override fun doHandle(message: RedisMessage): List<*>? {
