@@ -72,26 +72,20 @@ launch {
 <dependency>
   <groupId>io.github.crackthecodeabhi</groupId>
   <artifactId>kreds</artifactId>
-  <version>0.9.0</version>
+  <version>0.9.1</version>
 </dependency>
 ```
 
 Gradle Groovy DSL
 
 ```groovy
-implementation 'io.github.crackthecodeabhi:kreds:0.9.0'
+implementation 'io.github.crackthecodeabhi:kreds:0.9.1'
 
 ```
 Gradle Kotlin DSL
 ```kotlin
-implementation("io.github.crackthecodeabhi:kreds:0.9.0")
+implementation("io.github.crackthecodeabhi:kreds:0.9.1")
 ```
-
-## Sponsor the project on Github or Patreon!
-Do you find this project useful? Please show your support by sponsoring the project.
-* [Patreon](https://patreon.com/abhicreates)
-* [Github Sponsors](https://github.com/sponsors/crackthecodeabhi)
-
 ## Contribution
 Most of the frequently used commands are implemented, if you find any command unimplemented, you are welcome to open a pull request or request for feature.
 

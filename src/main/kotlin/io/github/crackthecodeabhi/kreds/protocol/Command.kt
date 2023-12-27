@@ -69,6 +69,6 @@ internal open class CommandProcessor<R>(private vararg val outputTypeHandlers: M
     override fun decode(message: RedisMessage): R {
         if (message is ErrorRedisMessage) throw KredsRedisDataException(message.content())
         val handler = outputTypeHandlers.first { it.canHandle(message) }
-        return handler.doHandle(message) as R
+        return handler.doHandleAndRelease(message) as R
     }
 }

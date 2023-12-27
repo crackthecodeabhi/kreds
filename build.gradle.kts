@@ -36,7 +36,7 @@ plugins {
 }
 
 group = "io.github.crackthecodeabhi"
-version = "0.9.0"
+version = "0.9.1"
 
 repositories {
     mavenCentral()
@@ -73,15 +73,15 @@ nexusPublishing {
 dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
     implementation("io.netty:netty-codec-redis:4.1.86.Final")
-    implementation("io.netty:netty-handler:4.1.91.Final")
+    implementation("io.netty:netty-handler:4.1.101.Final")
     implementation(kotlin("stdlib"))
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.0")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.4")
 
     testImplementation("io.kotest:kotest-runner-junit5:5.6.2")
     testImplementation("io.kotest:kotest-assertions-core:5.5.4")
     testImplementation("net.swiftzer.semver:semver:1.3.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
     testImplementation("ch.qos.logback:logback-classic:1.4.7")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
