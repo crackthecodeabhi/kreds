@@ -31,7 +31,7 @@ plugins {
     `maven-publish`
     signing
     id("com.dorongold.task-tree") version "2.1.1"
-    id("io.gitlab.arturbosch.detekt") version "1.23.1"
+    id("io.gitlab.arturbosch.detekt") version "1.23.4"
     jacoco
 }
 
