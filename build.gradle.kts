@@ -78,7 +78,7 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.4")
 
-    testImplementation("io.kotest:kotest-runner-junit5:5.6.2")
+    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
     testImplementation("io.kotest:kotest-assertions-core:5.5.4")
     testImplementation("net.swiftzer.semver:semver:1.3.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
