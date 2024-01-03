@@ -61,6 +61,7 @@ class PubSubTest : FunSpec({
                     }
                 })
 
+            subscriber.auth("kreds")
             subscriber.subscribe(testChannel)
             subscriber.ping("OK")!!.shouldBeOk()
             repeat(1000) {

@@ -243,6 +243,12 @@ public interface SubscriberCommands {
      * @since 2.0.0
      */
     public suspend fun unsubscribe(vararg channels: String)
+
+    /**
+     * Perform Authentication for the subscriber client.
+     * @return string reply an error if the password, or username/password pair, is invalid.
+     */
+    public suspend fun auth(password: String, username: String? = null): String
 }
 
 public interface KredsSubscriberClient : AutoCloseable, SubscriberCommands {
@@ -487,6 +493,17 @@ internal class DefaultKredsSubscriberClient(
                     SimpleStringCommandProcessor
                 )
             )
+        }
+        return SimpleStringCommandProcessor.decode(reader.readChannel.receive())
+    }
+    override suspend fun auth(password: String, username: String?): String {
+        reader.preemptRead {
+            writer.write(CommandExecution(
+                ConnectionCommand.AUTH,
+                SimpleStringCommandProcessor,
+                username?.toArgument() ?: EmptyArgument,
+                password.toArgument()
+            ))
         }
         return SimpleStringCommandProcessor.decode(reader.readChannel.receive())
     }
