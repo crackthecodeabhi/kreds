@@ -58,14 +58,14 @@ internal interface QueuedCommand {
 }
 
 public interface Pipeline : PipelineStringCommands, PipelineKeyCommands, PipelineHashCommands, PipelineSetCommands,
-    PipelineListCommands, PipelineHyperLogLogCommands, PipelineZSetCommands, PipelinePublishCommands {
+    PipelineListCommands, PipelineHyperLogLogCommands, PipelineZSetCommands, PipelinePublishCommands, PipelineJsonCommands {
     public suspend fun execute()
 }
 
 
 internal class PipelineImpl(private val client: DefaultKredsClient) : ExclusiveObject, Pipeline,
     PipelineStringCommandsExecutor, PipelineKeyCommandExecutor, PipelineHashCommandExecutor, PipelineSetCommandExecutor,
-    PipelineListCommandExecutor, PipelineHyperLogLogCommandExecutor, PipelineZSetCommandExecutor, PipelinePublishCommandExecutor {
+    PipelineListCommandExecutor, PipelineHyperLogLogCommandExecutor, PipelineZSetCommandExecutor, PipelinePublishCommandExecutor, PipelineJsonCommandExecutor {
 
     override val mutex: Mutex = Mutex()
 
