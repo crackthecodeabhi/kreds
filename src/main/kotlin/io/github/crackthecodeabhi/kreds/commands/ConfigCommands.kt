@@ -1,11 +1,3 @@
-import io.github.crackthecodeabhi.kreds.args.createArguments
-import io.github.crackthecodeabhi.kreds.commands.Command
-import io.github.crackthecodeabhi.kreds.commands.CommandExecution
-import io.github.crackthecodeabhi.kreds.commands.MapElementProcessor
-import io.github.crackthecodeabhi.kreds.commands.asReturnType
-import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
-import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
-
 /*
  *  Copyright (C) 2024 Abhijith Shivaswamy
  *   See the notice.md file distributed with this work for additional
@@ -24,6 +16,12 @@ import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
  *   limitations under the License.
  *
  */
+package io.github.crackthecodeabhi.kreds.commands
+
+import io.github.crackthecodeabhi.kreds.args.createArguments
+import io.github.crackthecodeabhi.kreds.protocol.CommandExecutor
+import io.github.crackthecodeabhi.kreds.protocol.SimpleStringCommandProcessor
+
 internal enum class ConfigCommand(
     override val subCommand: Command? = null,
     override val string: String = "CONFIG"
