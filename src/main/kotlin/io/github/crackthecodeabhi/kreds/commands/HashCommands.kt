@@ -24,6 +24,7 @@ import io.github.crackthecodeabhi.kreds.StringFieldValue
 import io.github.crackthecodeabhi.kreds.args.*
 import io.github.crackthecodeabhi.kreds.commands.HashCommand.*
 import io.github.crackthecodeabhi.kreds.protocol.*
+import io.netty.handler.codec.redis.RedisMessage
 import java.math.BigDecimal
 
 internal enum class HashCommand(override val subCommand: Command? = null) : Command {
@@ -366,4 +367,23 @@ internal interface HashCommandsExecutor : HashCommands, BaseHashCommands, Comman
         count: Long?
     ): IScanResult<StringFieldValue> =
         execute(_hscan(key, cursor, matchPattern, count))
+}
+
+/**
+ * Works on Map Redis messages
+ * Decodes chunked 2 elements of array to map, if array is null, return empty map.
+ */
+internal object MapElementProcessor : ICommandProcessor<Map<String, String>> {
+    override fun decode(message: RedisMessage): Map<String, String> {
+        try {
+            return ArrayCommandProcessor.decode(message).let {
+                @Suppress("UNCHECKED_CAST")
+                it as? List<String>
+            }?.let { list->
+                list.chunked(2).associate { it[0] to it[1] }
+            } ?: emptyMap()
+        } catch (ex: ClassCastException) {
+            throw KredsRedisDataException("Failed to decode response.", ex)
+        }
+    }
 }
