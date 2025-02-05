@@ -63,7 +63,8 @@ public suspend fun shutdown() {
 
 public interface KredsClient : AutoCloseable, KeyCommands, StringCommands, ConnectionCommands, PublisherCommands,
     HashCommands, SetCommands,
-    ListCommands, HyperLogLogCommands, ServerCommands, ZSetCommands, JsonCommands, ScriptingCommands, FunctionCommands {
+    ListCommands, HyperLogLogCommands, ServerCommands, ZSetCommands, JsonCommands, ScriptingCommands, FunctionCommands,
+    ConfigCommands {
     public fun pipelined(): Pipeline
     public fun transaction(): Transaction
 }
@@ -119,7 +120,8 @@ internal class DefaultKredsClient(
     AbstractKredsClient(endpoint, eventLoopGroup, config), KredsClient, InternalKredsClient, KeyCommandExecutor,
     StringCommandsExecutor, ConnectionCommandsExecutor, PublishCommandExecutor, HashCommandsExecutor,
     SetCommandExecutor, ListCommandExecutor, HyperLogLogCommandExecutor, ServerCommandExecutor, BlockingKredsClient,
-    ZSetCommandExecutor, JsonCommandExecutor, ScriptingCommandExecutor, FunctionCommandExecutor {
+    ZSetCommandExecutor, JsonCommandExecutor, ScriptingCommandExecutor, FunctionCommandExecutor,
+    ConfigCommandExecutor {
 
     override val mutex: Mutex = Mutex()
 
